@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vista Training</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vista Training">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#834B9E">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one narrow column, lessons styled as grocery shelf tags, player takes the full column. */
+:root{
+  --paper:#F6F4FA; --surface:#FFFFFF; --ink:#1E1A24; --muted:#655E72; --line:#E2DDEA;
+  --brand:#834B9E; --brand-ink:#FFFFFF; --blue:#007BC4; --tag:#FEC938; --tag-ink:#2A2100; --carrot:#F47321;
+  --ok:#23824F; --ok-bg:#E3F4EA; --warn-bg:#FFF4E8; --lock:#B9B2C4;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif; --body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:12px; --logo-bg:transparent;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141119; --surface:#1E1925; --ink:#F2EEF7; --muted:#A79FB4; --line:#332C3D;
+  --brand:#B686D6; --brand-ink:#1A0F22; --blue:#55B3EC; --tag:#FEC938; --tag-ink:#2A2100; --carrot:#FF8A45;
+  --ok:#5DC98D; --ok-bg:#16301F; --warn-bg:#33230F; --lock:#5A5266; --logo-bg:#FFFFFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#141119; --surface:#1E1925; --ink:#F2EEF7; --muted:#A79FB4; --line:#332C3D;
+  --brand:#B686D6; --brand-ink:#1A0F22; --blue:#55B3EC; --tag:#FEC938; --tag-ink:#2A2100; --carrot:#FF8A45;
+  --ok:#5DC98D; --ok-bg:#16301F; --warn-bg:#33230F; --lock:#5A5266; --logo-bg:#FFFFFF; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,label,input,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;display:grid;gap:20px}
+@media (min-width:768px){.wrap{max-width:760px}body{font-size:17px}.lesson{grid-template-columns:104px 1fr}}
+h1,h2,h3{font-family:var(--display);font-stretch:85%;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--display);font-stretch:100%;font-weight:700;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mark{display:flex;align-items:baseline;gap:8px}
+.mark{align-items:center}.mark img{height:46px;width:auto;display:block;background:var(--logo-bg);border-radius:10px;padding:4px 8px}
+.mark span{font-family:var(--display);font-weight:700;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;background:var(--blue);color:#fff;padding:2px 8px;border-radius:99px}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:var(--surface)}
+.lang button{border:0;background:none;color:var(--muted);font:700 .9rem var(--body);padding:10px 16px;min-height:44px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:16px}
+.banner{background:var(--warn-bg);border:1px solid var(--line);border-left:4px solid var(--carrot);border-radius:8px;padding:10px 12px;font-size:.9rem}
+label{display:grid;gap:6px;font-weight:700;font-size:.92rem}
+input,select{font:16px var(--body);padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:460px){.row2{grid-template-columns:1fr}}
+.btn{-webkit-appearance:none;min-height:48px;appearance:none;border:0;border-radius:10px;background:var(--brand);color:var(--brand-ink);font:800 1rem var(--body);padding:14px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.err{color:var(--carrot);font-weight:700;font-size:.9rem}
+.who{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.linkish{background:none;border:0;color:var(--blue);font:700 .95rem var(--body);cursor:pointer;padding:10px 0;min-height:44px}
+/* progress meter */
+.meter{display:grid;gap:6px}
+.meter .bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .4s}
+/* shelf-tag lessons */
+.lessons{display:grid;gap:12px}
+.lesson{display:grid;grid-template-columns:88px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;color:inherit;font:inherit;padding:0;width:100%}
+.lesson[aria-disabled="true"]{cursor:not-allowed}
+.lesson .tag{background:var(--tag);color:var(--tag-ink);display:grid;place-content:center;text-align:center;padding:12px 6px;position:relative}
+.lesson .tag:after{content:"";position:absolute;right:-7px;top:50%;width:14px;height:14px;border-radius:50%;background:var(--surface);transform:translateY(-50%)}
+.lesson[aria-disabled="true"] .tag{background:var(--lock);color:var(--surface)}
+.lesson .tag small{font-family:var(--display);font-weight:700;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
+.lesson .tag strong{font-family:var(--display);font-weight:800;font-size:2.1rem;line-height:1;font-stretch:80%}
+.lesson .body{padding:14px 16px 14px 20px;display:grid;gap:6px;min-width:0}
+.chip{justify-self:start;font-size:.75rem;font-weight:800;letter-spacing:.04em;padding:3px 10px;border-radius:99px;background:var(--paper);color:var(--muted);border:1px solid var(--line)}
+.chip.done{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.chip.next{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+/* player */
+.player{display:grid;gap:12px}
+.vbox{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;max-width:100%}
+.vbox video{width:100%;height:100%;display:block;background:#000}
+.vbox .big{position:absolute;inset:0;margin:auto;width:76px;height:76px;border-radius:50%;border:0;background:rgba(131,75,158,.92);color:#fff;font-size:1.6rem;cursor:pointer}
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ctrls .btn{padding:10px 14px;font-size:.92rem}
+.time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);margin-left:auto}
+.track{height:14px;border-radius:99px;background:var(--line);position:relative;overflow:hidden;cursor:pointer}
+.track .watched{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--brand) 35%,transparent)}
+.track .now{position:absolute;inset:0 auto 0 0;background:var(--brand)}
+.note{font-size:.88rem;color:var(--muted)}
+/* quiz */
+.q{display:grid;gap:8px;padding-block:14px;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.q legend{font-weight:800;padding:0;margin-bottom:4px}
+.q fieldset{border:0;margin:0;padding:0;display:grid;gap:6px}
+.opt{display:flex;gap:12px;align-items:flex-start;font-weight:600;padding:13px 14px;min-height:48px;border:1px solid var(--line);border-radius:8px;background:var(--paper);cursor:pointer}
+.opt input,.ackbox input{width:22px;height:22px;flex:0 0 auto;margin-top:0;accent-color:var(--brand)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--carrot)}
+.score{font-family:var(--display);font-weight:800;font-size:3rem;font-stretch:80%;line-height:1}
+.rd{display:grid;gap:14px}
+.rd section{display:grid;gap:10px}
+#rd-check section+section{padding-top:16px;border-top:1px solid var(--line)}
+.rd h3{font-size:1.5rem;font-weight:800}
+.rd ul{font-size:1.05rem}
+.pgtop{display:grid;gap:8px}
+.pgbar{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.pgbar i{display:block;height:6px;border-radius:99px;background:var(--line)}
+.pgbar i.on{background:var(--brand)}
+.pgnav{display:flex;gap:10px}
+.pgnav .btn{flex:1}
+.pgnav .btn:disabled{visibility:hidden}
+.rd ul{margin:0;padding-left:22px;display:grid;gap:4px}
+.phone{background:var(--paper);border:2px solid var(--brand);border-radius:var(--r);padding:14px 16px;display:grid;gap:4px}
+.phone strong{font-family:var(--display);font-size:1.6rem;font-weight:800;font-stretch:85%;font-variant-numeric:tabular-nums;color:var(--brand)}
+.tl{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:14px 1fr;gap:12px;padding-bottom:12px;position:relative}
+.tl li:before{content:"";width:12px;height:12px;border-radius:50%;background:var(--brand);margin-top:5px}
+.tl li:not(:last-child):after{content:"";position:absolute;left:5px;top:19px;bottom:0;width:2px;background:var(--line)}
+.tl b{display:block}
+.steps{width:100%;border-collapse:collapse;font-size:.95rem}
+.steps td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.steps td:first-child{font-weight:800;white-space:nowrap;color:var(--brand)}
+.ackbox{display:flex;gap:12px;align-items:flex-start;font-weight:600;padding:6px 0;min-height:44px}
+.ackbox input{width:auto;margin-top:4px}
+.fb{font-size:.9rem;font-weight:700}
+.fb.ok{color:var(--ok)}.fb.no{color:var(--carrot)}
+.cert{border:2px dashed var(--brand);border-radius:var(--r);padding:20px;display:grid;gap:8px;text-align:center;background:var(--surface)}
+.cert .big{font-family:var(--display);font-weight:800;font-size:1.6rem;font-stretch:85%}
+@media (hover:hover){.lesson:not([aria-disabled="true"]):hover{border-color:var(--brand)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mark"><img src="logo.png" alt="Vista Markets" width="111" height="46"><span id="t-badge">Training</span></div>
+    <div class="lang" role="group" aria-label="Language" hidden><!-- Spanish: remove "hidden" here and set SPANISH_ON to true below -->
+      <button type="button" id="lang-en" aria-pressed="true">English</button>
+      <button type="button" id="lang-es" aria-pressed="false">Español</button>
+    </div>
+  </header>
+
+  <div class="banner" id="demo-banner" hidden></div>
+
+  <!-- SIGN IN -->
+  <section id="v-start" class="panel">
+    <div class="eyebrow" id="t-start-eyebrow"></div>
+    <h1 id="t-start-title"></h1>
+    <p class="muted" id="t-start-lead"></p>
+    <form id="start-form" novalidate class="panel" style="padding:0;border:0;background:none">
+      <label for="f-name"><span id="t-name"></span><input id="f-name" autocomplete="name" required></label>
+      <div class="row2">
+        <label for="f-date"><span id="t-date"></span><input id="f-date" type="date" required></label>
+        <label for="f-store"><span id="t-store"></span><select id="f-store" required></select></label>
+      </div>
+      <p class="err" id="start-err" hidden></p>
+      <button class="btn" type="submit" id="t-start-btn"></button>
+    </form>
+  </section>
+
+  <!-- COURSE -->
+  <section id="v-course" hidden>
+    <div class="wrap">
+      <div class="who">
+        <div><div class="eyebrow" id="t-course-eyebrow"></div><h1 id="who-name"></h1><p class="muted" id="who-meta"></p></div>
+        <button class="linkish" type="button" id="t-signout"></button>
+      </div>
+      <div class="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
+      <div class="lessons" id="lessons"></div>
+      <p class="note" id="t-rules"></p>
+      <button class="linkish" type="button" id="demo-unlock" hidden></button>
+    </div>
+  </section>
+
+  <!-- PLAYER -->
+  <section id="v-player" class="player" hidden>
+    <button class="linkish" type="button" id="t-back" style="justify-self:start"></button>
+    <div><div class="eyebrow" id="p-eyebrow"></div><h2 id="p-title"></h2></div>
+    <div class="vbox" id="vbox">
+      <video id="video" playsinline preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback"></video>
+      <button class="big" type="button" id="big-play" aria-label="Play">▶</button>
+    </div>
+    <div class="track" id="track" title="Tap anywhere you have already watched to go back"><div class="watched" id="tr-watched"></div><div class="now" id="tr-now"></div></div>
+    <div class="ctrls">
+      <button class="btn" type="button" id="c-play"></button>
+      <button class="btn secondary" type="button" id="c-back10"></button>
+      <button class="btn secondary" type="button" id="c-speed" aria-label="Playback speed">1x</button>
+      <button class="btn secondary" type="button" id="c-full"></button>
+      <span class="time" id="c-time">0:00 / 0:00</span>
+    </div>
+    <p class="note" id="t-noskip"></p>
+    <div class="banner" id="p-done" hidden></div>
+    <button class="btn" type="button" id="p-next" hidden></button>
+  </section>
+
+  <!-- READING: attendance -->
+  <section id="v-read" class="panel" hidden>
+    <button class="linkish" type="button" id="t-back3" style="justify-self:start"></button>
+    <div><div class="eyebrow" id="rd-eyebrow"></div><h2 id="rd-title"></h2><p class="muted" id="rd-lead"></p></div>
+    <div class="pgtop"><span class="eyebrow" id="rd-count"></span><div class="pgbar" id="rd-bar" aria-hidden="true"></div></div>
+    <div class="rd" id="rd-body" aria-live="polite"></div>
+    <div class="rd" id="rd-check"></div>
+    <p class="err" id="rd-err" hidden></p>
+    <div class="banner" id="rd-complete" hidden></div>
+    <button class="btn" type="button" id="rd-nextstep" hidden></button>
+    <div class="pgnav">
+      <button class="btn secondary" type="button" id="rd-prev"></button>
+      <button class="btn" type="button" id="rd-next"></button>
+      <button class="btn" type="button" id="rd-done"></button>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="v-quiz" class="panel" hidden>
+    <button class="linkish" type="button" id="t-back2" style="justify-self:start"></button>
+    <div><div class="eyebrow" id="t-quiz-eyebrow"></div><h2 id="t-quiz-title"></h2><p class="muted" id="t-quiz-lead"></p></div>
+    <form id="quiz-form" novalidate></form>
+    <p class="err" id="quiz-err" hidden></p>
+    <button class="btn" type="button" id="t-submit"></button>
+  </section>
+
+  <!-- RESULT -->
+  <section id="v-result" class="panel" hidden>
+    <div class="eyebrow" id="r-eyebrow"></div>
+    <div class="score" id="r-score"></div>
+    <h2 id="r-title"></h2>
+    <p id="r-lead"></p>
+    <div class="cert" id="r-cert" hidden>
+      <div class="eyebrow" id="t-cert-eyebrow"></div>
+      <div class="big" id="cert-name"></div>
+      <div id="cert-meta" class="muted"></div>
+    </div>
+    <button class="btn" type="button" id="r-btn"></button>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ============ SETTINGS: edit these ============ */
+const CONFIG = {
+  // Paste from Supabase > Project Settings > API. Leave blank to run in preview mode (saves on this device only).
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
+  STORES: ["Alameda","Central","Doniphan","Horizon","Montana","Piedras","Urban"],
+  // Put each video file in the /videos folder and list it here. Blank = "coming soon".
+  VIDEOS: {
+    en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4" },
+    es: { day1: "", day2: "", day3: "" }
+  },
+  // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
+  STORE_PHONES: { Alameda:"", Central:"", Doniphan:"", Horizon:"", Montana:"", Piedras:"", Urban:"" },
+  PASS_SCORE: 8
+};
+/* ============================================== */
+
+const T = {
+ en:{badge:"Training",startEyebrow:"New hire training",startTitle:"Welcome to the Vista team",
+  startLead:"Watch three short videos, read the attendance and time-off rules, then take a 10-question quiz. Your trainer will check your results before you work on your own.",
+  name:"Full name",date:"Date",store:"Store",pickStore:"Choose your store",startBtn:"Start training",
+  errFill:"Fill in your name, the date and your store.",errNet:"Couldn't connect. Check your internet and try again.",
+  courseEyebrow:"Your training",signout:"Not you? Sign out",
+  meter:(d,t)=>`${d} of ${t} steps done`,
+  rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Day 3 video.",
+  days:{day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
+  dayLabel:"Day",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:"Read · 5 min",attName:"Attendance & Time Off",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
+  chipDone:"Watched",chipNext:"Start here",chipLocked:"Locked",chipSoon:"Coming soon",chipPassed:"Passed",chipRetake:"Retake",
+  back:"← Back to my training",play:"Play",pause:"Pause",back10:"⟲ 10 sec",full:"Full screen",
+  noskip:"Rewind any time: tap ⟲ 10 sec or tap the bar on a part you already watched. You can't skip ahead. If you leave the page, it pauses and remembers where you were.",
+  done:"Video complete. The next step is unlocked.",
+  quizEyebrow:"Day 3",quizTitle:"Knowledge check",quizLead:"Pick the best answer for each question. You need 8 of 10 to pass.",
+  submit:"Submit answers",errAll:n=>`Answer all questions first (${n} left).`,
+  passEyebrow:"You passed",passTitle:"Great job! Show this screen to your trainer.",passLead:"Your trainer will finish your sign-off sheet with you.",
+  failEyebrow:"Not quite",failTitle:"Review the ones marked in orange, then try again.",failLead:"You need 8 of 10 to pass.",
+  retake:"Retake the quiz",home:"Back to my training",certEyebrow:"Training complete",
+  demo:"Preview mode: progress saves on this device only. Connect Supabase in the settings to track employees.",
+  demoUnlock:"Preview tools: unlock all steps",soonMsg:"This video isn't uploaded yet."},
+ es:{badge:"Capacitación",startEyebrow:"Capacitación para nuevos empleados",startTitle:"Bienvenido al equipo Vista",
+  startLead:"Mira tres videos cortos, lee las reglas de asistencia y días libres, y luego contesta un examen de 10 preguntas. Tu entrenador revisará tus resultados antes de que trabajes solo.",
+  name:"Nombre completo",date:"Fecha",store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
+  errFill:"Escribe tu nombre, la fecha y tu tienda.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
+  courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
+  meter:(d,t)=>`${d} de ${t} pasos completos`,
+  rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video del Día 3.",
+  days:{day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
+  dayLabel:"Día",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:"Lectura · 5 min",attName:"Asistencia y días libres",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
+  chipDone:"Visto",chipNext:"Empieza aquí",chipLocked:"Bloqueado",chipSoon:"Próximamente",chipPassed:"Aprobado",chipRetake:"Repetir",
+  back:"← Regresar a mi capacitación",play:"Reproducir",pause:"Pausa",back10:"⟲ 10 seg",full:"Pantalla completa",
+  noskip:"Puedes regresar cuando quieras: toca ⟲ 10 seg o toca la barra en una parte que ya viste. No puedes adelantar. Si sales de la página, se pausa y recuerda dónde ibas.",
+  done:"Video completo. El siguiente paso ya está abierto.",
+  quizEyebrow:"Día 3",quizTitle:"Examen final",quizLead:"Escoge la mejor respuesta. Necesitas 8 de 10 para aprobar.",
+  submit:"Enviar respuestas",errAll:n=>`Contesta todas las preguntas primero (faltan ${n}).`,
+  passEyebrow:"Aprobaste",passTitle:"¡Muy bien! Enséñale esta pantalla a tu entrenador.",passLead:"Tu entrenador terminará tu hoja de aprobación contigo.",
+  failEyebrow:"Casi",failTitle:"Repasa las marcadas en naranja e intenta de nuevo.",failLead:"Necesitas 8 de 10 para aprobar.",
+  retake:"Repetir el examen",home:"Regresar a mi capacitación",certEyebrow:"Capacitación completa",
+  demo:"Modo de prueba: el avance se guarda solo en este dispositivo. Conecta Supabase en la configuración para registrar empleados.",
+  demoUnlock:"Herramientas de prueba: abrir todos los pasos",soonMsg:"Este video todavía no está disponible."}
+};
+
+const QUIZ=[
+ {en:["What is Vista's Golden Rule?",["The customer is always right","Never leave a customer unacknowledged","Finish your task first"]],es:["¿Cuál es la Regla de Oro de Vista?",["El cliente siempre tiene la razón","Nunca dejes a un cliente sin reconocer","Termina tu tarea primero"]],a:1},
+ {en:["A customer asks where the tortillas are. You should:",["Point to the aisle","Say \"aisle 4\"","Walk them there"]],es:["Un cliente pregunta dónde están las tortillas. Debes:",["Señalar el pasillo","Decir \"pasillo 4\"","Acompañarlo hasta ahí"]],a:2},
+ {en:["A customer is upset about a product. The first step is:",["Explain it's not your fault","Listen without interrupting","Call the vendor"]],es:["Un cliente está molesto por un producto. El primer paso es:",["Explicar que no es tu culpa","Escuchar sin interrumpir","Llamar al proveedor"]],a:1},
+ {en:["The danger zone is:",["0°F–32°F","41°F–135°F","135°F–165°F"]],es:["La zona de peligro es:",["0°F–32°F","41°F–135°F","135°F–165°F"]],a:1},
+ {en:["FIFO means:",["Fresh In, Fresh Out","First In, First Out","Fill It, Face It Often"]],es:["PEPS significa:",["Producto En Perfecto Servicio","Primero en Entrar, Primero en Salir","Precio Especial Por Semana"]],a:1},
+ {en:["Where is raw meat stored in a cooler?",["Top shelf","Bottom shelf, below ready-to-eat food","Anywhere it fits"]],es:["¿Dónde se guarda la carne cruda en el refrigerador?",["En el anaquel de arriba","En el anaquel de abajo, debajo de lo listo para comer","Donde quepa"]],a:1},
+ {en:["You see a spill in aisle 6. You:",["Tell someone at the end of your shift","Stop, Block, Clean","Walk around it"]],es:["Ves un derrame en el pasillo 6. Tú:",["Le avisas a alguien al final de tu turno","Detente, Bloquea, Limpia","Le das la vuelta"]],a:1},
+ {en:["You see someone shoplifting. You:",["Chase them","Block the door","Don't confront — tell a manager"]],es:["Ves a alguien robando. Tú:",["Lo persigues","Bloqueas la puerta","No lo enfrentas — avisas a un gerente"]],a:2},
+ {en:["What does PASS stand for?",["Pull, Aim, Squeeze, Sweep","Push, Alert, Spray, Stop","Point, Aim, Shoot, Sweep"]],es:["¿Qué significa PASS al usar un extintor?",["Jala, Apunta, Aprieta, Barre","Empuja, Avisa, Rocía, Para","Señala, Apunta, Dispara, Barre"]],a:0},
+ {en:["You're running late. You:",["Call the store cell line, at least 2 hours before your shift when possible","Text a coworker","Explain when you arrive"]],es:["Vas a llegar tarde. Tú:",["Llamas al celular de la tienda, por lo menos 2 horas antes de tu turno cuando sea posible","Le mandas mensaje a un compañero","Lo explicas cuando llegues"]],a:0}
+];
+
+const DAYS=["day1","day2","day3"];
+const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"read"},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
+const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
+const $=id=>document.getElementById(id);
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY&&window.supabase);
+const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY):null;
+
+const SPANISH_ON=false;   // turn on when the Spanish videos are ready
+let lang=SPANISH_ON?(store.get("vt-lang")||"en"):"en";
+let me=store.get("vt-me");            // {name,date,store,key}
+const makeKey=(n,st)=>n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()+"|"+st;
+if(me&&!me.key)me=null;               // older saved sign-in without a key
+const fmtDate=iso=>{if(!iso)return"";const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})};
+let progress={};                      // {day1:{at}, quiz:{score,total,passed}}
+let current=null;                     // lesson key in player
+
+const t=()=>T[lang];
+let advTimer=null;const clearAdvance=()=>{if(advTimer){clearInterval(advTimer);advTimer=null}};
+const show=v=>{clearAdvance();["v-start","v-course","v-player","v-read","v-quiz","v-result"].forEach(id=>$(id).hidden=id!==v)};
+function stepName(stp){const s=t();return stp.type==="quiz"?s.quizName:stp.type==="read"?s.attName:s.days[stp.k]}
+function openStep(stp){if(!stp){renderCourse();show("v-course");return}
+  if(stp.type==="quiz")openQuiz();else if(stp.type==="read")openReading();
+  else if(CONFIG.VIDEOS[lang][stp.k])openLesson(stp.k);else{renderCourse();show("v-course")}}
+/* After a step is finished: show "Next: ..." and, when auto is true, go there after 5 seconds. */
+function offerNext(k,btn,auto){
+  clearAdvance();const i=STEPS.findIndex(x=>x.k===k),nx=STEPS[i+1];
+  const base=nx?`${lang==="es"?"Siguiente":"Next"}: ${stepName(nx)}`:(lang==="es"?"Regresar a mi capacitación":"Back to my training");
+  btn.hidden=false;btn.textContent=base+" →";btn.onclick=()=>{clearAdvance();openStep(nx)};
+  if(auto&&nx){let n=5;btn.textContent=`${base} (${n}) →`;advTimer=setInterval(()=>{n--;if(n<=0){clearAdvance();openStep(nx)}else btn.textContent=`${base} (${n}) →`},1000)}
+}
+const fmt=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const progKey=()=>"vt-prog-"+(me?me.key:"");
+const posKey=k=>`vt-pos-${me.key}-${k}-${lang}`;
+
+/* ---------- data ---------- */
+async function loadProgress(){
+  progress=store.get(progKey())||{};
+  if(!LIVE)return;
+  const {data,error}=await sb.rpc("get_progress",{p_employee_no:me.key});
+  if(error)throw error;
+  const p={};
+  (data||[]).forEach(r=>{
+    if(r.item==="quiz"){const prev=p.quiz;const passed=r.score>=CONFIG.PASS_SCORE;if(!prev||r.score>prev.score)p.quiz={score:r.score,total:r.total,passed,at:r.completed_at}}
+    else p[r.item]={at:r.completed_at};
+  });
+  progress=p;store.set(progKey(),p);
+}
+async function record(item,score=null,total=null){
+  const at=new Date().toISOString();
+  if(item==="quiz"){const prev=progress.quiz;if(!prev||score>prev.score)progress.quiz={score,total,passed:score>=CONFIG.PASS_SCORE,at}}
+  else progress[item]={at};
+  store.set(progKey(),progress);
+  if(LIVE){
+    const {error}=await sb.rpc("record_completion",{p_employee_no:me.key,p_full_name:me.name,p_store:me.store,p_start_date:me.date,p_language:lang,p_item:item,p_score:score,p_total:total});
+    if(error)console.error(error);
+  }
+}
+
+/* ---------- text ---------- */
+function applyText(){
+  document.documentElement.lang=lang;
+  $("lang-en").setAttribute("aria-pressed",lang==="en");$("lang-es").setAttribute("aria-pressed",lang==="es");
+  const s=t();
+  const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
+  set("t-badge",s.badge);set("t-start-eyebrow",s.startEyebrow);set("t-start-title",s.startTitle);set("t-start-lead",s.startLead);
+  set("t-name",s.name);set("t-date",s.date);set("t-store",s.store);set("t-start-btn",s.startBtn);
+  set("t-course-eyebrow",s.courseEyebrow);set("t-signout",s.signout);set("t-rules",s.rules);
+  set("t-back",s.back);set("t-back2",s.back);set("c-back10",s.back10);set("c-full",s.full);set("t-noskip",s.noskip);
+  set("t-quiz-eyebrow",s.quizEyebrow);set("t-quiz-title",s.quizTitle);set("t-quiz-lead",s.quizLead);set("t-submit",s.submit);
+  set("t-cert-eyebrow",s.certEyebrow);set("demo-unlock",s.demoUnlock);
+  const b=$("demo-banner");b.hidden=LIVE;b.textContent=s.demo;$("demo-unlock").hidden=LIVE;
+  const sel=$("f-store"),cur=sel.value;sel.innerHTML="";
+  const o0=document.createElement("option");o0.value="";o0.textContent=s.pickStore;sel.appendChild(o0);
+  CONFIG.STORES.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)});sel.value=cur;
+  updatePlayBtn();
+}
+function setLang(l){lang=l;store.set("vt-lang",l);applyText();if(!$("v-course").hidden)renderCourse();if(!$("v-quiz").hidden)renderQuiz();if(!$("v-player").hidden&&current)openLesson(current);if(!$("v-read").hidden)openReading();}
+
+/* ---------- course ---------- */
+function stepState(i){
+  const st=STEPS[i];
+  if(st.k==="quiz"){if(isDone("quiz"))return "passed";if(!STEPS.slice(0,i).every(x=>isDone(x.k)))return "locked";return progress.quiz?"retake":"next"}
+  if(isDone(st.k))return "done";
+  if(i>0&&!isDone(STEPS[i-1].k))return "locked";
+  if(st.type==="video"&&!CONFIG.VIDEOS[lang][st.k])return "soon";
+  return "next";
+}
+function renderCourse(){
+  const s=t();
+  $("who-name").textContent=me.name;
+  $("who-meta").textContent=`${me.store} · ${fmtDate(me.date)}`;
+  const done=STEPS.filter(x=>isDone(x.k)).length;
+  $("meter-fill").style.width=(done/STEPS.length*100)+"%";$("meter-text").textContent=s.meter(done,STEPS.length);
+  const box=$("lessons");box.innerHTML="";
+  STEPS.forEach((stp,i)=>{
+    const st=stepState(i);const isQuiz=stp.type==="quiz";
+    const b=document.createElement("button");b.type="button";b.className="lesson";
+    const open=st==="next"||st==="done"||st==="retake"||st==="passed";
+    if(!open)b.setAttribute("aria-disabled","true");
+    const tag=document.createElement("div");tag.className="tag";
+    tag.innerHTML=`<small></small><strong>${isQuiz?"✓":i+1}</strong>`;
+    tag.querySelector("small").textContent=isQuiz?s.quizTag:s.stepLabel;
+    const body=document.createElement("div");body.className="body";
+    const h=document.createElement("h3");
+    const sub=document.createElement("span");sub.className="muted";
+    if(isQuiz){h.textContent=s.quizName;sub.textContent=progress.quiz?`${s.quizDesc} · ${progress.quiz.score}/${progress.quiz.total}`:s.quizDesc}
+    else if(stp.type==="read"){h.textContent=s.attName;sub.textContent=`${s.dayLabel} 1 · ${s.readMin}`}
+    else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`}
+    const chip=document.createElement("span");chip.className="chip";
+    const map={done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
+    chip.textContent=stp.type==="read"&&st==="done"?(lang==="es"?"Completo":"Complete"):map[st][0];if(map[st][1])chip.classList.add(map[st][1]);
+    body.append(h,sub,chip);b.append(tag,body);
+    b.addEventListener("click",()=>{if(!open)return;isQuiz?openQuiz():stp.type==="read"?openReading():openLesson(stp.k)});
+    box.appendChild(b);
+  });
+}
+
+/* ---------- reading: attendance & time off ---------- */
+const ATT={
+ en:{eyebrow:"Step 2 · Day 1",title:"Attendance & Time Off",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom. Your manager will also go over this with you.",
+  why:["Why it matters","When one person is late or doesn't show up, a register or counter sits empty and your coworkers cover for you. Showing up on time is part of taking care of customers."],
+  sched:["Your schedule",["The workweek runs Sunday through Saturday.","The schedule is made every Thursday for the week that starts the following Sunday.","Check it every week. It can change with business needs, including evenings, weekends, holidays, different shifts or another store."]],
+  off:["Asking for time off",["Ask your Store Manager or designated supervisor at least 7 days before the Thursday that week's schedule is made.","It isn't approved until your manager confirms it.","Requests after the deadline depend on staffing and may not be approved, except legally protected leave."]],
+  exTitle:"Example for the next open week",exDead:"Last day to ask for time off",exMade:"Manager makes the schedule",exStart:"Workweek begins",exRule:"Easy way to remember: ask by the Thursday 10 days before the week starts.",next:"Next →",prev:"← Back",count:(i,n)=>`${i} of ${n}`,
+  call:["Running late or can't come in?",["Call the store cell line at least 2 hours before your shift whenever possible.","Call. Texting a coworker or posting in a group chat doesn't count.","Say your name, department, shift time, what's going on, and when you expect to be back."]],
+  phoneLabel:"Store cell line",phoneNone:"Your manager will give you this number on your first day.",phoneSave:"Save it in your phone now.",
+  ready:["Ready to work at your start time","At your start time you're clocked in, in full uniform, in slip-resistant shoes, wearing any required protective gear, and at your station ready to work. Getting to the door at your start time is late."],
+  disc:["Unexcused absences",[["1st","Verbal warning, documented in your personnel file"],["2nd","Written warning"],["More than 2","Further discipline, up to and including termination"]],"Call us, and we'll work with you."],
+  checkTitle:"Check & sign",acks:["I know the schedule is made every Thursday.","I know how and when to ask for time off.","I know to call the store cell line if I'm late or can't come in."],
+  q1:["When is the weekly schedule made?",["The day before the week starts","Every Thursday, for the week that starts Sunday","Once a month"],1,"The schedule is made every Thursday for the week that starts Sunday."],
+  q2:d=>[`You want ${d.sat} off. What is the last day to ask?`,[d.dead,d.made,d.fri],0,`Ask by ${d.dead}, 7 days before the Thursday that week's schedule is made.`],
+  q3:["You wake up sick an hour before your shift. What do you do?",["Text a coworker to tell the manager","Call the store cell line right away","Wait and explain at your next shift"],1,"Call the store cell line right away. Calling is what counts."],
+  ackTitle:"Acknowledgement",ackText:"I have read and understood Vista Markets' attendance, punctuality and time-off rules. I agree to report to work on all scheduled shifts, be ready to work at my start time, request time off by the deadline, and call the store cell line as early as possible, preferably 2 hours ahead, if I will be late or absent. I understand that repeated absences or excessive tardiness may result in disciplinary action, up to and including termination.",
+  signLabel:"Type your full name to sign",signDate:"Date",errSign:"Type your full name exactly as you signed in.",signedBy:(n,d)=>`Signed by ${n} on ${d}.`,
+  done:"Sign and complete",errAck:"Check all three boxes first.",errQ:"Some answers aren't right yet. Read the explanation in orange and try again.",complete:"Done. The Day 2 video is unlocked."},
+ es:{eyebrow:"Paso 2 · Día 1",title:"Asistencia y días libres",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final. Tu gerente también lo repasará contigo.",
+  why:["Por qué importa","Cuando alguien llega tarde o no viene, una caja o mostrador se queda vacío y tus compañeros tienen que cubrirte. Llegar a tiempo es parte de atender bien al cliente."],
+  sched:["Tu horario",["La semana de trabajo es de domingo a sábado.","El horario se hace cada jueves para la semana que empieza el domingo siguiente.","Revísalo cada semana. Puede cambiar según las necesidades de la empresa, incluyendo noches, fines de semana, días festivos, otros turnos u otra tienda."]],
+  off:["Cómo pedir días libres",["Pídelos a tu gerente o supervisor designado por lo menos 7 días antes del jueves en que se hace el horario de esa semana.","No está aprobado hasta que tu gerente te lo confirme.","Las solicitudes después de la fecha límite dependen del personal disponible y pueden no aprobarse, excepto permisos protegidos por la ley."]],
+  exTitle:"Ejemplo para la próxima semana abierta",exDead:"Último día para pedir días libres",exMade:"El gerente hace el horario",exStart:"Empieza la semana de trabajo",exRule:"Fácil de recordar: pide a más tardar el jueves 10 días antes de que empiece la semana.",next:"Siguiente →",prev:"← Atrás",count:(i,n)=>`${i} de ${n}`,
+  call:["¿Vas a llegar tarde o no puedes venir?",["Llama al celular de la tienda por lo menos 2 horas antes de tu turno cuando sea posible.","Llama. Mandarle mensaje a un compañero o al chat de grupo no cuenta.","Di tu nombre, departamento, horario, qué pasa y cuándo crees que vas a regresar."]],
+  phoneLabel:"Celular de la tienda",phoneNone:"Tu gerente te dará este número en tu primer día.",phoneSave:"Guárdalo en tu celular ahora.",
+  ready:["Listo para trabajar a tu hora de entrada","A tu hora de entrada ya estás registrado, con uniforme completo, zapatos antiderrapantes, el equipo de protección requerido, y en tu estación listo para trabajar. Llegar a la puerta a tu hora de entrada es llegar tarde."],
+  disc:["Ausencias injustificadas",[["1.ª","Amonestación verbal, documentada en tu expediente"],["2.ª","Amonestación por escrito"],["Más de 2","Medidas disciplinarias adicionales, hasta e incluyendo el despido"]],"Si nos llamas, trabajamos contigo."],
+  checkTitle:"Revisa y firma",acks:["Sé que el horario se hace cada jueves.","Sé cómo y cuándo pedir días libres.","Sé que debo llamar al celular de la tienda si llego tarde o no puedo venir."],
+  q1:["¿Cuándo se hace el horario semanal?",["Un día antes de que empiece la semana","Cada jueves, para la semana que empieza el domingo","Una vez al mes"],1,"El horario se hace cada jueves para la semana que empieza el domingo."],
+  q2:d=>[`Quieres el ${d.sat} libre. ¿Cuál es el último día para pedirlo?`,[d.dead,d.made,d.fri],0,`Pídelo a más tardar el ${d.dead}, 7 días antes del jueves en que se hace el horario de esa semana.`],
+  q3:["Te despiertas enfermo una hora antes de tu turno. ¿Qué haces?",["Le mando mensaje a un compañero para que le diga al gerente","Llamo de inmediato al celular de la tienda","Espero y lo explico en mi siguiente turno"],1,"Llama de inmediato al celular de la tienda. Lo que cuenta es llamar."],
+  ackTitle:"Reconocimiento",ackText:"He leído y entendido las reglas de asistencia, puntualidad y días libres de Vista Markets. Acepto presentarme a todos mis turnos programados, estar listo para trabajar a mi hora de entrada, pedir días libres antes de la fecha límite y llamar al celular de la tienda lo antes posible, de preferencia 2 horas antes, si voy a llegar tarde o faltar. Entiendo que las ausencias repetidas o la impuntualidad excesiva pueden dar lugar a medidas disciplinarias, hasta e incluyendo el despido.",
+  signLabel:"Escribe tu nombre completo para firmar",signDate:"Fecha",errSign:"Escribe tu nombre completo tal como lo pusiste al entrar.",signedBy:(n,d)=>`Firmado por ${n} el ${d}.`,
+  done:"Firmar y completar",errAck:"Marca las tres casillas primero.",errQ:"Algunas respuestas todavía no son correctas. Lee la explicación en naranja e intenta de nuevo.",complete:"Listo. El video del Día 2 ya está abierto."}
+};
+function exampleDates(){
+  const now=new Date();const d0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const add=n=>{const x=new Date(d0);x.setDate(d0.getDate()+n);return x};
+  const toThu=(4-d0.getDay()+7)%7;
+  const fm=(x,o)=>x.toLocaleDateString(lang==="es"?"es-MX":"en-US",o||{weekday:"long",month:"long",day:"numeric"});
+  const dead=add(toThu),made=add(toThu+7),start=add(toThu+10),end=add(toThu+16),fri=add(toThu+15);
+  return {startFull:fm(start),dead:fm(dead),made:fm(made),fri:fm(fri),sat:fm(end),week:`${fm(start,{month:"long",day:"numeric"})} – ${fm(end,{month:"long",day:"numeric"})}`};
+}
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function sectionList(title,items){const sec=el("section");sec.append(el("h3",null,title));const ul=el("ul");items.forEach(i=>ul.append(el("li",null,i)));sec.append(ul);return sec}
+function openReading(){
+  const a=ATT[lang],d=exampleDates();
+  $("t-back3").textContent=t().back;$("rd-eyebrow").textContent=a.eyebrow;$("rd-title").textContent=a.title;$("rd-lead").textContent=a.lead;
+  const body=$("rd-body");body.innerHTML="";
+  const sch=sectionList(a.sched[0],a.sched[1]);sch.insertBefore(el("p","muted",a.why[1]),sch.children[1]);body.append(sch);
+  const off=sectionList(a.off[0],a.off[1]);
+  const exh=el("p");exh.append(el("b",null,`${a.exTitle}: ${d.week}`));off.append(exh);
+  const tl=el("ol","tl");[[d.dead,a.exDead],[d.made,a.exMade],[d.startFull,a.exStart]].forEach(([dt,lbl])=>{const li=el("li");const tx=el("div");tx.append(el("b",null,dt),el("span","muted",lbl));li.append(tx);tl.append(li)});
+  off.append(tl,el("p","muted",a.exRule));body.append(off);
+  const call=sectionList(a.call[0],a.call[1]);
+  const ph=el("div","phone");const num=(CONFIG.STORE_PHONES||{})[me.store];
+  ph.append(el("span","eyebrow",`${a.phoneLabel} · ${me.store}`));
+  if(num){ph.append(el("strong",null,num),el("span","muted",a.phoneSave))}else ph.append(el("span",null,a.phoneNone));
+  call.append(ph);body.append(call);
+  const r=el("section");r.append(el("h3",null,a.ready[0]),el("p",null,a.ready[1]));body.append(r);
+  const ds=el("section");ds.append(el("h3",null,a.disc[0]));const tb=el("table","steps");a.disc[1].forEach(([n,x])=>{const tr=el("tr");tr.append(el("td",null,n),el("td",null,x));tb.append(tr)});ds.append(tb,el("p",null,a.disc[2]));body.append(ds);
+  // check
+  const ck=$("rd-check");ck.innerHTML="";const sec=el("section");sec.append(el("h3",null,a.checkTitle));
+  a.acks.forEach((txt,i)=>{const l=el("label","ackbox");l.htmlFor="ack"+i;const c=el("input");c.type="checkbox";c.id="ack"+i;l.append(c,el("span",null,txt));sec.append(l)});
+  [a.q1,a.q2(d),a.q3].forEach((q,qi)=>{
+    const fs=el("fieldset");fs.style.cssText="border:0;margin:8px 0 0;padding:0;display:grid;gap:6px";
+    fs.append(el("legend",null,`${qi+1}. ${q[0]}`));fs.querySelector("legend").style.fontWeight="800";
+    q[1].forEach((o,oi)=>{const id=`rq${qi}o${oi}`;const l=el("label","opt");l.htmlFor=id;const r=el("input");r.type="radio";r.name="rq"+qi;r.id=id;r.value=oi;l.append(r,el("span",null,o));fs.append(l)});
+    const fb=el("p","fb");fb.id="rqfb"+qi;fb.hidden=true;fs.append(fb);fs.dataset.a=q[2];fs.dataset.why=q[3];fs.id="rqfs"+qi;sec.append(fs);
+  });
+  ck.append(sec);
+  const ak=el("section");ak.append(el("h3",null,a.ackTitle));
+  const box=el("div","phone");box.style.borderStyle="solid";box.append(el("p",null,a.ackText));ak.append(box);
+  const lb=el("label");lb.htmlFor="rd-sign";lb.append(el("span",null,a.signLabel));const inp=el("input");inp.id="rd-sign";inp.autocomplete="name";lb.append(inp);
+  const dt=el("p","muted",`${a.signDate}: ${new Date().toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})}`);
+  ak.append(lb,dt);ck.append(ak);
+  $("rd-err").hidden=true;$("rd-done").textContent=a.done;
+  const fin=isDone("attendance");$("rd-complete").textContent=fin?`${a.signedBy(me.name,new Date(progress.attendance.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"}))} ${a.complete}`:a.complete;
+  rdPages=[...body.children];rdTotal=rdPages.length+1;
+  $("rd-prev").textContent=a.prev;$("rd-next").textContent=a.next;
+  $("rd-bar").innerHTML="";for(let i=0;i<rdTotal;i++)$("rd-bar").append(el("i"));
+  show("v-read");goPage(0);
+}
+let rdPages=[],rdTotal=6,rdPage=0;
+function goPage(i){
+  const a=ATT[lang],fin=isDone("attendance"),last=i===rdTotal-1;rdPage=i;
+  rdPages.forEach((pg,j)=>pg.hidden=j!==i);
+  $("rd-check").hidden=!last||fin;$("rd-done").hidden=!last||fin;$("rd-complete").hidden=!(last&&fin);
+  $("rd-nextstep").hidden=true;if(last&&fin)offerNext("attendance",$("rd-nextstep"),false);
+  $("rd-next").hidden=last;$("rd-prev").disabled=i===0;
+  $("rd-lead").hidden=i!==0;$("rd-err").hidden=true;
+  $("rd-count").textContent=a.count(i+1,rdTotal);
+  [...$("rd-bar").children].forEach((b,j)=>b.classList.toggle("on",j<=i));
+  window.scrollTo(0,0);
+}
+$("rd-next").addEventListener("click",()=>goPage(Math.min(rdPage+1,rdTotal-1)));
+$("rd-prev").addEventListener("click",()=>goPage(Math.max(rdPage-1,0)));
+$("t-back3").addEventListener("click",()=>{renderCourse();show("v-course")});
+$("rd-done").addEventListener("click",async()=>{
+  const a=ATT[lang];const err=$("rd-err");
+  if(![0,1,2].every(i=>$("ack"+i).checked)){err.textContent=a.errAck;err.hidden=false;return}
+  let ok=true;
+  [0,1,2].forEach(qi=>{const fs=$("rqfs"+qi);const pick=fs.querySelector("input:checked");const fb=$("rqfb"+qi);
+    fs.querySelectorAll(".opt").forEach(o=>o.classList.remove("right","wrong"));
+    const good=pick&&+pick.value===+fs.dataset.a;
+    if(pick)pick.parentElement.classList.add(good?"right":"wrong");
+    fb.hidden=false;fb.className="fb "+(good?"ok":"no");fb.textContent=good?"✓":fs.dataset.why;if(!good)ok=false});
+  if(!ok){err.textContent=a.errQ;err.hidden=false;return}
+  const norm=x=>x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+  if(norm($("rd-sign").value)!==norm(me.name)){err.textContent=a.errSign;err.hidden=false;$("rd-sign").focus();return}
+  err.hidden=true;await record("attendance");
+  const today=new Date().toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  $("rd-done").hidden=true;$("rd-check").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent=`${a.signedBy(me.name,today)} ${a.complete}`;
+  offerNext("attendance",$("rd-nextstep"),true);$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});
+});
+
+/* ---------- player (no skip) ---------- */
+const v=$("video");let maxT=0,lastSave=0;
+function updatePlayBtn(){$("c-play").textContent=v.paused?"▶ "+t().play:"❚❚ "+t().pause;$("big-play").hidden=!v.paused}
+function openLesson(k){
+  current=k;const i=DAYS.indexOf(k);const s=t();
+  $("p-eyebrow").textContent=`${s.dayLabel} ${i+1}`;$("p-title").textContent=s.days[k];
+  $("p-done").hidden=!progress[k];$("p-done").textContent=s.done;$("p-next").hidden=true;if(progress[k])offerNext(k,$("p-next"),false);
+  const src=CONFIG.VIDEOS[lang][k];
+  v.pause();v.removeAttribute("src");
+  if(src){v.src=src;v.load()}else{$("p-done").hidden=false;$("p-done").textContent=s.soonMsg}
+  maxT=progress[k]?Infinity:(store.get(posKey(k))||0);
+  show("v-player");updatePlayBtn();drawTrack();window.scrollTo(0,0);
+}
+v.addEventListener("loadedmetadata",()=>{if(isFinite(maxT)&&maxT>0)v.currentTime=Math.min(maxT,v.duration-1);drawTrack()});
+v.addEventListener("timeupdate",()=>{
+  if(!v.seeking&&v.currentTime>maxT&&v.currentTime-maxT<2)maxT=v.currentTime;
+  if(isFinite(maxT)&&Date.now()-lastSave>3000){store.set(posKey(current),maxT);lastSave=Date.now()}
+  drawTrack();
+});
+v.addEventListener("seeking",()=>{if(isFinite(maxT)&&v.currentTime>maxT+0.75)v.currentTime=maxT});
+const SPEEDS=[1,1.25,1.5,0.75];let speed=1;
+const setSpeed=r=>{speed=r;v.playbackRate=r;$("c-speed").textContent=(r===1?"1":String(r))+"x"};
+v.addEventListener("ratechange",()=>{if(v.playbackRate!==speed)v.playbackRate=speed});
+v.addEventListener("loadeddata",()=>{v.playbackRate=speed});
+$("c-speed").addEventListener("click",()=>setSpeed(SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length]));
+$("track").addEventListener("click",e=>{const d=v.duration;if(!d)return;const r=$("track").getBoundingClientRect();
+  const want=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*d;const cap=isFinite(maxT)?maxT:d;v.currentTime=Math.min(want,cap)});
+v.addEventListener("play",updatePlayBtn);v.addEventListener("pause",updatePlayBtn);
+v.addEventListener("ended",async()=>{
+  if(!isFinite(maxT)||maxT>=v.duration-3){
+    if(!progress[current]){await record(current);store.del(posKey(current))}
+    maxT=Infinity;$("p-done").hidden=false;$("p-done").textContent=t().done;offerNext(current,$("p-next"),true);
+    if(v.webkitDisplayingFullscreen&&v.webkitExitFullscreen)v.webkitExitFullscreen();
+    if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  }
+});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&!v.paused)v.pause()});
+window.addEventListener("pagehide",()=>{if(!v.paused)v.pause();if(current&&isFinite(maxT))store.set(posKey(current),maxT)});
+function drawTrack(){
+  const d=v.duration||0,w=d?Math.min(isFinite(maxT)?maxT:d,d)/d*100:0,n=d?v.currentTime/d*100:0;
+  $("tr-watched").style.width=w+"%";$("tr-now").style.width=n+"%";
+  $("c-time").textContent=`${fmt(v.currentTime)} / ${fmt(d)}`;
+}
+const togglePlay=()=>{if(!v.src)return;v.paused?v.play().catch(()=>{}):v.pause()};
+$("c-play").addEventListener("click",togglePlay);$("big-play").addEventListener("click",togglePlay);v.addEventListener("click",togglePlay);
+$("c-back10").addEventListener("click",()=>{v.currentTime=Math.max(0,v.currentTime-10)});
+$("c-full").addEventListener("click",()=>{const box=$("vbox");
+  if(box.requestFullscreen)box.requestFullscreen().catch(()=>{if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()});
+  else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();});
+$("t-back").addEventListener("click",()=>{v.pause();if(isFinite(maxT))store.set(posKey(current),maxT);renderCourse();show("v-course")});
+
+/* ---------- quiz ---------- */
+function renderQuiz(){
+  const f=$("quiz-form"),keep={};f.querySelectorAll("input:checked").forEach(i=>keep[i.name]=i.value);f.innerHTML="";
+  QUIZ.forEach((q,qi)=>{
+    const wrap=document.createElement("div");wrap.className="q";
+    const fs=document.createElement("fieldset");const lg=document.createElement("legend");lg.textContent=`${qi+1}. ${q[lang][0]}`;fs.appendChild(lg);
+    q[lang][1].forEach((o,oi)=>{const id=`q${qi}o${oi}`;const l=document.createElement("label");l.className="opt";l.htmlFor=id;
+      const r=document.createElement("input");r.type="radio";r.name="q"+qi;r.id=id;r.value=oi;if(keep["q"+qi]==String(oi))r.checked=true;
+      const sp=document.createElement("span");sp.textContent=`${"abc"[oi]}) ${o}`;l.append(r,sp);fs.appendChild(l)});
+    wrap.appendChild(fs);f.appendChild(wrap);
+  });
+}
+function openQuiz(){renderQuiz();$("quiz-err").hidden=true;show("v-quiz");window.scrollTo(0,0)}
+$("t-back2").addEventListener("click",()=>{renderCourse();show("v-course")});
+$("t-submit").addEventListener("click",async()=>{
+  const f=$("quiz-form");const ans=QUIZ.map((q,qi)=>{const c=f.querySelector(`input[name=q${qi}]:checked`);return c?+c.value:null});
+  const left=ans.filter(a=>a===null).length;
+  if(left){$("quiz-err").textContent=t().errAll(left);$("quiz-err").hidden=false;return}
+  const score=ans.filter((a,i)=>a===QUIZ[i].a).length;
+  await record("quiz",score,QUIZ.length);
+  showResult(score,ans);
+});
+function showResult(score,ans){
+  const s=t(),pass=score>=CONFIG.PASS_SCORE;
+  $("r-eyebrow").textContent=pass?s.passEyebrow:s.failEyebrow;
+  $("r-score").textContent=`${score}/${QUIZ.length}`;$("r-score").style.color=pass?"var(--ok)":"var(--carrot)";
+  $("r-title").textContent=pass?s.passTitle:s.failTitle;$("r-lead").textContent=pass?s.passLead:s.failLead;
+  $("r-cert").hidden=!pass;
+  if(pass){$("cert-name").textContent=me.name;$("cert-meta").textContent=`${me.store} · ${new Date().toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})}`}
+  $("r-btn").textContent=pass?s.home:s.retake;
+  $("r-btn").onclick=()=>{if(pass){renderCourse();show("v-course")}else{markQuiz(ans);show("v-quiz");window.scrollTo(0,0)}};
+  show("v-result");window.scrollTo(0,0);
+}
+function markQuiz(ans){
+  renderQuiz();
+  QUIZ.forEach((q,qi)=>{const pick=ans[qi];const lbl=$(`q${qi}o${pick}`);if(lbl&&pick!==q.a)lbl.parentElement.classList.add("wrong");if(lbl)lbl.checked=false});
+}
+
+/* ---------- sign in ---------- */
+$("start-form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const name=$("f-name").value.trim(),date=$("f-date").value,st=$("f-store").value;
+  const err=$("start-err");
+  if(!name||!date||!st){err.textContent=t().errFill;err.hidden=false;return}
+  err.hidden=true;me={name,date,store:st,key:makeKey(name,st)};store.set("vt-me",me);
+  try{await loadProgress()}catch(x){err.textContent=t().errNet;err.hidden=false;return}
+  renderCourse();show("v-course");
+});
+$("t-signout").addEventListener("click",()=>{store.del("vt-me");me=null;progress={};const d=$("f-date").value;$("start-form").reset();$("f-date").value=d;show("v-start")});
+$("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
+$("demo-unlock").addEventListener("click",()=>{STEPS.filter(x=>x.type!=="quiz").forEach(x=>progress[x.k]=progress[x.k]||{at:new Date().toISOString()});store.set(progKey(),progress);renderCourse()});
+
+/* ---------- boot ---------- */
+applyText();
+(()=>{const n=new Date();$("f-date").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`})();
+(async()=>{
+  if(me){try{await loadProgress()}catch(x){}renderCourse();show("v-course")}else show("v-start");
+})();
+</script>
+</body>
+</html>

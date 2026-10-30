@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vista Training Report</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Vista Report">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: summary counts, filter bar, one wide scrollable table. */
+:root{
+  --paper:#F6F4FA; --surface:#FFFFFF; --ink:#1E1A24; --muted:#655E72; --line:#E2DDEA;
+  --brand:#834B9E; --brand-ink:#FFFFFF; --blue:#007BC4; --tag:#FEC938; --carrot:#F47321;
+  --ok:#23824F; --ok-bg:#E3F4EA; --warn:#9A5B00; --warn-bg:#FFF1DA;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif; --body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#141119; --surface:#1E1925; --ink:#F2EEF7; --muted:#A79FB4; --line:#332C3D;
+  --brand:#B686D6; --brand-ink:#1A0F22; --blue:#55B3EC; --carrot:#FF8A45;
+  --ok:#5DC98D; --ok-bg:#16301F; --warn:#F2B35B; --warn-bg:#33230F; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;display:grid;gap:18px}
+h1{font-family:var(--display);font-stretch:85%;font-weight:800;font-size:1.8rem;margin:0}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:14px}
+.login{max-width:420px}
+label{display:grid;gap:6px;font-weight:700;font-size:.9rem}
+input,select{font:16px var(--body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.btn{border:0;border-radius:10px;background:var(--brand);color:var(--brand-ink);font:800 .95rem var(--body);padding:11px 16px;cursor:pointer}
+.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.err{color:var(--carrot);font-weight:700}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:2rem;font-stretch:80%;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-weight:700;font-size:.85rem}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.filters label{min-width:150px}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--paper)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:800;font-size:.78rem}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.mid{background:var(--warn-bg);color:var(--warn)}
+.pill.none{background:var(--paper);color:var(--muted);border:1px solid var(--line)}
+.dash{color:var(--muted)}
+.fail{color:var(--carrot);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><img src="logo.png" alt="Vista Markets" width="111" height="46" style="height:46px;width:auto;background:#fff;border-radius:10px;padding:4px 8px"><div><div class="eyebrow">Managers</div><h1>Training report</h1></div></div>
+
+  <section id="v-login" class="panel login">
+    <p>Sign in with the manager login set up in Supabase.</p>
+    <form id="login-form" novalidate style="display:grid;gap:12px">
+      <label for="l-email">Email<input id="l-email" type="email" autocomplete="username"></label>
+      <label for="l-pass">Password<input id="l-pass" type="password" autocomplete="current-password"></label>
+      <p class="err" id="l-err" hidden></p>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <section id="v-report" hidden class="wrap" style="max-width:none">
+    <div class="stats">
+      <div class="stat"><b id="s-total">0</b><span>Employees started</span></div>
+      <div class="stat"><b id="s-done">0</b><span>Finished and passed</span></div>
+      <div class="stat"><b id="s-prog">0</b><span>Still in progress</span></div>
+      <div class="stat"><b id="s-fail">0</b><span>Failed quiz, need retake</span></div>
+    </div>
+    <div class="top">
+      <div class="filters">
+        <label for="f-store">Store<select id="f-store"><option value="">All stores</option></select></label>
+        <label for="f-status">Status<select id="f-status"><option value="">All</option><option value="done">Complete</option><option value="prog">In progress</option></select></label>
+        <label for="f-q">Search<input id="f-q" placeholder="Employee name"></label>
+      </div>
+      <div class="filters">
+        <button class="btn secondary" type="button" id="b-refresh">Refresh</button>
+        <button class="btn" type="button" id="b-csv">Download CSV</button>
+        <button class="btn secondary" type="button" id="b-out">Sign out</button>
+      </div>
+    </div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Employee</th><th>Start date</th><th>Store</th><th>Lang</th><th>Day 1</th><th>Attendance</th><th>Day 2</th><th>Day 3</th><th>Quiz (best)</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <p id="empty" class="dash" hidden>No employees match these filters yet.</p>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* Use the same two values as index.html */
+const SUPABASE_URL = "";
+const SUPABASE_ANON_KEY = "";
+const PASS_SCORE = 8;
+
+const $=id=>document.getElementById(id);
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let data=[];
+const d=s=>s?new Date(s).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+const sd=s=>{if(!s)return"—";const [y,mo,da]=s.split("-").map(Number);return new Date(y,mo-1,da).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})};
+
+async function load(){
+  const [{data:tr,error:e1},{data:ev,error:e2}]=await Promise.all([
+    sb.from("trainees").select("*"),
+    sb.from("training_events").select("*").order("completed_at")]);
+  if(e1||e2){$("rows").innerHTML="";$("empty").hidden=false;$("empty").textContent="Couldn't load the report. Check your internet and press Refresh.";return}
+  const by={};tr.forEach(t=>by[t.employee_no]={...t,day1:null,attendance:null,day2:null,day3:null,best:null,attempts:0});
+  ev.forEach(e=>{const r=by[e.employee_no];if(!r)return;
+    if(e.item==="quiz"){r.attempts++;if(!r.best||e.score>r.best.score)r.best=e}
+    else if(!r[e.item])r[e.item]=e.completed_at});
+  data=Object.values(by).map(r=>{
+    const passed=r.best&&r.best.score>=PASS_SCORE;
+    r.status=passed&&r.day1&&r.attendance&&r.day2&&r.day3?"done":"prog";
+    r.failed=!passed&&r.attempts>0;return r});
+  const stores=[...new Set(data.map(r=>r.store))].sort();
+  const sel=$("f-store"),cur=sel.value;sel.innerHTML='<option value="">All stores</option>';
+  stores.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;sel.appendChild(o)});sel.value=cur;
+  render();
+}
+function filtered(){
+  const st=$("f-store").value,ss=$("f-status").value,q=$("f-q").value.trim().toLowerCase();
+  return data.filter(r=>(!st||r.store===st)&&(!ss||r.status===ss)&&(!q||r.full_name.toLowerCase().includes(q)))
+    .sort((a,b)=>a.store.localeCompare(b.store)||a.full_name.localeCompare(b.full_name));
+}
+function render(){
+  const rows=filtered(),tb=$("rows");tb.innerHTML="";
+  $("s-total").textContent=rows.length;
+  $("s-done").textContent=rows.filter(r=>r.status==="done").length;
+  $("s-prog").textContent=rows.filter(r=>r.status==="prog").length;
+  $("s-fail").textContent=rows.filter(r=>r.failed).length;
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    const cell=(txt,cls)=>{const td=document.createElement("td");td.textContent=txt;if(cls)td.className=cls;tr.appendChild(td);return td};
+    cell(r.full_name);cell(sd(r.start_date));cell(r.store);cell(r.language.toUpperCase());
+    ["day1","attendance","day2","day3"].forEach(k=>cell(r[k]?d(r[k]):"—",r[k]?"":"dash"));
+    if(r.best)cell(`${r.best.score}/${r.best.total} · ${r.attempts} ${r.attempts===1?"try":"tries"}`,r.best.score>=PASS_SCORE?"":"fail");else cell("—","dash");
+    const td=document.createElement("td");const p=document.createElement("span");
+    p.className="pill "+(r.status==="done"?"ok":r.failed?"mid":"none");
+    p.textContent=r.status==="done"?"Complete":r.failed?"Needs retake":"In progress";td.appendChild(p);tr.appendChild(td);
+    tb.appendChild(tr);
+  });
+  $("empty").hidden=rows.length>0;$("empty").textContent="No employees match these filters yet.";
+}
+function csv(){
+  const head=["Name","Start date","Store","Language","Day 1","Attendance","Day 2","Day 3","Best quiz score","Quiz attempts","Status"];
+  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[head.map(esc).join(",")].concat(filtered().map(r=>[r.full_name,r.start_date||"",r.store,r.language,d(r.day1),d(r.attendance),d(r.day2),d(r.day3),r.best?`${r.best.score}/${r.best.total}`:"",r.attempts,r.status==="done"?"Complete":r.failed?"Needs retake":"In progress"].map(esc).join(",")));
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=`vista-training-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+$("login-form").addEventListener("submit",async e=>{
+  e.preventDefault();const err=$("l-err");err.hidden=true;
+  const {error}=await sb.auth.signInWithPassword({email:$("l-email").value.trim(),password:$("l-pass").value});
+  if(error){err.textContent="Email or password is wrong. Ask Miguel to reset it in Supabase.";err.hidden=false;return}
+  enter();
+});
+async function enter(){$("v-login").hidden=true;$("v-report").hidden=false;await load()}
+$("b-out").addEventListener("click",async()=>{await sb.auth.signOut();location.reload()});
+$("b-refresh").addEventListener("click",load);$("b-csv").addEventListener("click",csv);
+["f-store","f-status"].forEach(id=>$(id).addEventListener("change",render));$("f-q").addEventListener("input",render);
+sb.auth.getSession().then(({data})=>{if(data.session)enter()});
+</script>
+</body>
+</html>
