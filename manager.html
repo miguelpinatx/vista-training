@@ -43,7 +43,7 @@ input,select{font:16px var(--body);padding:10px 12px;border:1px solid var(--line
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .filters label{min-width:150px}
 .tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;min-width:900px}
+table{border-collapse:collapse;width:100%;min-width:1050px}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
 th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--paper)}
 .pill{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:800;font-size:.78rem}
@@ -52,6 +52,10 @@ th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mu
 .pill.none{background:var(--paper);color:var(--muted);border:1px solid var(--line)}
 .dash{color:var(--muted)}
 .fail{color:var(--carrot);font-weight:800}
+.code{font-family:ui-monospace,Menlo,monospace;font-weight:800;color:var(--brand)}
+.mini{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;font:700 .8rem var(--body);padding:6px 10px;cursor:pointer;min-height:34px}
+.mini.warn{border-color:var(--carrot);color:var(--carrot)}
+.mini:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -79,7 +83,7 @@ th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mu
       <div class="filters">
         <label for="f-store">Store<select id="f-store"><option value="">All stores</option></select></label>
         <label for="f-status">Status<select id="f-status"><option value="">All</option><option value="done">Complete</option><option value="prog">In progress</option></select></label>
-        <label for="f-q">Search<input id="f-q" placeholder="Employee name"></label>
+        <label for="f-q">Search<input id="f-q" placeholder="Name or certificate #"></label>
       </div>
       <div class="filters">
         <button class="btn secondary" type="button" id="b-refresh">Refresh</button>
@@ -88,7 +92,7 @@ th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mu
       </div>
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Employee</th><th>Start date</th><th>Store</th><th>Lang</th><th>Day 1</th><th>Attendance</th><th>Day 2</th><th>Day 3</th><th>Quiz (best)</th><th>Status</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Start date</th><th>Store</th><th>Day 1</th><th>Attendance</th><th>Day 2</th><th>Day 3</th><th>Quiz (best)</th><th>Certificate</th><th>Status</th><th>PIN</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
     <p id="empty" class="dash" hidden>No employees match these filters yet.</p>
@@ -98,8 +102,8 @@ th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mu
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* Use the same two values as index.html */
-const SUPABASE_URL = "";
-const SUPABASE_ANON_KEY = "";
+const SUPABASE_URL = "https://uplaxcwnhicggztytppt.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwbGF4Y3duaGljZ2d6dHl0cHB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjg3NjgsImV4cCI6MjEwODcwNDc2OH0.xECvTE9mgOKyN_lQhG1o1J-FMr9lfMypaOquCezhTtE";
 const PASS_SCORE = 8;
 
 const $=id=>document.getElementById(id);
@@ -110,16 +114,17 @@ const sd=s=>{if(!s)return"—";const [y,mo,da]=s.split("-").map(Number);return n
 
 async function load(){
   const [{data:tr,error:e1},{data:ev,error:e2}]=await Promise.all([
-    sb.from("trainees").select("*"),
-    sb.from("training_events").select("*").order("completed_at")]);
+    sb.from("training_trainees").select("trainee_key,full_name,store,start_date,locked_until,cert_code,completed_at"),
+    sb.from("training_events").select("trainee_key,item,score,total,completed_at").order("completed_at")]);
   if(e1||e2){$("rows").innerHTML="";$("empty").hidden=false;$("empty").textContent="Couldn't load the report. Check your internet and press Refresh.";return}
-  const by={};tr.forEach(t=>by[t.employee_no]={...t,day1:null,attendance:null,day2:null,day3:null,best:null,attempts:0});
-  ev.forEach(e=>{const r=by[e.employee_no];if(!r)return;
+  const by={};tr.forEach(t=>by[t.trainee_key]={...t,day1:null,attendance:null,day2:null,day3:null,best:null,attempts:0});
+  ev.forEach(e=>{const r=by[e.trainee_key];if(!r)return;
     if(e.item==="quiz"){r.attempts++;if(!r.best||e.score>r.best.score)r.best=e}
     else if(!r[e.item])r[e.item]=e.completed_at});
   data=Object.values(by).map(r=>{
     const passed=r.best&&r.best.score>=PASS_SCORE;
-    r.status=passed&&r.day1&&r.attendance&&r.day2&&r.day3?"done":"prog";
+    r.status=r.cert_code||(passed&&r.day1&&r.attendance&&r.day2&&r.day3)?"done":"prog";
+    r.locked=r.locked_until&&new Date(r.locked_until)>new Date();
     r.failed=!passed&&r.attempts>0;return r});
   const stores=[...new Set(data.map(r=>r.store))].sort();
   const sel=$("f-store"),cur=sel.value;sel.innerHTML='<option value="">All stores</option>';
@@ -128,7 +133,7 @@ async function load(){
 }
 function filtered(){
   const st=$("f-store").value,ss=$("f-status").value,q=$("f-q").value.trim().toLowerCase();
-  return data.filter(r=>(!st||r.store===st)&&(!ss||r.status===ss)&&(!q||r.full_name.toLowerCase().includes(q)))
+  return data.filter(r=>(!st||r.store===st)&&(!ss||r.status===ss)&&(!q||r.full_name.toLowerCase().includes(q)||(r.cert_code||"").toLowerCase().includes(q)))
     .sort((a,b)=>a.store.localeCompare(b.store)||a.full_name.localeCompare(b.full_name));
 }
 function render(){
@@ -140,20 +145,30 @@ function render(){
   rows.forEach(r=>{
     const tr=document.createElement("tr");
     const cell=(txt,cls)=>{const td=document.createElement("td");td.textContent=txt;if(cls)td.className=cls;tr.appendChild(td);return td};
-    cell(r.full_name);cell(sd(r.start_date));cell(r.store);cell(r.language.toUpperCase());
+    cell(r.full_name);cell(sd(r.start_date));cell(r.store);
     ["day1","attendance","day2","day3"].forEach(k=>cell(r[k]?d(r[k]):"—",r[k]?"":"dash"));
     if(r.best)cell(`${r.best.score}/${r.best.total} · ${r.attempts} ${r.attempts===1?"try":"tries"}`,r.best.score>=PASS_SCORE?"":"fail");else cell("—","dash");
+    if(r.cert_code){const c=cell("");const b=document.createElement("span");b.className="code";b.textContent=r.cert_code;c.append(b,document.createTextNode(" · "+d(r.completed_at)))}else cell("—","dash");
     const td=document.createElement("td");const p=document.createElement("span");
     p.className="pill "+(r.status==="done"?"ok":r.failed?"mid":"none");
     p.textContent=r.status==="done"?"Complete":r.failed?"Needs retake":"In progress";td.appendChild(p);tr.appendChild(td);
+    const pc=document.createElement("td");const rb=document.createElement("button");rb.type="button";rb.className="mini"+(r.locked?" warn":"");
+    rb.textContent=r.locked?"Locked · Reset PIN":"Reset PIN";
+    rb.addEventListener("click",async()=>{
+      if(rb.dataset.confirm!=="1"){rb.dataset.confirm="1";rb.className="mini warn";rb.textContent="Tap again to reset";setTimeout(()=>{if(rb.dataset.confirm==="1"){rb.dataset.confirm="";rb.className="mini";rb.textContent="Reset PIN"}},4000);return}
+      rb.disabled=true;const {error}=await sb.rpc("training_reset_pin",{p_key:r.trainee_key});
+      rb.textContent=error?"Couldn't reset":"PIN reset ✓";
+      if(!error){const n=document.createElement("div");n.className="dash";n.style.fontSize=".78rem";n.textContent="Have them tap Start training";pc.appendChild(n)}
+    });
+    pc.appendChild(rb);tr.appendChild(pc);
     tb.appendChild(tr);
   });
   $("empty").hidden=rows.length>0;$("empty").textContent="No employees match these filters yet.";
 }
 function csv(){
-  const head=["Name","Start date","Store","Language","Day 1","Attendance","Day 2","Day 3","Best quiz score","Quiz attempts","Status"];
+  const head=["Name","Start date","Store","Day 1","Attendance","Day 2","Day 3","Best quiz score","Quiz attempts","Certificate #","Completed","Status"];
   const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[head.map(esc).join(",")].concat(filtered().map(r=>[r.full_name,r.start_date||"",r.store,r.language,d(r.day1),d(r.attendance),d(r.day2),d(r.day3),r.best?`${r.best.score}/${r.best.total}`:"",r.attempts,r.status==="done"?"Complete":r.failed?"Needs retake":"In progress"].map(esc).join(",")));
+  const lines=[head.map(esc).join(",")].concat(filtered().map(r=>[r.full_name,r.start_date||"",r.store,d(r.day1),d(r.attendance),d(r.day2),d(r.day3),r.best?`${r.best.score}/${r.best.total}`:"",r.attempts,r.cert_code||"",r.completed_at?d(r.completed_at):"",r.status==="done"?"Complete":r.failed?"Needs retake":"In progress"].map(esc).join(",")));
   const blob=new Blob([lines.join("\n")],{type:"text/csv"});const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);a.download=`vista-training-${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }

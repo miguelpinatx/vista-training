@@ -135,6 +135,30 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
 .ackbox input{width:auto;margin-top:4px}
 .fb{font-size:.9rem;font-weight:700}
 .fb.ok{color:var(--ok)}.fb.no{color:var(--carrot)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:none;color:var(--muted);font:800 .95rem var(--body);padding:12px 8px;min-height:48px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
+.pin{font-size:1.4rem!important;letter-spacing:.5em;text-align:center;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:10px;font-weight:700;max-width:calc(100% - 32px);z-index:20}
+.certcard{background:#fff;color:#1E1A24;border-radius:18px;padding:16px 16px 14px;border:3px solid #834B9E;box-shadow:inset 0 0 0 6px #fff,inset 0 0 0 8px #FEC938;display:grid;gap:8px;text-align:center}
+.cc-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cc-top img{height:38px;width:auto}
+.cc-badge{font-family:var(--display);font-weight:800;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;background:#007BC4;color:#fff;padding:4px 10px;border-radius:99px}
+.cc-kicker{font-family:var(--display);font-weight:800;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:#834B9E;margin-top:2px}
+.cc-name{font-family:var(--display);font-weight:800;font-stretch:85%;font-size:1.85rem;line-height:1.05;text-wrap:balance;border-bottom:2px solid #FEC938;padding-bottom:6px}
+.cc-line{margin:0;color:#4b4555;font-weight:600;font-size:.92rem}
+.cc-steps{list-style:none;margin:0;padding:0;display:grid;gap:3px;text-align:left;justify-self:center}
+.cc-steps li{display:flex;gap:7px;align-items:center;font-weight:700;font-size:.86rem}
+.cc-steps li:before{content:"✓";display:inline-grid;place-content:center;width:17px;height:17px;border-radius:50%;background:#23824F;color:#fff;font-size:.65rem;flex:0 0 auto}
+.cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 0}
+.cc-grid div{background:#F6F4FA;border-radius:10px;padding:6px 8px}
+.cc-grid dt{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#655E72}
+.cc-grid dd{margin:1px 0 0;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.cc-code{font-family:ui-monospace,Menlo,monospace;color:#834B9E}
+body.certmode header.top,body.certmode #demo-banner{display:none!important}
+body.certmode{padding-block:12px 24px}
+#c-instr{padding:8px 12px;font-size:.88rem}
+@media (max-height:620px){.certcard{gap:5px;padding:12px}.cc-top img{height:30px}.cc-name{font-size:1.45rem}.cc-steps li{font-size:.8rem}.cc-line{font-size:.85rem}#c-instr{font-size:.8rem;padding:6px 10px}}
 .cert{border:2px dashed var(--brand);border-radius:var(--r);padding:20px;display:grid;gap:8px;text-align:center;background:var(--surface)}
 .cert .big{font-family:var(--display);font-weight:800;font-size:1.6rem;font-stretch:85%}
 @media (hover:hover){.lesson:not([aria-disabled="true"]):hover{border-color:var(--brand)}}
@@ -158,12 +182,21 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
     <div class="eyebrow" id="t-start-eyebrow"></div>
     <h1 id="t-start-title"></h1>
     <p class="muted" id="t-start-lead"></p>
+    <div class="seg" role="group" aria-label="Sign in">
+      <button type="button" id="mode-new" aria-pressed="true"></button>
+      <button type="button" id="mode-back" aria-pressed="false"></button>
+    </div>
     <form id="start-form" novalidate class="panel" style="padding:0;border:0;background:none">
       <label for="f-name"><span id="t-name"></span><input id="f-name" autocomplete="name" required></label>
       <div class="row2">
-        <label for="f-date"><span id="t-date"></span><input id="f-date" type="date" required></label>
+        <label for="f-date" id="w-date"><span id="t-date"></span><input id="f-date" type="date" required></label>
         <label for="f-store"><span id="t-store"></span><select id="f-store" required></select></label>
       </div>
+      <div class="row2">
+        <label for="f-pin"><span id="t-pin"></span><input id="f-pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" required></label>
+        <label for="f-pin2" id="w-pin2"><span id="t-pin2"></span><input id="f-pin2" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" required></label>
+      </div>
+      <p class="muted" id="pin-hint" style="font-size:.9rem"></p>
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
@@ -177,6 +210,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
         <button class="linkish" type="button" id="t-signout"></button>
       </div>
       <div class="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
+      <button class="btn" type="button" id="cert-open" hidden></button>
       <div class="lessons" id="lessons"></div>
       <p class="note" id="t-rules"></p>
       <button class="linkish" type="button" id="demo-unlock" hidden></button>
@@ -230,6 +264,29 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
     <button class="btn" type="button" id="t-submit"></button>
   </section>
 
+  <!-- CERTIFICATE -->
+  <section id="v-cert" hidden>
+    <div class="wrap" style="gap:14px">
+      <div class="banner" id="c-instr"></div>
+      <div class="certcard" id="certcard">
+        <div class="cc-top"><img src="logo.png" alt="Vista Markets" width="111" height="46"><span class="cc-badge" id="c-badge"></span></div>
+        <div class="cc-kicker" id="c-kicker"></div>
+        <div class="cc-name" id="c-name"></div>
+        <p class="cc-line" id="c-line"></p>
+        <ul class="cc-steps" id="c-steps"></ul>
+        <dl class="cc-grid">
+          <div><dt id="c-l-store"></dt><dd id="c-store"></dd></div>
+          <div><dt id="c-l-start"></dt><dd id="c-start"></dd></div>
+          <div><dt id="c-l-done"></dt><dd id="c-done"></dd></div>
+          <div><dt id="c-l-code"></dt><dd id="c-code" class="cc-code"></dd></div>
+        </dl>
+      </div>
+      <button class="btn secondary" type="button" id="c-home"></button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
   <!-- RESULT -->
   <section id="v-result" class="panel" hidden>
     <div class="eyebrow" id="r-eyebrow"></div>
@@ -250,8 +307,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
 /* ============ SETTINGS: edit these ============ */
 const CONFIG = {
   // Paste from Supabase > Project Settings > API. Leave blank to run in preview mode (saves on this device only).
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://uplaxcwnhicggztytppt.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwbGF4Y3duaGljZ2d6dHl0cHB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjg3NjgsImV4cCI6MjEwODcwNDc2OH0.xECvTE9mgOKyN_lQhG1o1J-FMr9lfMypaOquCezhTtE",
   STORES: ["Alameda","Central","Doniphan","Horizon","Montana","Piedras","Urban"],
   // Put each video file in the /videos folder and list it here. Blank = "coming soon".
   VIDEOS: {
@@ -267,7 +324,15 @@ const CONFIG = {
 const T = {
  en:{badge:"Training",startEyebrow:"New hire training",startTitle:"Welcome to the Vista team",
   startLead:"Watch three short videos, read the attendance and time-off rules, then take a 10-question quiz. Your trainer will check your results before you work on your own.",
-  name:"Full name",date:"Date",store:"Store",pickStore:"Choose your store",startBtn:"Start training",
+  name:"Full name",date:"Date",modeNew:"I'm new",modeBack:"I'm coming back",pin:"Create a 4-digit PIN",pinBack:"Your 4-digit PIN",pin2:"Type the PIN again",
+  pinHintNew:"Make up a PIN you'll remember. You'll use it with your name and store to come back for Day 2 and Day 3.",pinHintBack:"Forgot your PIN? Ask your manager to reset it, then tap I'm new to make a new one.",
+  backBtn:"Continue my training",errPin:"Your PIN must be 4 numbers.",errPin2:"The two PINs don't match.",
+  errExists:"You already started training. Enter your PIN to continue.",errNotFound:"We couldn't find you. Check that your name and store match what you used before.",
+  errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
+  errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
+  certOpen:"View my certificate",certInstr:"Take a screenshot of this certificate and send it to your manager.",certBadge:"Training",certKicker:"Certificate of Completion",
+  certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Started",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
+  certSteps:q=>["Customer Service","Attendance & Time Off","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
   errFill:"Fill in your name, the date and your store.",errNet:"Couldn't connect. Check your internet and try again.",
   courseEyebrow:"Your training",signout:"Not you? Sign out",
   meter:(d,t)=>`${d} of ${t} steps done`,
@@ -287,7 +352,15 @@ const T = {
   demoUnlock:"Preview tools: unlock all steps",soonMsg:"This video isn't uploaded yet."},
  es:{badge:"Capacitación",startEyebrow:"Capacitación para nuevos empleados",startTitle:"Bienvenido al equipo Vista",
   startLead:"Mira tres videos cortos, lee las reglas de asistencia y días libres, y luego contesta un examen de 10 preguntas. Tu entrenador revisará tus resultados antes de que trabajes solo.",
-  name:"Nombre completo",date:"Fecha",store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
+  name:"Nombre completo",date:"Fecha",modeNew:"Soy nuevo",modeBack:"Ya empecé",pin:"Crea un PIN de 4 números",pinBack:"Tu PIN de 4 números",pin2:"Escribe el PIN otra vez",
+  pinHintNew:"Inventa un PIN que recuerdes. Lo usarás con tu nombre y tienda para regresar el Día 2 y el Día 3.",pinHintBack:"¿Olvidaste tu PIN? Pide a tu gerente que lo restablezca y luego toca Empezar para crear uno nuevo.",
+  backBtn:"Continuar mi capacitación",errPin:"Tu PIN debe ser de 4 números.",errPin2:"Los dos PIN no coinciden.",
+  errExists:"Ya empezaste tu capacitación. Toca Continuar y escribe tu PIN.",errNotFound:"No te encontramos. Revisa que tu nombre y tienda sean los mismos que usaste antes.",
+  errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
+  errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
+  certOpen:"Ver mi certificado",certInstr:"Toma una captura de pantalla de este certificado y mándasela a tu gerente.",certBadge:"Capacitación",certKicker:"Certificado de terminación",
+  certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Inicio",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
+  certSteps:q=>["Servicio al cliente","Asistencia y días libres","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
   errFill:"Escribe tu nombre, la fecha y tu tienda.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
   courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
   meter:(d,t)=>`${d} de ${t} pasos completos`,
@@ -330,7 +403,9 @@ const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_A
 
 const SPANISH_ON=false;   // turn on when the Spanish videos are ready
 let lang=SPANISH_ON?(store.get("vt-lang")||"en"):"en";
-let me=store.get("vt-me");            // {name,date,store,key}
+const ss={get(k){try{return JSON.parse(sessionStorage.getItem(k))}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+store.del("vt-me");                   // older versions remembered sign-in on the device
+let me=ss.get("vt-sess");             // {name,date,store,key,pin,cert:{code,at}} for this browser session only
 const makeKey=(n,st)=>n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()+"|"+st;
 if(me&&!me.key)me=null;               // older saved sign-in without a key
 const fmtDate=iso=>{if(!iso)return"";const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})};
@@ -339,7 +414,7 @@ let current=null;                     // lesson key in player
 
 const t=()=>T[lang];
 let advTimer=null;const clearAdvance=()=>{if(advTimer){clearInterval(advTimer);advTimer=null}};
-const show=v=>{clearAdvance();["v-start","v-course","v-player","v-read","v-quiz","v-result"].forEach(id=>$(id).hidden=id!==v)};
+const show=v=>{clearAdvance();document.body.classList.toggle("certmode",v==="v-cert");["v-start","v-course","v-player","v-read","v-quiz","v-result","v-cert"].forEach(id=>$(id).hidden=id!==v)};
 function stepName(stp){const s=t();return stp.type==="quiz"?s.quizName:stp.type==="read"?s.attName:s.days[stp.k]}
 function openStep(stp){if(!stp){renderCourse();show("v-course");return}
   if(stp.type==="quiz")openQuiz();else if(stp.type==="read")openReading();
@@ -356,27 +431,57 @@ const progKey=()=>"vt-prog-"+(me?me.key:"");
 const posKey=k=>`vt-pos-${me.key}-${k}-${lang}`;
 
 /* ---------- data ---------- */
+function toast(msg){const el=$("toast");el.textContent=msg;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,5000)}
+function applyState(d){
+  const p={};
+  (d.events||[]).forEach(r=>{
+    if(r.item==="quiz"){const prev=p.quiz;if(!prev||r.score>prev.score)p.quiz={score:r.score,total:r.total,passed:r.score>=CONFIG.PASS_SCORE,at:r.at}}
+    else if(!p[r.item])p[r.item]={at:r.at};
+  });
+  progress=p;
+  if(d.start_date)me.date=d.start_date;
+  if(d.name)me.name=d.name;
+  me.cert=d.cert_code?{code:d.cert_code,at:d.completed_at}:null;
+  ss.set("vt-sess",me);store.set(progKey(),progress);
+}
+/* Preview mode (no Supabase): same behavior, saved on this device only. */
+const local={
+  users(){return store.get("vt-users")||{}},
+  save(u){store.set("vt-users",u)},
+  state(k){const u=this.users()[k];return u?{ok:true,name:u.name,store:u.store,start_date:u.date,cert_code:u.cert||null,completed_at:u.certAt||null,events:u.events||[]}:null},
+  register(k,name,st,date,pin){const u=this.users();if(u[k]&&u[k].pin)return{ok:false,error:"exists"};u[k]={...(u[k]||{events:[]}),name,store:st,date,pin};this.save(u);return this.state(k)},
+  login(k,pin){const u=this.users()[k];if(!u)return{ok:false,error:"not_found"};if(!u.pin)return{ok:false,error:"no_pin"};if(u.pin!==pin)return{ok:false,error:"wrong"};return this.state(k)},
+  record(k,pin,item,score,total){const all=this.users(),u=all[k];if(!u||u.pin!==pin)return{ok:false,error:"wrong"};
+    u.events=u.events||[];if(item==="quiz"||!u.events.some(e=>e.item===item))u.events.push({item,score,total,at:new Date().toISOString()});
+    const done=["day1","attendance","day2","day3"].every(i=>u.events.some(e=>e.item===i))&&u.events.some(e=>e.item==="quiz"&&e.score>=CONFIG.PASS_SCORE);
+    if(done&&!u.cert){u.cert="VT-"+Math.random().toString(16).slice(2,8).toUpperCase();u.certAt=new Date().toISOString()}
+    this.save(all);return this.state(k)}
+};
+async function api(fn,args){
+  if(!LIVE){
+    if(fn==="training_register")return local.register(args.p_key,args.p_name,args.p_store,args.p_start_date,args.p_pin);
+    if(fn==="training_login")return local.login(args.p_key,args.p_pin);
+    if(fn==="training_record")return local.record(args.p_key,args.p_pin,args.p_item,args.p_score,args.p_total);
+  }
+  const {data,error}=await sb.rpc(fn,args);
+  if(error)throw error;
+  return data;
+}
 async function loadProgress(){
   progress=store.get(progKey())||{};
-  if(!LIVE)return;
-  const {data,error}=await sb.rpc("get_progress",{p_employee_no:me.key});
-  if(error)throw error;
-  const p={};
-  (data||[]).forEach(r=>{
-    if(r.item==="quiz"){const prev=p.quiz;const passed=r.score>=CONFIG.PASS_SCORE;if(!prev||r.score>prev.score)p.quiz={score:r.score,total:r.total,passed,at:r.completed_at}}
-    else p[r.item]={at:r.completed_at};
-  });
-  progress=p;store.set(progKey(),p);
+  const d=await api("training_login",{p_key:me.key,p_pin:me.pin});
+  if(d&&d.ok)applyState(d);
+  return d;
 }
 async function record(item,score=null,total=null){
   const at=new Date().toISOString();
   if(item==="quiz"){const prev=progress.quiz;if(!prev||score>prev.score)progress.quiz={score,total,passed:score>=CONFIG.PASS_SCORE,at}}
   else progress[item]={at};
   store.set(progKey(),progress);
-  if(LIVE){
-    const {error}=await sb.rpc("record_completion",{p_employee_no:me.key,p_full_name:me.name,p_store:me.store,p_start_date:me.date,p_language:lang,p_item:item,p_score:score,p_total:total});
-    if(error)console.error(error);
-  }
+  try{
+    const d=await api("training_record",{p_key:me.key,p_pin:me.pin,p_item:item,p_score:score,p_total:total,p_language:lang});
+    if(d&&d.ok)applyState(d);else toast(t().errSave);
+  }catch(e){console.error(e);toast(t().errSave)}
 }
 
 /* ---------- text ---------- */
@@ -386,7 +491,7 @@ function applyText(){
   const s=t();
   const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
   set("t-badge",s.badge);set("t-start-eyebrow",s.startEyebrow);set("t-start-title",s.startTitle);set("t-start-lead",s.startLead);
-  set("t-name",s.name);set("t-date",s.date);set("t-store",s.store);set("t-start-btn",s.startBtn);
+  set("t-name",s.name);set("t-date",s.date);set("t-store",s.store);set("mode-new",s.modeNew);set("mode-back",s.modeBack);set("t-pin2",s.pin2);setMode(mode);
   set("t-course-eyebrow",s.courseEyebrow);set("t-signout",s.signout);set("t-rules",s.rules);
   set("t-back",s.back);set("t-back2",s.back);set("c-back10",s.back10);set("c-full",s.full);set("t-noskip",s.noskip);
   set("t-quiz-eyebrow",s.quizEyebrow);set("t-quiz-title",s.quizTitle);set("t-quiz-lead",s.quizLead);set("t-submit",s.submit);
@@ -414,6 +519,7 @@ function renderCourse(){
   $("who-meta").textContent=`${me.store} · ${fmtDate(me.date)}`;
   const done=STEPS.filter(x=>isDone(x.k)).length;
   $("meter-fill").style.width=(done/STEPS.length*100)+"%";$("meter-text").textContent=s.meter(done,STEPS.length);
+  const cb=$("cert-open");cb.hidden=!me.cert;cb.textContent="🎓 "+s.certOpen;cb.onclick=openCert;
   const box=$("lessons");box.innerHTML="";
   STEPS.forEach((stp,i)=>{
     const st=stepState(i);const isQuiz=stp.type==="quiz";
@@ -624,7 +730,10 @@ $("t-submit").addEventListener("click",async()=>{
   const left=ans.filter(a=>a===null).length;
   if(left){$("quiz-err").textContent=t().errAll(left);$("quiz-err").hidden=false;return}
   const score=ans.filter((a,i)=>a===QUIZ[i].a).length;
+  $("t-submit").disabled=true;
   await record("quiz",score,QUIZ.length);
+  $("t-submit").disabled=false;
+  if(score>=CONFIG.PASS_SCORE&&me.cert){openCert();return}
   showResult(score,ans);
 });
 function showResult(score,ans){
@@ -643,25 +752,72 @@ function markQuiz(ans){
   QUIZ.forEach((q,qi)=>{const pick=ans[qi];const lbl=$(`q${qi}o${pick}`);if(lbl&&pick!==q.a)lbl.parentElement.classList.add("wrong");if(lbl)lbl.checked=false});
 }
 
+/* ---------- certificate ---------- */
+function openCert(){
+  const s=t(),c=me.cert;if(!c)return;
+  const best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
+  const fdate=x=>new Date(x).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  $("c-instr").textContent=s.certInstr;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
+  $("c-name").textContent=me.name;$("c-line").textContent=s.certLine;
+  const ul=$("c-steps");ul.innerHTML="";s.certSteps(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
+  $("c-l-store").textContent=s.certStore;$("c-store").textContent=me.store;
+  $("c-l-start").textContent=s.certStart;$("c-start").textContent=fmtDate(me.date);
+  $("c-l-done").textContent=s.certDone;$("c-done").textContent=fdate(c.at);
+  $("c-l-code").textContent=s.certCode;$("c-code").textContent=c.code;
+  $("c-home").textContent=s.certHome;
+  show("v-cert");window.scrollTo(0,0);
+}
+$("c-home").addEventListener("click",()=>{renderCourse();show("v-course")});
+
 /* ---------- sign in ---------- */
+let mode="new";
+function setMode(m){
+  mode=m;const s=t(),isNew=m==="new";
+  $("mode-new").setAttribute("aria-pressed",isNew);$("mode-back").setAttribute("aria-pressed",!isNew);
+  $("w-date").hidden=!isNew;$("w-pin2").hidden=!isNew;
+  $("t-pin").textContent=isNew?s.pin:s.pinBack;$("pin-hint").textContent=isNew?s.pinHintNew:s.pinHintBack;
+  $("f-pin").autocomplete=isNew?"new-password":"current-password";
+  $("t-start-btn").textContent=isNew?s.startBtn:s.backBtn;$("start-err").hidden=true;
+}
+$("mode-new").addEventListener("click",()=>setMode("new"));
+$("mode-back").addEventListener("click",()=>setMode("back"));
+["f-pin","f-pin2"].forEach(id=>$(id).addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)}));
 $("start-form").addEventListener("submit",async e=>{
   e.preventDefault();
-  const name=$("f-name").value.trim(),date=$("f-date").value,st=$("f-store").value;
-  const err=$("start-err");
-  if(!name||!date||!st){err.textContent=t().errFill;err.hidden=false;return}
-  err.hidden=true;me={name,date,store:st,key:makeKey(name,st)};store.set("vt-me",me);
-  try{await loadProgress()}catch(x){err.textContent=t().errNet;err.hidden=false;return}
-  renderCourse();show("v-course");
+  const s=t(),err=$("start-err"),fail=m=>{err.textContent=m;err.hidden=false};
+  const name=$("f-name").value.trim().replace(/\s+/g," "),date=$("f-date").value,st=$("f-store").value,pin=$("f-pin").value;
+  if(!name||!st||(mode==="new"&&!date))return fail(s.errFill);
+  if(!/^\d{4}$/.test(pin))return fail(s.errPin);
+  if(mode==="new"&&pin!==$("f-pin2").value)return fail(s.errPin2);
+  err.hidden=true;const btn=$("t-start-btn");btn.disabled=true;
+  const key=makeKey(name,st);
+  try{
+    const d=mode==="new"
+      ?await api("training_register",{p_key:key,p_name:name,p_store:st,p_start_date:date,p_pin:pin,p_language:lang})
+      :await api("training_login",{p_key:key,p_pin:pin});
+    if(!d||!d.ok){
+      const map={exists:s.errExists,not_found:s.errNotFound,wrong:s.errWrong,locked:s.errLocked,no_pin:s.errNoPin,bad_pin:s.errPin,missing:s.errFill};
+      if(d&&d.error==="exists")setMode("back");
+      return fail(map[d&&d.error]||s.errNet);
+    }
+    me={name,date,store:st,key,pin};
+    applyState(d);
+    $("f-pin").value="";$("f-pin2").value="";
+    renderCourse();show("v-course");window.scrollTo(0,0);
+  }catch(x){console.error(x);fail(s.errNet)}
+  finally{btn.disabled=false}
 });
-$("t-signout").addEventListener("click",()=>{store.del("vt-me");me=null;progress={};const d=$("f-date").value;$("start-form").reset();$("f-date").value=d;show("v-start")});
+$("t-signout").addEventListener("click",()=>{ss.del("vt-sess");me=null;progress={};const d=$("f-date").value;$("start-form").reset();$("f-date").value=d;setMode("back");show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
-$("demo-unlock").addEventListener("click",()=>{STEPS.filter(x=>x.type!=="quiz").forEach(x=>progress[x.k]=progress[x.k]||{at:new Date().toISOString()});store.set(progKey(),progress);renderCourse()});
+$("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
 
 /* ---------- boot ---------- */
 applyText();
 (()=>{const n=new Date();$("f-date").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`})();
 (async()=>{
-  if(me){try{await loadProgress()}catch(x){}renderCourse();show("v-course")}else show("v-start");
+  if(me&&me.pin){try{const d=await loadProgress();if(d&&d.ok){renderCourse();show("v-course");return}}catch(x){}
+    ss.del("vt-sess");me=null}
+  show("v-start");
 })();
 </script>
 </body>
