@@ -135,6 +135,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
 .ackbox input{width:auto;margin-top:4px}
 .fb{font-size:.9rem;font-weight:700}
 .fb.ok{color:var(--ok)}.fb.no{color:var(--carrot)}
+.mgrbox{gap:12px;border:1px dashed var(--line);border-radius:12px;padding:14px;background:var(--paper)}
+.banner.mgr{border-style:dashed}
 .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
 .seg button{border:0;background:none;color:var(--muted);font:800 .95rem var(--body);padding:12px 8px;min-height:48px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
@@ -200,6 +202,13 @@ body.certmode{padding-block:12px 24px}
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
+    <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Manager? Open manager mode</button>
+    <form id="mgr-form" novalidate class="panel mgrbox" hidden>
+      <label for="m-pin"><span>Manager PIN</span><input id="m-pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" required></label>
+      <p class="muted" style="font-size:.9rem">Opens every step so you can show the training. Videos can be skipped and nothing is saved.</p>
+      <p class="err" id="mgr-err" hidden></p>
+      <button class="btn" type="submit" id="mgr-btn">Open manager mode</button>
+    </form>
   </section>
 
   <!-- COURSE -->
@@ -209,7 +218,8 @@ body.certmode{padding-block:12px 24px}
         <div><div class="eyebrow" id="t-course-eyebrow"></div><h1 id="who-name"></h1><p class="muted" id="who-meta"></p></div>
         <button class="linkish" type="button" id="t-signout"></button>
       </div>
-      <div class="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
+      <div class="banner mgr" id="mgr-banner" hidden>Manager mode: every step is open, videos can be skipped, and nothing is saved.</div>
+      <div class="meter" id="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
       <button class="btn" type="button" id="cert-open" hidden></button>
       <div class="lessons" id="lessons"></div>
       <p class="note" id="t-rules"></p>
@@ -229,6 +239,7 @@ body.certmode{padding-block:12px 24px}
     <div class="ctrls">
       <button class="btn" type="button" id="c-play"></button>
       <button class="btn secondary" type="button" id="c-back10"></button>
+      <button class="btn secondary" type="button" id="c-fwd10" hidden>10 sec ⟳</button>
       <button class="btn secondary" type="button" id="c-speed" aria-label="Playback speed">1x</button>
       <button class="btn secondary" type="button" id="c-full"></button>
       <span class="time" id="c-time">0:00 / 0:00</span>
@@ -317,7 +328,9 @@ const CONFIG = {
   },
   // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
   STORE_PHONES: { Alameda:"", Central:"", Doniphan:"", Horizon:"", Montana:"", Piedras:"", Urban:"" },
-  PASS_SCORE: 8
+  PASS_SCORE: 8,
+  // Manager mode: SHA-256 of the 4-digit manager PIN (opens everything, saves nothing).
+  MANAGER_PIN_SHA256: "d5e1986576c827e9402cf13e76958eabaadbba61b940154eb84bdef638cc19e6"
 };
 /* ============================================== */
 
@@ -381,7 +394,7 @@ const T = {
 };
 
 const QUIZ=[
- {en:["What is Vista's Golden Rule?",["The customer is always right","Never leave a customer unacknowledged","Finish your task first"]],es:["¿Cuál es la Regla de Oro de Vista?",["El cliente siempre tiene la razón","Nunca dejes a un cliente sin reconocer","Termina tu tarea primero"]],a:1},
+ {en:["What is Vista's Golden Rule?",["Help customers only when they ask for help","Never leave a customer unacknowledged","Finish your task first"]],es:["¿Cuál es la Regla de Oro de Vista?",["Ayuda a los clientes solo cuando te pidan ayuda","Nunca dejes a un cliente sin reconocer","Termina tu tarea primero"]],a:1},
  {en:["A customer asks where the tortillas are. You should:",["Point to the aisle","Say \"aisle 4\"","Walk them there"]],es:["Un cliente pregunta dónde están las tortillas. Debes:",["Señalar el pasillo","Decir \"pasillo 4\"","Acompañarlo hasta ahí"]],a:2},
  {en:["A customer is upset about a product. The first step is:",["Explain it's not your fault","Listen without interrupting","Call the vendor"]],es:["Un cliente está molesto por un producto. El primer paso es:",["Explicar que no es tu culpa","Escuchar sin interrumpir","Llamar al proveedor"]],a:1},
  {en:["The danger zone is:",["0°F–32°F","41°F–135°F","135°F–165°F"]],es:["La zona de peligro es:",["0°F–32°F","41°F–135°F","135°F–165°F"]],a:1},
@@ -395,6 +408,7 @@ const QUIZ=[
 
 const DAYS=["day1","day2","day3"];
 const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"read"},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
+const isMgr=()=>!!(me&&me.manager);
 const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
 const $=id=>document.getElementById(id);
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
@@ -474,6 +488,7 @@ async function loadProgress(){
   return d;
 }
 async function record(item,score=null,total=null){
+  if(isMgr())return;
   const at=new Date().toISOString();
   if(item==="quiz"){const prev=progress.quiz;if(!prev||score>prev.score)progress.quiz={score,total,passed:score>=CONFIG.PASS_SCORE,at}}
   else progress[item]={at};
@@ -507,6 +522,7 @@ function setLang(l){lang=l;store.set("vt-lang",l);applyText();if(!$("v-course").
 /* ---------- course ---------- */
 function stepState(i){
   const st=STEPS[i];
+  if(isMgr())return st.type==="video"&&!CONFIG.VIDEOS[lang][st.k]?"soon":"open";
   if(st.k==="quiz"){if(isDone("quiz"))return "passed";if(!STEPS.slice(0,i).every(x=>isDone(x.k)))return "locked";return progress.quiz?"retake":"next"}
   if(isDone(st.k))return "done";
   if(i>0&&!isDone(STEPS[i-1].k))return "locked";
@@ -515,16 +531,19 @@ function stepState(i){
 }
 function renderCourse(){
   const s=t();
+  const mg=isMgr();
   $("who-name").textContent=me.name;
-  $("who-meta").textContent=`${me.store} · ${fmtDate(me.date)}`;
+  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${fmtDate(me.date)}`;
+  $("mgr-banner").hidden=!mg;$("meter").hidden=mg;$("t-rules").hidden=mg;
+  $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Exit manager mode":s.signout;
   const done=STEPS.filter(x=>isDone(x.k)).length;
   $("meter-fill").style.width=(done/STEPS.length*100)+"%";$("meter-text").textContent=s.meter(done,STEPS.length);
-  const cb=$("cert-open");cb.hidden=!me.cert;cb.textContent="🎓 "+s.certOpen;cb.onclick=openCert;
+  const cb=$("cert-open");cb.hidden=!me.cert||mg;cb.textContent="🎓 "+s.certOpen;cb.onclick=openCert;
   const box=$("lessons");box.innerHTML="";
   STEPS.forEach((stp,i)=>{
     const st=stepState(i);const isQuiz=stp.type==="quiz";
     const b=document.createElement("button");b.type="button";b.className="lesson";
-    const open=st==="next"||st==="done"||st==="retake"||st==="passed";
+    const open=st==="open"||st==="next"||st==="done"||st==="retake"||st==="passed";
     if(!open)b.setAttribute("aria-disabled","true");
     const tag=document.createElement("div");tag.className="tag";
     tag.innerHTML=`<small></small><strong>${isQuiz?"✓":i+1}</strong>`;
@@ -536,7 +555,7 @@ function renderCourse(){
     else if(stp.type==="read"){h.textContent=s.attName;sub.textContent=`${s.dayLabel} 1 · ${s.readMin}`}
     else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`}
     const chip=document.createElement("span");chip.className="chip";
-    const map={done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
+    const map={open:[lang==="es"?"Abrir":"Open","next"],done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
     chip.textContent=stp.type==="read"&&st==="done"?(lang==="es"?"Completo":"Complete"):map[st][0];if(map[st][1])chip.classList.add(map[st][1]);
     body.append(h,sub,chip);b.append(tag,body);
     b.addEventListener("click",()=>{if(!open)return;isQuiz?openQuiz():stp.type==="read"?openReading():openLesson(stp.k)});
@@ -632,7 +651,7 @@ function goPage(i){
   const a=ATT[lang],fin=isDone("attendance"),last=i===rdTotal-1;rdPage=i;
   rdPages.forEach((pg,j)=>pg.hidden=j!==i);
   $("rd-check").hidden=!last||fin;$("rd-done").hidden=!last||fin;$("rd-complete").hidden=!(last&&fin);
-  $("rd-nextstep").hidden=true;if(last&&fin)offerNext("attendance",$("rd-nextstep"),false);
+  $("rd-nextstep").hidden=true;if(last&&(fin||isMgr()))offerNext("attendance",$("rd-nextstep"),false);
   $("rd-next").hidden=last;$("rd-prev").disabled=i===0;
   $("rd-lead").hidden=i!==0;$("rd-err").hidden=true;
   $("rd-count").textContent=a.count(i+1,rdTotal);
@@ -652,6 +671,7 @@ $("rd-done").addEventListener("click",async()=>{
     if(pick)pick.parentElement.classList.add(good?"right":"wrong");
     fb.hidden=false;fb.className="fb "+(good?"ok":"no");fb.textContent=good?"✓":fs.dataset.why;if(!good)ok=false});
   if(!ok){err.textContent=a.errQ;err.hidden=false;return}
+  if(isMgr()){err.hidden=true;$("rd-done").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent="All answers are correct. Manager mode: nothing was saved.";$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});return}
   const norm=x=>x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
   if(norm($("rd-sign").value)!==norm(me.name)){err.textContent=a.errSign;err.hidden=false;$("rd-sign").focus();return}
   err.hidden=true;await record("attendance");
@@ -670,7 +690,8 @@ function openLesson(k){
   const src=CONFIG.VIDEOS[lang][k];
   v.pause();v.removeAttribute("src");
   if(src){v.src=src;v.load()}else{$("p-done").hidden=false;$("p-done").textContent=s.soonMsg}
-  maxT=progress[k]?Infinity:(store.get(posKey(k))||0);
+  maxT=progress[k]||isMgr()?Infinity:(store.get(posKey(k))||0);
+  $("c-fwd10").hidden=!isMgr();$("t-noskip").hidden=isMgr();
   show("v-player");updatePlayBtn();drawTrack();window.scrollTo(0,0);
 }
 v.addEventListener("loadedmetadata",()=>{if(isFinite(maxT)&&maxT>0)v.currentTime=Math.min(maxT,v.duration-1);drawTrack()});
@@ -690,8 +711,8 @@ $("track").addEventListener("click",e=>{const d=v.duration;if(!d)return;const r=
 v.addEventListener("play",updatePlayBtn);v.addEventListener("pause",updatePlayBtn);
 v.addEventListener("ended",async()=>{
   if(!isFinite(maxT)||maxT>=v.duration-3){
-    if(!progress[current]){await record(current);store.del(posKey(current))}
-    maxT=Infinity;$("p-done").hidden=false;$("p-done").textContent=t().done;offerNext(current,$("p-next"),true);
+    if(!progress[current]&&!isMgr()){await record(current);store.del(posKey(current))}
+    maxT=Infinity;$("p-done").hidden=false;$("p-done").textContent=isMgr()?"Video finished.":t().done;offerNext(current,$("p-next"),true);
     if(v.webkitDisplayingFullscreen&&v.webkitExitFullscreen)v.webkitExitFullscreen();
     if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
   }
@@ -706,6 +727,7 @@ function drawTrack(){
 const togglePlay=()=>{if(!v.src)return;v.paused?v.play().catch(()=>{}):v.pause()};
 $("c-play").addEventListener("click",togglePlay);$("big-play").addEventListener("click",togglePlay);v.addEventListener("click",togglePlay);
 $("c-back10").addEventListener("click",()=>{v.currentTime=Math.max(0,v.currentTime-10)});
+$("c-fwd10").addEventListener("click",()=>{if(isMgr()&&v.duration)v.currentTime=Math.min(v.duration-0.1,v.currentTime+10)});
 $("c-full").addEventListener("click",()=>{const box=$("vbox");
   if(box.requestFullscreen)box.requestFullscreen().catch(()=>{if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()});
   else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();});
@@ -745,7 +767,17 @@ function showResult(score,ans){
   if(pass){$("cert-name").textContent=me.name;$("cert-meta").textContent=`${me.store} · ${new Date().toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})}`}
   $("r-btn").textContent=pass?s.home:s.retake;
   $("r-btn").onclick=()=>{if(pass){renderCourse();show("v-course")}else{markQuiz(ans);show("v-quiz");window.scrollTo(0,0)}};
+  if(isMgr()){
+    $("r-eyebrow").textContent="Manager mode";$("r-title").textContent=pass?"That's a passing score.":"That score wouldn't pass.";
+    $("r-lead").textContent=`Employees need ${CONFIG.PASS_SCORE} of ${QUIZ.length} to pass. Nothing was saved.`;$("r-cert").hidden=true;
+    $("r-btn").textContent="Review answers";$("r-btn").onclick=()=>{reviewQuiz(ans);show("v-quiz");window.scrollTo(0,0)};
+  }
   show("v-result");window.scrollTo(0,0);
+}
+function reviewQuiz(ans){
+  renderQuiz();
+  QUIZ.forEach((q,qi)=>{const ok=$(`q${qi}o${q.a}`);if(ok){ok.checked=true;ok.parentElement.classList.add("right")}
+    const pick=ans&&ans[qi];if(pick!=null&&pick!==q.a){const w=$(`q${qi}o${pick}`);if(w)w.parentElement.classList.add("wrong")}});
 }
 function markQuiz(ans){
   renderQuiz();
@@ -807,6 +839,19 @@ $("start-form").addEventListener("submit",async e=>{
   }catch(x){console.error(x);fail(s.errNet)}
   finally{btn.disabled=false}
 });
+$("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-pin").focus()});
+$("m-pin").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
+const sha256=async x=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+$("mgr-form").addEventListener("submit",async e=>{
+  e.preventDefault();const err=$("mgr-err"),btn=$("mgr-btn"),pin=$("m-pin").value;
+  if(!/^\d{4}$/.test(pin)){err.textContent="Enter the 4-digit manager PIN.";err.hidden=false;return}
+  btn.disabled=true;
+  let ok=false;try{ok=(await sha256("vista-mgr:"+pin))===CONFIG.MANAGER_PIN_SHA256}catch(x){console.error(x)}
+  if(!ok){err.textContent="That PIN isn't right.";err.hidden=false;setTimeout(()=>btn.disabled=false,2000);$("m-pin").value="";return}
+  btn.disabled=false;err.hidden=true;$("m-pin").value="";$("mgr-form").hidden=true;
+  me={manager:true,name:"Manager mode",key:"manager",store:"",date:""};progress={};ss.set("vt-sess",me);
+  renderCourse();show("v-course");window.scrollTo(0,0);
+});
 $("t-signout").addEventListener("click",()=>{ss.del("vt-sess");me=null;progress={};const d=$("f-date").value;$("start-form").reset();$("f-date").value=d;setMode("back");show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
 $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
@@ -815,6 +860,7 @@ $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(
 applyText();
 (()=>{const n=new Date();$("f-date").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`})();
 (async()=>{
+  if(me&&me.manager){progress={};renderCourse();show("v-course");return}
   if(me&&me.pin){try{const d=await loadProgress();if(d&&d.ok){renderCourse();show("v-course");return}}catch(x){}
     ss.del("vt-sess");me=null}
   show("v-start");
