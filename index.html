@@ -407,7 +407,7 @@ const QUIZ=[
 ];
 
 const DAYS=["day1","day2","day3"];
-const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"read"},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
+const STEPS=[{k:"day1",type:"video",min:5},{k:"attendance",type:"read"},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
 const isMgr=()=>!!(me&&me.manager);
 const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
 const $=id=>document.getElementById(id);
