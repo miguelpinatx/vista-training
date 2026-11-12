@@ -22,7 +22,7 @@ create table if not exists public.training_trainees (
 create table if not exists public.training_events (
   id           bigint generated always as identity primary key,
   trainee_key  text not null references public.training_trainees(trainee_key) on delete cascade,
-  item         text not null check (item in ('day1','attendance','day2','day3','quiz')),
+  item         text not null check (item in ('day1','attendance','phone','day2','day3','quiz')),
   language     text not null default 'en',
   score        int,
   total        int,
@@ -132,7 +132,7 @@ declare r text := training_check_pin(p_key, p_pin);
         all_done boolean;
 begin
   if r <> 'ok' then return json_build_object('ok', false, 'error', r); end if;
-  if p_item not in ('day1','attendance','day2','day3','quiz') then
+  if p_item not in ('day1','attendance','phone','day2','day3','quiz') then
     return json_build_object('ok', false, 'error', 'unknown_item');
   end if;
 
@@ -143,7 +143,7 @@ begin
   end if;
 
   select (select count(distinct item) from training_events
-           where trainee_key = p_key and item in ('day1','attendance','day2','day3')) = 4
+           where trainee_key = p_key and item in ('day1','attendance','phone','day2','day3')) = 5
      and exists (select 1 from training_events where trainee_key = p_key and item = 'quiz' and score >= pass_score)
     into all_done;
 
