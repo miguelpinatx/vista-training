@@ -234,12 +234,13 @@ body.certmode{padding-block:12px 24px}
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
-    <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Manager? Open manager mode</button>
+    <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Admin login</button>
     <form id="mgr-form" novalidate class="panel mgrbox" hidden>
-      <label for="m-pin"><span>Manager PIN</span><input id="m-pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" required></label>
-      <p class="muted" style="font-size:.9rem">Opens every step so you can show the training. Videos can be skipped and nothing is saved.</p>
+      <label for="m-email"><span>Admin email</span><input id="m-email" type="email" autocomplete="username" required></label>
+      <label for="m-pass"><span>Password</span><input id="m-pass" type="password" autocomplete="current-password" required></label>
+      <p class="muted" style="font-size:.9rem">Same login as the manager report. Opens every step so you can preview or present the training. Videos can be skipped and nothing is saved.</p>
       <p class="err" id="mgr-err" hidden></p>
-      <button class="btn" type="submit" id="mgr-btn">Open manager mode</button>
+      <button class="btn" type="submit" id="mgr-btn">Sign in as admin</button>
     </form>
   </section>
 
@@ -250,7 +251,7 @@ body.certmode{padding-block:12px 24px}
         <div><div class="eyebrow" id="t-course-eyebrow"></div><h1 id="who-name"></h1><p class="muted" id="who-meta"></p></div>
         <button class="linkish" type="button" id="t-signout"></button>
       </div>
-      <div class="banner mgr" id="mgr-banner" hidden>Manager mode: every step is open, videos can be skipped, and nothing is saved.</div>
+      <div class="banner mgr" id="mgr-banner" hidden>Admin mode: every step is open, videos can be skipped, and nothing is saved.</div>
       <div class="meter" id="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
       <div class="notice" id="t-notice2"><b id="t-notice2-h"></b><span id="t-notice2-b"></span></div>
       <button class="btn" type="button" id="cert-open" hidden></button>
@@ -370,8 +371,7 @@ const CONFIG = {
   DEPARTMENTS: ["Cashier / Front End","Grocery / Stocker","Produce","Meat Market","Hot Deli","Cold Deli","Bakery","Cakes","Tortilleria","Pricing","Management","Other"],
   // Where "Send certificate" emails go if the device can't open the share sheet (leave blank to let the employee type it).
   CORP_EMAIL: "",
-  // Manager mode: SHA-256 of the 4-digit manager PIN (opens everything, saves nothing).
-  MANAGER_PIN_SHA256: "d5e1986576c827e9402cf13e76958eabaadbba61b940154eb84bdef638cc19e6"
+  // Admin mode uses the same Supabase manager logins as manager.html (no PIN).
 };
 /* ============================================== */
 
@@ -397,7 +397,7 @@ const T = {
   back:"← Back to my training",play:"Play",pause:"Pause",back10:"⟲ 10 sec",full:"Full screen",
   noskip:"Rewind any time: tap ⟲ 10 sec or tap the bar on a part you already watched. You can't skip ahead. If you leave the page, it pauses and remembers where you were.",
   done:"Video complete. The next step is unlocked.",
-  quizEyebrow:"Day 3",quizTitle:"Knowledge check",quizLead:"Pick the best answer for each question. You need 8 of 10 to pass.",
+  quizEyebrow:"Final step",quizTitle:"Knowledge check",quizLead:"Pick the best answer for each question. You need 8 of 10 to pass.",
   submit:"Submit answers",errAll:n=>`Answer all questions first (${n} left).`,
   passEyebrow:"You passed",passTitle:"Great job! Show this screen to your trainer.",passLead:"Your trainer will finish your sign-off sheet with you.",
   failEyebrow:"Not quite",failTitle:"Review the ones marked in orange, then try again.",failLead:"You need 8 of 10 to pass.",
@@ -425,7 +425,7 @@ const T = {
   back:"← Regresar a mi capacitación",play:"Reproducir",pause:"Pausa",back10:"⟲ 10 seg",full:"Pantalla completa",
   noskip:"Puedes regresar cuando quieras: toca ⟲ 10 seg o toca la barra en una parte que ya viste. No puedes adelantar. Si sales de la página, se pausa y recuerda dónde ibas.",
   done:"Video completo. El siguiente paso ya está abierto.",
-  quizEyebrow:"Día 3",quizTitle:"Examen final",quizLead:"Escoge la mejor respuesta. Necesitas 8 de 10 para aprobar.",
+  quizEyebrow:"Último paso",quizTitle:"Examen final",quizLead:"Escoge la mejor respuesta. Necesitas 8 de 10 para aprobar.",
   submit:"Enviar respuestas",errAll:n=>`Contesta todas las preguntas primero (faltan ${n}).`,
   passEyebrow:"Aprobaste",passTitle:"¡Muy bien! Enséñale esta pantalla a tu entrenador.",passLead:"Tu entrenador terminará tu hoja de aprobación contigo.",
   failEyebrow:"Casi",failTitle:"Repasa las marcadas en naranja e intenta de nuevo.",failLead:"Necesitas 8 de 10 para aprobar.",
@@ -592,7 +592,7 @@ function renderCourse(){
   $("who-name").textContent=me.name;
   $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${me.dept}`;
   $("mgr-banner").hidden=!mg;$("meter").hidden=mg;$("t-rules").hidden=mg;
-  $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Exit manager mode":s.signout;
+  $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Sign out of admin":s.signout;
   const R=REQ(),done=R.filter(x=>isDone(x.k)).length;
   $("meter-fill").style.width=(done/R.length*100)+"%";$("meter-text").textContent=s.meter(done,R.length);
   $("t-notice2").hidden=mg||!!me.cert;
@@ -881,7 +881,7 @@ $("rd-done").addEventListener("click",async()=>{
     if(pick)pick.parentElement.classList.add(good?"right":"wrong");
     fb.hidden=false;fb.className="fb "+(good?"ok":"no");fb.textContent=good?"✓":fs.dataset.why;if(!good)ok=false});
   if(!ok){err.textContent=a.errQ;err.hidden=false;return}
-  if(isMgr()){err.hidden=true;$("rd-done").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent="All answers are correct. Manager mode: nothing was saved.";$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});return}
+  if(isMgr()){err.hidden=true;$("rd-done").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent="All answers are correct. Admin mode: nothing was saved.";$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});return}
   const norm=x=>x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
   if(norm($("rd-sign").value)!==norm(me.name)){err.textContent=a.errSign;err.hidden=false;$("rd-sign").focus();return}
   err.hidden=true;await record(rdKey);
@@ -981,7 +981,7 @@ function showResult(score,ans,unsent){
   if(unsent){$("r-lead").textContent=s.errSubmit;$("r-btn").textContent=s.trySave;
     $("r-btn").onclick=async()=>{$("r-btn").disabled=true;const ok=await submitAll();$("r-btn").disabled=false;if(ok)openCert()}}
   if(isMgr()){
-    $("r-eyebrow").textContent="Manager mode";$("r-title").textContent=pass?"That's a passing score.":"That score wouldn't pass.";
+    $("r-eyebrow").textContent="Admin mode";$("r-title").textContent=pass?"That's a passing score.":"That score wouldn't pass.";
     $("r-lead").textContent=`Employees need ${CONFIG.PASS_SCORE} of ${QUIZ.length} to pass. Nothing was saved.`;$("r-cert").hidden=true;
     $("r-btn").textContent="Review answers";$("r-btn").onclick=()=>{reviewQuiz(ans);show("v-quiz");window.scrollTo(0,0)};
   }
@@ -1062,20 +1062,22 @@ $("start-form").addEventListener("submit",e=>{
   me={name,store:st,dept,key,cert:null};progress={};ss.set("vt-sess",me);ss.set("vt-prog",progress);
   renderCourse();show("v-course");window.scrollTo(0,0);
 });
-$("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-pin").focus()});
-$("m-pin").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
-const sha256=async x=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+$("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-email").focus()});
+// Separate client that never stores the admin session on the device: it ends when the page closes.
+const sbAdmin=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"vt-admin"}}):null;
 $("mgr-form").addEventListener("submit",async e=>{
-  e.preventDefault();const err=$("mgr-err"),btn=$("mgr-btn"),pin=$("m-pin").value;
-  if(!/^\d{4}$/.test(pin)){err.textContent="Enter the 4-digit manager PIN.";err.hidden=false;return}
+  e.preventDefault();const err=$("mgr-err"),btn=$("mgr-btn"),email=$("m-email").value.trim(),pass=$("m-pass").value;
+  if(!email||!pass){err.textContent="Enter your admin email and password.";err.hidden=false;return}
+  if(!sbAdmin){err.textContent="Admin login needs an internet connection.";err.hidden=false;return}
   btn.disabled=true;
-  let ok=false;try{ok=(await sha256("vista-mgr:"+pin))===CONFIG.MANAGER_PIN_SHA256}catch(x){console.error(x)}
-  if(!ok){err.textContent="That PIN isn't right.";err.hidden=false;setTimeout(()=>btn.disabled=false,2000);$("m-pin").value="";return}
-  btn.disabled=false;err.hidden=true;$("m-pin").value="";$("mgr-form").hidden=true;
-  me={manager:true,name:"Manager mode",key:"manager",store:"",date:""};progress={};ss.set("vt-sess",me);
+  let ok=false;try{const r=await sbAdmin.auth.signInWithPassword({email,password:pass});ok=!r.error&&!!(r.data&&r.data.session)}catch(x){console.error(x)}
+  btn.disabled=false;$("m-pass").value="";
+  if(!ok){err.textContent="That email or password isn't right.";err.hidden=false;return}
+  err.hidden=true;$("mgr-form").hidden=true;
+  me={manager:true,name:"Admin mode",key:"admin",store:"",dept:""};progress={};
   renderCourse();show("v-course");window.scrollTo(0,0);
 });
-$("t-signout").addEventListener("click",()=>{ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
+$("t-signout").addEventListener("click",()=>{if(me&&me.manager&&sbAdmin)sbAdmin.auth.signOut().catch(()=>{});ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
 $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
 
@@ -1084,7 +1086,7 @@ window.addEventListener("beforeunload",e=>{if(me&&!me.manager&&!me.cert&&Object.
 /* ---------- boot ---------- */
 applyText();
 (async()=>{
-  if(me&&me.manager){progress={};renderCourse();show("v-course");return}
+  if(me&&me.manager){ss.del("vt-sess");me=null}   // admin mode never survives a reload: sign in again
   if(me&&me.key&&me.dept){progress=ss.get("vt-prog")||{};renderCourse();show("v-course");return}
   ss.del("vt-sess");me=null;
   show("v-start");
