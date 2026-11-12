@@ -139,6 +139,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
 .rulebig{font-weight:800;font-size:1.05rem;line-height:1.35;margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{background:var(--tag);color:var(--tag-ink);border-radius:99px;padding:5px 11px;font-weight:800;font-size:.85rem}
 @media(max-width:360px){.dd,.tiles{grid-template-columns:1fr}}
+.rdvideo{width:100%;border-radius:12px;background:#000;display:block;margin-top:8px}
 .pgbar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
 .pgbar i{display:block;height:6px;border-radius:99px;background:var(--line)}
 .pgbar i.on{background:var(--brand)}
@@ -361,7 +362,7 @@ const CONFIG = {
   STORES: ["Alameda","Central","Doniphan","Horizon","Montana","Piedras","Urban"],
   // Put each video file in the /videos folder and list it here. Blank = "coming soon".
   VIDEOS: {
-    en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4" },
+    en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4", attendance: "videos/attendance-en.mp4" },
     es: { day1: "", day2: "", day3: "" }
   },
   // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
@@ -378,7 +379,7 @@ const T = {
  en:{badge:"Training",startEyebrow:"New hire training",startTitle:"Welcome to the Vista team",
   startLead:"Watch three short videos, read the attendance and phone rules, then take a 10-question quiz. Your trainer will check your results before you work on your own.",
   name:"Full name",date:"Date",modeNew:"I'm new",modeBack:"I'm coming back",pin:"Create a 4-digit PIN",pinBack:"Your 4-digit PIN",pin2:"Type the PIN again",
-  pinHintNew:"Make up a PIN you'll remember. You'll use it with your name and store to come back for Day 2 and Day 3.",pinHintBack:"Forgot your PIN? Ask your manager to reset it, then tap I'm new to make a new one.",
+  pinHintNew:"Make up a PIN you'll remember. You'll use it with your name and store to come back if you need to finish later.",pinHintBack:"Forgot your PIN? Ask your manager to reset it, then tap I'm new to make a new one.",
   backBtn:"Continue my training",errPin:"Your PIN must be 4 numbers.",errPin2:"The two PINs don't match.",
   errExists:"You already started training. Enter your PIN to continue.",errNotFound:"We couldn't find you. Check that your name and store match what you used before.",
   errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
@@ -391,7 +392,7 @@ const T = {
   meter:(d,t)=>`${d} of ${t} steps done`,
   rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Day 3 video.",
   days:{day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
-  dayLabel:"Day",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",clockName:"Time Clock & Lunch",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
+  dayLabel:"Module",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",clockName:"Time Clock & Lunch",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
   chipDone:"Watched",chipNext:"Start here",chipLocked:"Locked",chipSoon:"Coming soon",chipPassed:"Passed",chipRetake:"Retake",
   back:"← Back to my training",play:"Play",pause:"Pause",back10:"⟲ 10 sec",full:"Full screen",
   noskip:"Rewind any time: tap ⟲ 10 sec or tap the bar on a part you already watched. You can't skip ahead. If you leave the page, it pauses and remembers where you were.",
@@ -406,7 +407,7 @@ const T = {
  es:{badge:"Capacitación",startEyebrow:"Capacitación para nuevos empleados",startTitle:"Bienvenido al equipo Vista",
   startLead:"Mira tres videos cortos, lee las reglas de asistencia y días libres, y luego contesta un examen de 10 preguntas. Tu entrenador revisará tus resultados antes de que trabajes solo.",
   name:"Nombre completo",date:"Fecha",modeNew:"Soy nuevo",modeBack:"Ya empecé",pin:"Crea un PIN de 4 números",pinBack:"Tu PIN de 4 números",pin2:"Escribe el PIN otra vez",
-  pinHintNew:"Inventa un PIN que recuerdes. Lo usarás con tu nombre y tienda para regresar el Día 2 y el Día 3.",pinHintBack:"¿Olvidaste tu PIN? Pide a tu gerente que lo restablezca y luego toca Empezar para crear uno nuevo.",
+  pinHintNew:"Inventa un PIN que recuerdes. Lo usarás con tu nombre y tienda para regresar si necesitas terminar después.",pinHintBack:"¿Olvidaste tu PIN? Pide a tu gerente que lo restablezca y luego toca Empezar para crear uno nuevo.",
   backBtn:"Continuar mi capacitación",errPin:"Tu PIN debe ser de 4 números.",errPin2:"Los dos PIN no coinciden.",
   errExists:"Ya empezaste tu capacitación. Toca Continuar y escribe tu PIN.",errNotFound:"No te encontramos. Revisa que tu nombre y tienda sean los mismos que usaste antes.",
   errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
@@ -419,7 +420,7 @@ const T = {
   meter:(d,t)=>`${d} de ${t} pasos completos`,
   rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video del Día 3.",
   days:{day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
-  dayLabel:"Día",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",clockName:"Reloj checador y comida",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
+  dayLabel:"Módulo",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",clockName:"Reloj checador y comida",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
   chipDone:"Visto",chipNext:"Empieza aquí",chipLocked:"Bloqueado",chipSoon:"Próximamente",chipPassed:"Aprobado",chipRetake:"Repetir",
   back:"← Regresar a mi capacitación",play:"Reproducir",pause:"Pausa",back10:"⟲ 10 seg",full:"Pantalla completa",
   noskip:"Puedes regresar cuando quieras: toca ⟲ 10 seg o toca la barra en una parte que ya viste. No puedes adelantar. Si sales de la página, se pausa y recuerda dónde ibas.",
@@ -447,7 +448,7 @@ const QUIZ=[
 ];
 
 const DAYS=["day1","day2","day3"];
-const STEPS=[{k:"day1",type:"video",min:5},{k:"attendance",type:"read",min:5},{k:"phone",type:"read",min:4},{k:"clock",type:"read",min:3},{k:"day2",type:"video",min:6},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
+const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"read",min:5},{k:"phone",type:"read",min:4},{k:"clock",type:"read",min:3},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:5},{k:"quiz",type:"quiz"}];
 const isMgr=()=>!!(me&&me.manager);
 const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
 const $=id=>document.getElementById(id);
@@ -593,7 +594,7 @@ function renderCourse(){
     const h=document.createElement("h3");
     const sub=document.createElement("span");sub.className="muted";
     if(isQuiz){h.textContent=s.quizName;sub.textContent=progress.quiz?`${s.quizDesc} · ${progress.quiz.score}/${progress.quiz.total}`:s.quizDesc}
-    else if(stp.type==="read"){h.textContent=readName(stp.k);sub.textContent=`${s.dayLabel} 1 · ${s.readMin(stp.min)}`}
+    else if(stp.type==="read"){h.textContent=readName(stp.k);sub.textContent=(stp.k==="attendance"&&CONFIG.VIDEOS[lang].attendance)?(lang==="es"?"Video y lectura · 8 min":"Video + read · 8 min"):s.readMin(stp.min)}
     else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`}
     const chip=document.createElement("span");chip.className="chip";
     const map={open:[lang==="es"?"Abrir":"Open","next"],done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
@@ -606,7 +607,7 @@ function renderCourse(){
 
 /* ---------- reading: attendance & time off ---------- */
 const ATT={
- en:{eyebrow:"Step 2 · Day 1",title:"Attendance & Time Off",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom. Your manager will also go over this with you.",
+ en:{eyebrow:"Step 2",title:"Attendance & Time Off",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom. Your manager will also go over this with you.",
   why:["Why it matters","When one person is late or doesn't show up, a register or counter sits empty and your coworkers cover for you. Showing up on time is part of taking care of customers."],
   sched:["Your schedule",["The workweek runs Sunday through Saturday.","The schedule is made every Thursday for the week that starts the following Sunday.","Check it every week. It can change with business needs, including evenings, weekends, holidays, different shifts or another store."]],
   off:["Asking for time off",["Ask your Store Manager or designated supervisor at least 7 days before the Thursday that week's schedule is made.","It isn't approved until your manager confirms it.","Requests after the deadline depend on staffing and may not be approved, except legally protected leave."]],
@@ -622,7 +623,7 @@ const ATT={
   ackTitle:"Acknowledgement",ackText:"I have read and understood Vista Markets' attendance, punctuality and time-off rules. I agree to report to work on all scheduled shifts, be ready to work at my start time, request time off by the deadline, and call the store cell line as early as possible, preferably 2 hours ahead, if I will be late or absent. I understand that repeated absences or excessive tardiness may result in disciplinary action, up to and including termination.",
   signLabel:"Type your full name to sign",signDate:"Date",errSign:"Type your full name exactly as you signed in.",signedBy:(n,d)=>`Signed by ${n} on ${d}.`,
   done:"Sign and complete",errAck:"Check all three boxes first.",errQ:"Some answers aren't right yet. Read the explanation in orange and try again.",complete:"Done. The next step is unlocked."},
- es:{eyebrow:"Paso 2 · Día 1",title:"Asistencia y días libres",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final. Tu gerente también lo repasará contigo.",
+ es:{eyebrow:"Paso 2",title:"Asistencia y días libres",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final. Tu gerente también lo repasará contigo.",
   why:["Por qué importa","Cuando alguien llega tarde o no viene, una caja o mostrador se queda vacío y tus compañeros tienen que cubrirte. Llegar a tiempo es parte de atender bien al cliente."],
   sched:["Tu horario",["La semana de trabajo es de domingo a sábado.","El horario se hace cada jueves para la semana que empieza el domingo siguiente.","Revísalo cada semana. Puede cambiar según las necesidades de la empresa, incluyendo noches, fines de semana, días festivos, otros turnos u otra tienda."]],
   off:["Cómo pedir días libres",["Pídelos a tu gerente o supervisor designado por lo menos 7 días antes del jueves en que se hace el horario de esa semana.","No está aprobado hasta que tu gerente te lo confirme.","Las solicitudes después de la fecha límite dependen del personal disponible y pueden no aprobarse, excepto permisos protegidos por la ley."]],
@@ -640,7 +641,7 @@ const ATT={
   done:"Firmar y completar",errAck:"Marca las tres casillas primero.",errQ:"Algunas respuestas todavía no son correctas. Lee la explicación en naranja e intenta de nuevo.",complete:"Listo. El siguiente paso ya está abierto."}
 };
 const PHONE={
- en:{eyebrow:"Step 3 · Day 1",title:"Phones & Earbuds",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom.",
+ en:{eyebrow:"Step 3",title:"Phones & Earbuds",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom.",
   screens:[
    {k:"hero",h:"Customers come first",art:"counter",txt:"When a customer is around, they get your full attention: eyes up, a greeting, and stopping what you're doing to help. A phone in your hand tells a customer they're interrupting you."},
    {k:"dodont",h:"Your phone during your shift",dont:["Not OK",["Using your phone when customers are around","Texting, scrolling or calls on the sales floor, at the register or in your department"]],do:["OK",["Phone on silent and out of sight","Use it on your breaks and lunch"]]},
@@ -655,7 +656,7 @@ const PHONE={
   ackTitle:"Acknowledgement",ackText:"I have read and understood Vista Markets' phone and earbud rules. I will keep my personal phone put away during my shift, never use it when customers are around, and give every customer my full attention. I will not wear earbuds or headphones while working. I understand that not giving customers my full attention will result in disciplinary action.",
   signLabel:"Type your full name to sign",signDate:"Date",errSign:"Type your full name exactly as you signed in.",signedBy:(n,d)=>`Signed by ${n} on ${d}.`,
   done:"Sign and complete",errAck:"Check all three boxes first.",errQ:"Some answers aren't right yet. Read the explanation in orange and try again.",complete:"Done. The next step is unlocked.",next:"Next →",prev:"← Back",count:(i,n)=>`${i} of ${n}`},
- es:{eyebrow:"Paso 3 · Día 1",title:"Celulares y audífonos",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final.",
+ es:{eyebrow:"Paso 3",title:"Celulares y audífonos",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final.",
   screens:[
    {k:"hero",h:"Primero los clientes",art:"counter",txt:"Cuando hay un cliente cerca, recibe toda tu atención: levantas la vista, saludas y dejas lo que estás haciendo para ayudar. Un celular en la mano le dice al cliente que te está interrumpiendo."},
    {k:"dodont",h:"Tu celular durante el turno",dont:["No se vale",["Usar tu celular cuando hay clientes cerca","Mensajes, redes o llamadas en el piso de ventas, en la caja o en tu departamento"]],do:["Sí se vale",["Celular en silencio y fuera de vista","Úsalo en tus descansos y a la hora de comida"]]},
@@ -749,7 +750,7 @@ function buildPhone(a,body){
   });
 }
 const CLOCK={
- en:{eyebrow:"Step 4 · Day 1",title:"Time Clock & Lunch",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom.",
+ en:{eyebrow:"Step 4",title:"Time Clock & Lunch",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom.",
   screens:[
    {k:"hero",h:"Your time, recorded right",art:"timeclock",txt:"Your time punches are how you get paid correctly. Here's how to clock in and out, take your lunch, and buy something at the store the right way."},
    {k:"steps",h:"Clocking in and out",steps:[["punchin","Clock in at your start time","Then go straight to your station, ready to work."],["punchout","Clock out at the end of your shift","After your work is done."],["person","Only punch for yourself","Never clock in or out for a coworker."]]},
@@ -764,7 +765,7 @@ const CLOCK={
   ackTitle:"Acknowledgement",ackText:"I have read and understood Vista Markets' time clock and lunch rules. I will clock in and out only for myself, tell my supervisor or manager before and after lunch, take my full 30-minute lunch clocked out in the designated break areas, clock out before making any purchase, and keep my receipts. I will tell my manager the same day about any missed punch.",
   signLabel:"Type your full name to sign",signDate:"Date",errSign:"Type your full name exactly as you signed in.",signedBy:(n,d)=>`Signed by ${n} on ${d}.`,
   done:"Sign and complete",errAck:"Check all three boxes first.",errQ:"Some answers aren't right yet. Read the explanation in orange and try again.",complete:"Done. The next step is unlocked.",next:"Next →",prev:"← Back",count:(i,n)=>`${i} of ${n}`},
- es:{eyebrow:"Paso 4 · Día 1",title:"Reloj checador y comida",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final.",
+ es:{eyebrow:"Paso 4",title:"Reloj checador y comida",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final.",
   screens:[
    {k:"hero",h:"Tu tiempo, bien registrado",art:"timeclock",txt:"Tus registros de entrada y salida son la forma en que se te paga correctamente. Aquí te explicamos cómo registrar tu entrada y salida, tomar tu comida y comprar algo en la tienda de la forma correcta."},
    {k:"steps",h:"Registrar tu entrada y salida",steps:[["punchin","Registra tu entrada a tu hora","Luego ve directo a tu puesto, listo para trabajar."],["punchout","Registra tu salida al terminar","Cuando termines tu trabajo."],["person","Registra solo tu tiempo","Nunca registres la entrada o salida de un compañero."]]},
@@ -800,6 +801,9 @@ function openReading(k){
   if(rdKey!=="attendance"){
     buildPhone(a,body);
   }else{
+  const av=CONFIG.VIDEOS[lang].attendance;
+  if(av){const vs=el("section");vs.append(el("h3",null,lang==="es"?"Mira el video":"Watch the video"),el("p","muted",lang==="es"?"Mira este video corto y luego toca Siguiente para leer las reglas.":"Watch this short video, then tap Next to read the rules."));
+    const vd=el("video");vd.src=av;vd.controls=true;vd.playsInline=true;vd.preload="metadata";vd.className="rdvideo";vs.append(vd);body.append(vs)}
   const sch=sectionList(a.sched[0],a.sched[1]);sch.insertBefore(el("p","muted",a.why[1]),sch.children[1]);body.append(sch);
   const off=sectionList(a.off[0],a.off[1]);
   const exh=el("p");exh.append(el("b",null,`${a.exTitle}: ${d.week}`));off.append(exh);
@@ -839,6 +843,7 @@ let rdPages=[],rdTotal=6,rdPage=0;
 function goPage(i){
   const a=RD(),fin=isDone(rdKey),last=i===rdTotal-1;rdPage=i;
   rdPages.forEach((pg,j)=>pg.hidden=j!==i);
+  document.querySelectorAll("#rd-body video").forEach(v=>{if(!v.closest("section")||v.closest("section").hidden)v.pause()});
   $("rd-check").hidden=!last||fin;$("rd-done").hidden=!last||fin;$("rd-complete").hidden=!(last&&fin);
   $("rd-nextstep").hidden=true;if(last&&(fin||isMgr()))offerNext(rdKey,$("rd-nextstep"),false);
   $("rd-next").hidden=last;$("rd-prev").disabled=i===0;
