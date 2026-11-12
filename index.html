@@ -385,13 +385,13 @@ const T = {
   errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
   certOpen:"View my certificate",certInstr:"You did it. Tap Send to email your certificate to your manager, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
   certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Started",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
-  certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
+  certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Time Clock & Lunch","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
   errFill:"Fill in your name, the date and your store.",errNet:"Couldn't connect. Check your internet and try again.",
   courseEyebrow:"Your training",signout:"Not you? Sign out",
   meter:(d,t)=>`${d} of ${t} steps done`,
   rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Day 3 video.",
   days:{day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
-  dayLabel:"Day",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
+  dayLabel:"Day",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",clockName:"Time Clock & Lunch",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
   chipDone:"Watched",chipNext:"Start here",chipLocked:"Locked",chipSoon:"Coming soon",chipPassed:"Passed",chipRetake:"Retake",
   back:"← Back to my training",play:"Play",pause:"Pause",back10:"⟲ 10 sec",full:"Full screen",
   noskip:"Rewind any time: tap ⟲ 10 sec or tap the bar on a part you already watched. You can't skip ahead. If you leave the page, it pauses and remembers where you were.",
@@ -413,13 +413,13 @@ const T = {
   errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
   certOpen:"Ver mi certificado",certInstr:"Lo lograste. Toca Enviar para mandar tu certificado por correo a tu gerente, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
   certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Inicio",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
-  certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
+  certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Reloj checador y comida","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
   errFill:"Escribe tu nombre, la fecha y tu tienda.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
   courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
   meter:(d,t)=>`${d} de ${t} pasos completos`,
   rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video del Día 3.",
   days:{day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
-  dayLabel:"Día",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
+  dayLabel:"Día",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",clockName:"Reloj checador y comida",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
   chipDone:"Visto",chipNext:"Empieza aquí",chipLocked:"Bloqueado",chipSoon:"Próximamente",chipPassed:"Aprobado",chipRetake:"Repetir",
   back:"← Regresar a mi capacitación",play:"Reproducir",pause:"Pausa",back10:"⟲ 10 seg",full:"Pantalla completa",
   noskip:"Puedes regresar cuando quieras: toca ⟲ 10 seg o toca la barra en una parte que ya viste. No puedes adelantar. Si sales de la página, se pausa y recuerda dónde ibas.",
@@ -447,7 +447,7 @@ const QUIZ=[
 ];
 
 const DAYS=["day1","day2","day3"];
-const STEPS=[{k:"day1",type:"video",min:5},{k:"attendance",type:"read",min:5},{k:"phone",type:"read",min:4},{k:"day2",type:"video",min:6},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
+const STEPS=[{k:"day1",type:"video",min:5},{k:"attendance",type:"read",min:5},{k:"phone",type:"read",min:4},{k:"clock",type:"read",min:3},{k:"day2",type:"video",min:6},{k:"day3",type:"video",min:4},{k:"quiz",type:"quiz"}];
 const isMgr=()=>!!(me&&me.manager);
 const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
 const $=id=>document.getElementById(id);
@@ -469,7 +469,8 @@ let current=null;                     // lesson key in player
 const t=()=>T[lang];
 let advTimer=null;const clearAdvance=()=>{if(advTimer){clearInterval(advTimer);advTimer=null}};
 const show=v=>{clearAdvance();document.body.classList.toggle("certmode",v==="v-cert");["v-start","v-course","v-player","v-read","v-quiz","v-result","v-cert"].forEach(id=>$(id).hidden=id!==v)};
-function stepName(stp){const s=t();return stp.type==="quiz"?s.quizName:stp.type==="read"?(stp.k==="phone"?s.phoneName:s.attName):s.days[stp.k]}
+function readName(k){const s=t();return k==="phone"?s.phoneName:k==="clock"?s.clockName:s.attName}
+function stepName(stp){const s=t();return stp.type==="quiz"?s.quizName:stp.type==="read"?readName(stp.k):s.days[stp.k]}
 function openStep(stp){if(!stp){renderCourse();show("v-course");return}
   if(stp.type==="quiz")openQuiz();else if(stp.type==="read")openReading(stp.k);
   else if(CONFIG.VIDEOS[lang][stp.k])openLesson(stp.k);else{renderCourse();show("v-course")}}
@@ -507,7 +508,7 @@ const local={
   login(k,pin){const u=this.users()[k];if(!u)return{ok:false,error:"not_found"};if(!u.pin)return{ok:false,error:"no_pin"};if(u.pin!==pin)return{ok:false,error:"wrong"};return this.state(k)},
   record(k,pin,item,score,total){const all=this.users(),u=all[k];if(!u||u.pin!==pin)return{ok:false,error:"wrong"};
     u.events=u.events||[];if(item==="quiz"||!u.events.some(e=>e.item===item))u.events.push({item,score,total,at:new Date().toISOString()});
-    const done=["day1","attendance","phone","day2","day3"].every(i=>u.events.some(e=>e.item===i))&&u.events.some(e=>e.item==="quiz"&&e.score>=CONFIG.PASS_SCORE);
+    const done=["day1","attendance","phone","clock","day2","day3"].every(i=>u.events.some(e=>e.item===i))&&u.events.some(e=>e.item==="quiz"&&e.score>=CONFIG.PASS_SCORE);
     if(done&&!u.cert){u.cert="VT-"+Math.random().toString(16).slice(2,8).toUpperCase();u.certAt=new Date().toISOString()}
     this.save(all);return this.state(k)}
 };
@@ -592,7 +593,7 @@ function renderCourse(){
     const h=document.createElement("h3");
     const sub=document.createElement("span");sub.className="muted";
     if(isQuiz){h.textContent=s.quizName;sub.textContent=progress.quiz?`${s.quizDesc} · ${progress.quiz.score}/${progress.quiz.total}`:s.quizDesc}
-    else if(stp.type==="read"){h.textContent=stp.k==="phone"?s.phoneName:s.attName;sub.textContent=`${s.dayLabel} 1 · ${s.readMin(stp.min)}`}
+    else if(stp.type==="read"){h.textContent=readName(stp.k);sub.textContent=`${s.dayLabel} 1 · ${s.readMin(stp.min)}`}
     else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`}
     const chip=document.createElement("span");chip.className="chip";
     const map={open:[lang==="es"?"Abrir":"Open","next"],done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
@@ -685,7 +686,12 @@ const ICO={
  phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
  no:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
  ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
- clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ punchin:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 12h8M13 9l3 3-3 3"/>',
+ punchout:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M16 12H8M11 9l-3 3 3 3"/>',
+ lunch:'<path d="M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 0-3 2-3 6s1 4 3 4v8"/>',
+ receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+ store:'<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/>'
 };
 function ico(n,cls){const sp=el("span","ico"+(cls?" "+cls:""));sp.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]}</svg>`;return sp}
 const ART={
@@ -706,6 +712,17 @@ const ART={
   <path d="M128 40h70a10 10 0 0 1 10 10v12a10 10 0 0 1-10 10h-50l-12 10 2-10h-10a10 10 0 0 1-10-10V50a10 10 0 0 1 10-10z" fill="#FFFFFF" stroke="#E2DDEA" stroke-width="2"/>
   <circle cx="148" cy="56" r="4" fill="#834B9E"/><circle cx="163" cy="56" r="4" fill="#834B9E"/><circle cx="178" cy="56" r="4" fill="#834B9E"/>
  </svg>`,
+ timeclock:`<svg viewBox="0 0 320 170" role="img" aria-label="An employee clocking in at the time clock">
+  <rect width="320" height="170" rx="14" fill="#F6F4FA"/>
+  <rect x="40" y="26" width="110" height="128" rx="12" fill="#834B9E"/><rect x="52" y="38" width="86" height="40" rx="6" fill="#1E1A24"/>
+  <text x="95" y="66" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#5DEB8A">7:58</text>
+  <rect x="58" y="90" width="74" height="14" rx="7" fill="#FEC938"/><circle cx="66" cy="124" r="7" fill="#FFFFFF" opacity=".85"/><circle cx="95" cy="124" r="7" fill="#FFFFFF" opacity=".85"/><circle cx="124" cy="124" r="7" fill="#FFFFFF" opacity=".85"/>
+  <circle cx="232" cy="70" r="17" fill="#E8B48A"/><path d="M215 66c0-12 8-18 17-18s17 6 17 18c-4-5-10-7-17-7s-13 2-17 7z" fill="#3A2A22"/>
+  <circle cx="226" cy="70" r="1.8" fill="#1E1A24"/><circle cx="238" cy="70" r="1.8" fill="#1E1A24"/><path d="M226 77q6 5 12 0" stroke="#1E1A24" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M204 150c0-28 12-58 28-58s28 30 28 58z" fill="#007BC4"/><rect x="222" y="96" width="20" height="30" rx="4" fill="#FFFFFF" opacity=".9"/>
+  <path d="M212 112q-30 0-62-6" stroke="#E8B48A" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="276" cy="36" r="20" fill="#FFFFFF" stroke="#F47321" stroke-width="4"/><path d="M276 26v10l7 5" stroke="#F47321" stroke-width="4" fill="none" stroke-linecap="round"/>
+ </svg>`,
  earbud:`<svg viewBox="0 0 120 120" role="img" aria-label="Earbud crossed out">
   <circle cx="60" cy="60" r="56" fill="#FFF4E8"/>
   <path d="M52 34c12 0 20 8 20 18v4c0 9-7 15-16 15h-6c-9 0-15-7-15-16v-4c0-10 7-17 17-17z" fill="#FFFFFF" stroke="#1E1A24" stroke-width="4"/>
@@ -719,11 +736,11 @@ function buildPhone(a,body){
     const sec=el("section");sec.append(el("h3",null,sc.h));
     if(sc.k==="hero"){const ar=el("div","art");ar.innerHTML=ART[sc.art];sec.append(ar,el("p",null,sc.txt))}
     else if(sc.k==="dodont"){const g=el("div","dd");
-      [["dont",sc.dont,"no","phone"],["do",sc.do,"ok","clock"]].forEach(([cls,[t,items],mark,pic])=>{const c=el("div","ddc "+cls);const hd=el("div","ddh");hd.append(ico(mark,cls),el("b",null,t));c.append(hd);
+      [["dont",sc.dont,"no",sc.pics?sc.pics[0]:"phone"],["do",sc.do,"ok",sc.pics?sc.pics[1]:"clock"]].forEach(([cls,[t,items],mark,pic])=>{const c=el("div","ddc "+cls);const hd=el("div","ddh");hd.append(ico(mark,cls),el("b",null,t));c.append(hd);
         const big=el("div","ddpic");big.append(ico(pic,cls));c.append(big);const ul=el("ul");items.forEach(i=>ul.append(el("li",null,i)));c.append(ul);g.append(c)});
       sec.append(g)}
     else if(sc.k==="steps"){const g=el("div","st3");sc.steps.forEach(([ic,t,x],i)=>{const r=el("div","st3r");const n=el("span","st3n",String(i+1));const tx=el("div");tx.append(el("b",null,t),el("span","muted",x));r.append(n,ico(ic),tx);g.append(r)});
-      const w=el("div","warnbox");w.append(ico("warn","w"),el("span",null,sc.warn));sec.append(g,w)}
+      sec.append(g);if(sc.warn){const w=el("div","warnbox");w.append(ico("warn","w"),el("span",null,sc.warn));sec.append(w)}}
     else if(sc.k==="tiles"){if(sc.lead)sec.append(el("p","muted",sc.lead));const g=el("div","tiles"+(sc.tiles.length<3?" two":""));sc.tiles.forEach(([ic,x])=>{const t=el("div","tile");t.append(ico(ic),el("span",null,x));g.append(t)});sec.append(g)}
     else if(sc.k==="rule"){const b=el("div","rulebox");const ar=el("div","art sm");ar.innerHTML=ART.earbud;b.append(ar,el("p","rulebig",sc.big));sec.append(b);
       sec.append(el("p","muted",sc.chipsLabel));const ch=el("div","chips");sc.chips.forEach(c=>ch.append(el("span",null,c)));sec.append(ch);
@@ -731,8 +748,40 @@ function buildPhone(a,body){
     body.append(sec);
   });
 }
+const CLOCK={
+ en:{eyebrow:"Step 4 · Day 1",title:"Time Clock & Lunch",lead:"Read each part, answer three quick questions, then sign the acknowledgement at the bottom.",
+  screens:[
+   {k:"hero",h:"Your time, recorded right",art:"timeclock",txt:"Your time punches are how you get paid correctly. Here's how to clock in and out, take your lunch, and buy something at the store the right way."},
+   {k:"steps",h:"Clocking in and out",steps:[["punchin","Clock in at your start time","Then go straight to your station, ready to work."],["punchout","Clock out at the end of your shift","After your work is done."],["person","Only punch for yourself","Never clock in or out for a coworker."]]},
+   {k:"steps",h:"Your 30-minute lunch",steps:[["chat","Tell your supervisor","Let your supervisor or manager know you're going."],["punchout","Clock out","Before you start your lunch."],["clock","Take the full 30 minutes","Don't cut it short or skip it."],["punchin","Clock back in","When your 30 minutes are up."],["boss","Check back in","Let your supervisor or manager know you're back."]],warn:"Every lunch: full 30 minutes, clocked out."},
+   {k:"dodont",h:"Where to take your lunch",pics:["store","lunch"],dont:["Not OK",["In your department","On the sales floor","At a register or counter"]],do:["OK",["In the designated break areas"]]},
+   {k:"tiles",h:"Buying something at the store",lead:"Shopping happens on your own time.",tiles:[["punchout","Clock out before you buy anything"],["cart","Shop before your shift, on your lunch, or after you clock out"],["receipt","Keep your receipt until you leave the store"],["warn","Pay before you eat or use anything"]]},
+   {k:"tiles",h:"Missed a punch?",tiles:[["boss","Tell your manager the same day"],["clock","So your time and your pay are correct"]]}],
+  checkTitle:"Check & sign",acks:["I tell my supervisor, clock out, and take my full 30-minute lunch.","I take my lunch only in the designated break areas.","I clock out before buying anything and keep my receipts."],
+  qs:[["You're about to go to lunch. What do you do first?",["Clock out and go","Tell your supervisor or manager, then clock out","Eat at your station so you're close by"],1,"Tell your supervisor or manager first, then clock out and take your full 30 minutes."],
+      ["Where do you take your lunch?",["In the designated break area","In your department","At the register when it's slow"],0,"Only in the designated break areas, never in your department or on the sales floor."],
+      ["You want to buy a drink during your shift. What's the rule?",["Take it now and pay at the end of the day","Buy it while you're on the clock","Clock out first, buy it, and keep the receipt"],2,"Clock out first, pay for it, and keep the receipt until you leave the store."]],
+  ackTitle:"Acknowledgement",ackText:"I have read and understood Vista Markets' time clock and lunch rules. I will clock in and out only for myself, tell my supervisor or manager before and after lunch, take my full 30-minute lunch clocked out in the designated break areas, clock out before making any purchase, and keep my receipts. I will tell my manager the same day about any missed punch.",
+  signLabel:"Type your full name to sign",signDate:"Date",errSign:"Type your full name exactly as you signed in.",signedBy:(n,d)=>`Signed by ${n} on ${d}.`,
+  done:"Sign and complete",errAck:"Check all three boxes first.",errQ:"Some answers aren't right yet. Read the explanation in orange and try again.",complete:"Done. The next step is unlocked.",next:"Next →",prev:"← Back",count:(i,n)=>`${i} of ${n}`},
+ es:{eyebrow:"Paso 4 · Día 1",title:"Reloj checador y comida",lead:"Lee cada parte, contesta tres preguntas rápidas y firma el reconocimiento al final.",
+  screens:[
+   {k:"hero",h:"Tu tiempo, bien registrado",art:"timeclock",txt:"Tus registros de entrada y salida son la forma en que se te paga correctamente. Aquí te explicamos cómo registrar tu entrada y salida, tomar tu comida y comprar algo en la tienda de la forma correcta."},
+   {k:"steps",h:"Registrar tu entrada y salida",steps:[["punchin","Registra tu entrada a tu hora","Luego ve directo a tu puesto, listo para trabajar."],["punchout","Registra tu salida al terminar","Cuando termines tu trabajo."],["person","Registra solo tu tiempo","Nunca registres la entrada o salida de un compañero."]]},
+   {k:"steps",h:"Tu comida de 30 minutos",steps:[["chat","Avísale a tu supervisor","Dile a tu supervisor o gerente que te vas a comer."],["punchout","Registra tu salida","Antes de empezar tu comida."],["clock","Toma los 30 minutos completos","No la acortes ni te la saltes."],["punchin","Registra tu entrada","Cuando terminen tus 30 minutos."],["boss","Avisa que regresaste","Dile a tu supervisor o gerente que ya volviste."]],warn:"Cada comida: 30 minutos completos, con salida registrada."},
+   {k:"dodont",h:"Dónde tomar tu comida",pics:["store","lunch"],dont:["No se vale",["En tu departamento","En el piso de ventas","En una caja o mostrador"]],do:["Sí se vale",["En las áreas de descanso designadas"]]},
+   {k:"tiles",h:"Comprar algo en la tienda",lead:"Las compras se hacen en tu propio tiempo.",tiles:[["punchout","Registra tu salida antes de comprar cualquier cosa"],["cart","Compra antes de tu turno, en tu comida o después de registrar tu salida"],["receipt","Guarda tu recibo hasta que salgas de la tienda"],["warn","Paga antes de comer o usar cualquier cosa"]]},
+   {k:"tiles",h:"¿Olvidaste un registro?",tiles:[["boss","Avísale a tu gerente el mismo día"],["clock","Para que tu tiempo y tu pago estén correctos"]]}],
+  checkTitle:"Revisa y firma",acks:["Le aviso a mi supervisor, registro mi salida y tomo mis 30 minutos completos de comida.","Tomo mi comida solo en las áreas de descanso designadas.","Registro mi salida antes de comprar cualquier cosa y guardo mis recibos."],
+  qs:[["Te vas a ir a comer. ¿Qué haces primero?",["Registro mi salida y me voy","Le aviso a mi supervisor o gerente y luego registro mi salida","Como en mi puesto para estar cerca"],1,"Primero avísale a tu supervisor o gerente, luego registra tu salida y toma tus 30 minutos completos."],
+      ["¿Dónde tomas tu comida?",["En el área de descanso designada","En mi departamento","En la caja cuando está tranquilo"],0,"Solo en las áreas de descanso designadas, nunca en tu departamento ni en el piso de ventas."],
+      ["Quieres comprar una bebida durante tu turno. ¿Cuál es la regla?",["La tomo ahora y la pago al final del día","La compro mientras estoy en mi turno","Registro mi salida, la compro y guardo el recibo"],2,"Registra tu salida primero, págala y guarda el recibo hasta que salgas de la tienda."]],
+  ackTitle:"Reconocimiento",ackText:"He leído y entendido las reglas del reloj checador y la hora de comida de Vista Markets. Registraré solo mi propio tiempo, le avisaré a mi supervisor o gerente antes y después de comer, tomaré mis 30 minutos completos de comida con salida registrada en las áreas de descanso designadas, registraré mi salida antes de hacer cualquier compra y guardaré mis recibos. Le avisaré a mi gerente el mismo día si olvido un registro.",
+  signLabel:"Escribe tu nombre completo para firmar",signDate:"Fecha",errSign:"Escribe tu nombre completo tal como lo pusiste al entrar.",signedBy:(n,d)=>`Firmado por ${n} el ${d}.`,
+  done:"Firmar y completar",errAck:"Marca las tres casillas primero.",errQ:"Algunas respuestas todavía no son correctas. Lee la explicación en naranja e intenta de nuevo.",complete:"Listo. El siguiente paso ya está abierto.",next:"Siguiente →",prev:"← Atrás",count:(i,n)=>`${i} de ${n}`}
+};
 let rdKey="attendance";
-const RD=()=>(rdKey==="phone"?PHONE:ATT)[lang];
+const RD=()=>(rdKey==="phone"?PHONE:rdKey==="clock"?CLOCK:ATT)[lang];
 function exampleDates(){
   const now=new Date();const d0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   const add=n=>{const x=new Date(d0);x.setDate(d0.getDate()+n);return x};
@@ -748,7 +797,7 @@ function openReading(k){
   const a=RD(),d=exampleDates();
   $("t-back3").textContent=t().back;$("rd-eyebrow").textContent=a.eyebrow;$("rd-title").textContent=a.title;$("rd-lead").textContent=a.lead;
   const body=$("rd-body");body.innerHTML="";
-  if(rdKey==="phone"){
+  if(rdKey!=="attendance"){
     buildPhone(a,body);
   }else{
   const sch=sectionList(a.sched[0],a.sched[1]);sch.insertBefore(el("p","muted",a.why[1]),sch.children[1]);body.append(sch);
@@ -767,7 +816,7 @@ function openReading(k){
   // check
   const ck=$("rd-check");ck.innerHTML="";const sec=el("section");sec.append(el("h3",null,a.checkTitle));
   a.acks.forEach((txt,i)=>{const l=el("label","ackbox");l.htmlFor="ack"+i;const c=el("input");c.type="checkbox";c.id="ack"+i;l.append(c,el("span",null,txt));sec.append(l)});
-  (rdKey==="phone"?a.qs:[a.q1,a.q2(d),a.q3]).forEach((q,qi)=>{
+  (a.qs||[a.q1,a.q2(d),a.q3]).forEach((q,qi)=>{
     const fs=el("fieldset");fs.style.cssText="border:0;margin:8px 0 0;padding:0;display:grid;gap:6px";
     fs.append(el("legend",null,`${qi+1}. ${q[0]}`));fs.querySelector("legend").style.fontWeight="800";
     q[1].forEach((o,oi)=>{const id=`rq${qi}o${oi}`;const l=el("label","opt");l.htmlFor=id;const r=el("input");r.type="radio";r.name="rq"+qi;r.id=id;r.value=oi;l.append(r,el("span",null,o));fs.append(l)});
