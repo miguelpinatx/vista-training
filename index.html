@@ -184,6 +184,14 @@ input:focus-visible,select:focus-visible,button:focus-visible,.lesson:focus-visi
 .cc-code{font-family:ui-monospace,Menlo,monospace;color:#834B9E}
 body.certmode header.top,body.certmode #demo-banner{display:none!important}
 body.certmode{padding-block:12px 24px}
+.certbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media print{
+  @page{size:letter landscape;margin:12mm}
+  body{background:#fff!important;padding:0!important}
+  body *{visibility:hidden}
+  #cert-printimg{visibility:visible;display:block!important;position:absolute;left:0;right:0;top:0;margin:0 auto;height:180mm;width:auto}
+}
+#cert-printimg{display:none}
 #c-instr{padding:8px 12px;font-size:.88rem}
 @media (max-height:620px){.certcard{gap:5px;padding:12px}.cc-top img{height:30px}.cc-name{font-size:1.45rem}.cc-steps li{font-size:.8rem}.cc-line{font-size:.85rem}#c-instr{font-size:.8rem;padding:6px 10px}}
 .cert{border:2px dashed var(--brand);border-radius:var(--r);padding:20px;display:grid;gap:8px;text-align:center;background:var(--surface)}
@@ -317,10 +325,15 @@ body.certmode{padding-block:12px 24px}
           <div><dt id="c-l-code"></dt><dd id="c-code" class="cc-code"></dd></div>
         </dl>
       </div>
+      <div class="certbtns">
+        <button class="btn" type="button" id="c-send"></button>
+        <button class="btn secondary" type="button" id="c-print"></button>
+      </div>
       <button class="btn secondary" type="button" id="c-home"></button>
     </div>
   </section>
 
+  <img id="cert-printimg" alt="">
   <div class="toast" id="toast" role="status" hidden></div>
 
   <!-- RESULT -->
@@ -354,6 +367,8 @@ const CONFIG = {
   // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
   STORE_PHONES: { Alameda:"", Central:"", Doniphan:"", Horizon:"", Montana:"", Piedras:"", Urban:"" },
   PASS_SCORE: 8,
+  // Where "Send certificate" emails go if the device can't open the share sheet (leave blank to let the employee type it).
+  CORP_EMAIL: "",
   // Manager mode: SHA-256 of the 4-digit manager PIN (opens everything, saves nothing).
   MANAGER_PIN_SHA256: "d5e1986576c827e9402cf13e76958eabaadbba61b940154eb84bdef638cc19e6"
 };
@@ -368,7 +383,7 @@ const T = {
   errExists:"You already started training. Enter your PIN to continue.",errNotFound:"We couldn't find you. Check that your name and store match what you used before.",
   errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
   errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
-  certOpen:"View my certificate",certInstr:"Take a screenshot of this certificate and send it to your manager.",certBadge:"Training",certKicker:"Certificate of Completion",
+  certOpen:"View my certificate",certInstr:"You did it. Tap Send to email your certificate to your manager, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
   certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Started",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
   certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
   errFill:"Fill in your name, the date and your store.",errNet:"Couldn't connect. Check your internet and try again.",
@@ -396,7 +411,7 @@ const T = {
   errExists:"Ya empezaste tu capacitación. Toca Continuar y escribe tu PIN.",errNotFound:"No te encontramos. Revisa que tu nombre y tienda sean los mismos que usaste antes.",
   errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
   errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
-  certOpen:"Ver mi certificado",certInstr:"Toma una captura de pantalla de este certificado y mándasela a tu gerente.",certBadge:"Capacitación",certKicker:"Certificado de terminación",
+  certOpen:"Ver mi certificado",certInstr:"Lo lograste. Toca Enviar para mandar tu certificado por correo a tu gerente, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
   certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Inicio",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
   certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
   errFill:"Escribe tu nombre, la fecha y tu tienda.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
@@ -921,9 +936,46 @@ function openCert(){
   $("c-l-start").textContent=s.certStart;$("c-start").textContent=fmtDate(me.date);
   $("c-l-done").textContent=s.certDone;$("c-done").textContent=fdate(c.at);
   $("c-l-code").textContent=s.certCode;$("c-code").textContent=c.code;
-  $("c-home").textContent=s.certHome;
+  $("c-home").textContent=s.certHome;$("c-send").textContent=s.certSend;$("c-print").textContent=s.certPrint;
   show("v-cert");window.scrollTo(0,0);
 }
+function certSummary(){
+  const s=t(),c=me.cert,best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
+  const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  return [`${s.certKicker} — Vista Markets`,me.name,`${s.certStore}: ${me.store}`,`${s.certStart}: ${fmtDate(me.date)}`,`${s.certDone}: ${fd}`,`${s.certCode}: ${c.code}`,"",...s.certSteps(best).map(x=>"✓ "+x)].join("\n");
+}
+function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src})}
+async function certImage(){
+  const s=t(),c=me.cert,best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
+  const W=1650,H=1275,cv=document.createElement("canvas");cv.width=W;cv.height=H;const g=cv.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,W,H);
+  g.lineWidth=18;g.strokeStyle="#834B9E";g.strokeRect(30,30,W-60,H-60);g.lineWidth=6;g.strokeStyle="#FEC938";g.strokeRect(62,62,W-124,H-124);
+  try{const lg=await loadImg("logo.png");const lh=120,lw=lg.width*lh/lg.height;g.drawImage(lg,(W-lw)/2,110,lw,lh)}catch(e){}
+  const F='"Nunito Sans",Arial,sans-serif';g.textAlign="center";g.fillStyle="#834B9E";
+  g.font=`800 34px ${F}`;g.fillText(s.certKicker.toUpperCase(),W/2,300);
+  g.fillStyle="#1E1A24";g.font=`800 92px ${F}`;g.fillText(me.name,W/2,410,W-260);
+  g.fillStyle="#FEC938";g.fillRect(W/2-420,440,840,6);
+  g.fillStyle="#655E72";g.font=`600 32px ${F}`;g.fillText(s.certLine,W/2,500,W-260);
+  const steps=s.certSteps(best);g.textAlign="left";g.font=`700 32px ${F}`;
+  const x0=W/2-330;steps.forEach((x,i)=>{const y=575+i*52;g.fillStyle="#23824F";g.beginPath();g.arc(x0,y-11,15,0,7);g.fill();g.fillStyle="#fff";g.font=`800 20px ${F}`;g.textAlign="center";g.fillText("✓",x0,y-4);g.textAlign="left";g.fillStyle="#1E1A24";g.font=`700 32px ${F}`;g.fillText(x,x0+32,y)});
+  const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  const cols=[[s.certStore,me.store],[s.certStart,fmtDate(me.date)],[s.certDone,fd],[s.certCode,c.code]];
+  g.textAlign="center";cols.forEach(([l,v],i)=>{const cx=W*(i+1)/5+(i-1.5)*40;g.fillStyle="#655E72";g.font=`700 24px ${F}`;g.fillText(l.toUpperCase(),cx,1010);g.fillStyle=i===3?"#834B9E":"#1E1A24";g.font=`800 34px ${F}`;g.fillText(v,cx,1058,330)});
+  return new Promise(r=>cv.toBlob(r,"image/png"));
+}
+$("c-print").addEventListener("click",async()=>{
+  const im=$("cert-printimg");
+  try{const blob=await certImage();await new Promise(r=>{im.onload=r;im.onerror=r;im.src=URL.createObjectURL(blob)})}catch(e){console.error(e)}
+  window.print();
+});
+$("c-send").addEventListener("click",async()=>{
+  const s=t(),subj=s.certSubject(me.name),body=certSummary();
+  try{
+    const blob=await certImage();const file=new File([blob],`Vista-Certificate-${me.cert.code}.png`,{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});return}
+  }catch(e){if(e&&e.name==="AbortError")return;console.error(e)}
+  location.href=`mailto:${encodeURIComponent(CONFIG.CORP_EMAIL||"")}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+});
 $("c-home").addEventListener("click",()=>{renderCourse();show("v-course")});
 
 /* ---------- sign in ---------- */
