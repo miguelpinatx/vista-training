@@ -218,21 +218,13 @@ body.certmode{padding-block:12px 24px}
     <div class="eyebrow" id="t-start-eyebrow"></div>
     <h1 id="t-start-title"></h1>
     <p class="muted" id="t-start-lead"></p>
-    <div class="seg" role="group" aria-label="Sign in">
-      <button type="button" id="mode-new" aria-pressed="true"></button>
-      <button type="button" id="mode-back" aria-pressed="false"></button>
-    </div>
     <form id="start-form" novalidate class="panel" style="padding:0;border:0;background:none">
       <label for="f-name"><span id="t-name"></span><input id="f-name" autocomplete="name" required></label>
       <div class="row2">
-        <label for="f-date" id="w-date"><span id="t-date"></span><input id="f-date" type="date" required></label>
         <label for="f-store"><span id="t-store"></span><select id="f-store" required></select></label>
+        <label for="f-dept"><span id="t-dept"></span><select id="f-dept" required></select></label>
       </div>
-      <div class="row2">
-        <label for="f-pin"><span id="t-pin"></span><input id="f-pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" required></label>
-        <label for="f-pin2" id="w-pin2"><span id="t-pin2"></span><input id="f-pin2" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" required></label>
-      </div>
-      <p class="muted" id="pin-hint" style="font-size:.9rem"></p>
+      <p class="muted" id="start-hint" style="font-size:.9rem"></p>
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
@@ -362,12 +354,13 @@ const CONFIG = {
   STORES: ["Alameda","Central","Doniphan","Horizon","Montana","Piedras","Urban"],
   // Put each video file in the /videos folder and list it here. Blank = "coming soon".
   VIDEOS: {
-    en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4", attendance: "videos/attendance-en.mp4" },
+    en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4", attendance: "videos/attendance-en.mp4", sco: "videos/self-checkout-en.mp4" },
     es: { day1: "", day2: "", day3: "" }
   },
   // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
   STORE_PHONES: { Alameda:"", Central:"", Doniphan:"", Horizon:"", Montana:"", Piedras:"", Urban:"" },
   PASS_SCORE: 8,
+  DEPARTMENTS: ["Cashier / Front End","Self-Checkout","Grocery / Stocker","Produce","Meat Market","Hot Deli","Cold Deli","Bakery","Cakes","Other"],
   // Where "Send certificate" emails go if the device can't open the share sheet (leave blank to let the employee type it).
   CORP_EMAIL: "",
   // Manager mode: SHA-256 of the 4-digit manager PIN (opens everything, saves nothing).
@@ -377,7 +370,7 @@ const CONFIG = {
 
 const T = {
  en:{badge:"Training",startEyebrow:"New hire training",startTitle:"Welcome to the Vista team",
-  startLead:"Watch three short videos, read the attendance and phone rules, then take a 10-question quiz. Your trainer will check your results before you work on your own.",
+  startLead:"Watch the training videos, read the phone and time clock rules, then take a 10-question quiz. It takes about 30 minutes. Please finish it all in one sitting.",dept:"Department",pickDept:"Choose your department",startHint:"Your results are sent to your manager when you pass the quiz.",errSubmit:"Your results didn't send. Check your internet and tap Try again.",trySave:"Try again",optTag:"Optional",optSub:m=>`Only if you work self-checkout · Video · ${m} min`,
   name:"Full name",date:"Date",modeNew:"I'm new",modeBack:"I'm coming back",pin:"Create a 4-digit PIN",pinBack:"Your 4-digit PIN",pin2:"Type the PIN again",
   pinHintNew:"Make up a PIN you'll remember. You'll use it with your name and store to come back if you need to finish later.",pinHintBack:"Forgot your PIN? Ask your manager to reset it, then tap I'm new to make a new one.",
   backBtn:"Continue my training",errPin:"Your PIN must be 4 numbers.",errPin2:"The two PINs don't match.",
@@ -385,13 +378,13 @@ const T = {
   errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
   errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
   certOpen:"View my certificate",certInstr:"You did it. Tap Send to email your certificate to your manager, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
-  certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Started",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
+  certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Department",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
   certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Time Clock & Lunch","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
-  errFill:"Fill in your name, the date and your store.",errNet:"Couldn't connect. Check your internet and try again.",
+  errFill:"Fill in your name, store and department.",errNet:"Couldn't connect. Check your internet and try again.",
   courseEyebrow:"Your training",signout:"Not you? Sign out",
   meter:(d,t)=>`${d} of ${t} steps done`,
-  rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Day 3 video.",
-  days:{day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
+  rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Workplace Safety video.",
+  days:{attendance:"Attendance & Time Off",sco:"Self-Checkout Training",day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
   dayLabel:"Module",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",clockName:"Time Clock & Lunch",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
   chipDone:"Watched",chipNext:"Start here",chipLocked:"Locked",chipSoon:"Coming soon",chipPassed:"Passed",chipRetake:"Retake",
   back:"← Back to my training",play:"Play",pause:"Pause",back10:"⟲ 10 sec",full:"Full screen",
@@ -405,7 +398,7 @@ const T = {
   demo:"Preview mode: progress saves on this device only. Connect Supabase in the settings to track employees.",
   demoUnlock:"Preview tools: unlock all steps",soonMsg:"This video isn't uploaded yet."},
  es:{badge:"Capacitación",startEyebrow:"Capacitación para nuevos empleados",startTitle:"Bienvenido al equipo Vista",
-  startLead:"Mira tres videos cortos, lee las reglas de asistencia y días libres, y luego contesta un examen de 10 preguntas. Tu entrenador revisará tus resultados antes de que trabajes solo.",
+  startLead:"Mira los videos de capacitación, lee las reglas de celulares y del reloj checador y luego contesta un examen de 10 preguntas. Toma unos 30 minutos. Termínalo todo en una sola sesión.",dept:"Departamento",pickDept:"Escoge tu departamento",startHint:"Tus resultados se le envían a tu gerente cuando apruebes el examen.",errSubmit:"Tus resultados no se enviaron. Revisa tu internet y toca Intentar otra vez.",trySave:"Intentar otra vez",optTag:"Opcional",optSub:m=>`Solo si trabajas en autocobro · Video · ${m} min`,
   name:"Nombre completo",date:"Fecha",modeNew:"Soy nuevo",modeBack:"Ya empecé",pin:"Crea un PIN de 4 números",pinBack:"Tu PIN de 4 números",pin2:"Escribe el PIN otra vez",
   pinHintNew:"Inventa un PIN que recuerdes. Lo usarás con tu nombre y tienda para regresar si necesitas terminar después.",pinHintBack:"¿Olvidaste tu PIN? Pide a tu gerente que lo restablezca y luego toca Empezar para crear uno nuevo.",
   backBtn:"Continuar mi capacitación",errPin:"Tu PIN debe ser de 4 números.",errPin2:"Los dos PIN no coinciden.",
@@ -413,13 +406,13 @@ const T = {
   errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
   errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
   certOpen:"Ver mi certificado",certInstr:"Lo lograste. Toca Enviar para mandar tu certificado por correo a tu gerente, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
-  certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Inicio",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
+  certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Departamento",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
   certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Reloj checador y comida","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
-  errFill:"Escribe tu nombre, la fecha y tu tienda.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
+  errFill:"Escribe tu nombre, tienda y departamento.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
   courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
   meter:(d,t)=>`${d} de ${t} pasos completos`,
-  rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video del Día 3.",
-  days:{day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
+  rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video de Seguridad en el trabajo.",
+  days:{attendance:"Asistencia y días libres",sco:"Capacitación de autocobro",day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
   dayLabel:"Módulo",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",clockName:"Reloj checador y comida",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
   chipDone:"Visto",chipNext:"Empieza aquí",chipLocked:"Bloqueado",chipSoon:"Próximamente",chipPassed:"Aprobado",chipRetake:"Repetir",
   back:"← Regresar a mi capacitación",play:"Reproducir",pause:"Pausa",back10:"⟲ 10 seg",full:"Pantalla completa",
@@ -436,19 +429,20 @@ const T = {
 
 const QUIZ=[
  {en:["What is Vista's Golden Rule?",["Help customers only when they ask for help","Never leave a customer unacknowledged","Finish your task first"]],es:["¿Cuál es la Regla de Oro de Vista?",["Ayuda a los clientes solo cuando te pidan ayuda","Nunca dejes a un cliente sin reconocer","Termina tu tarea primero"]],a:1},
- {en:["A customer asks where the tortillas are. You should:",["Point to the aisle","Say \"aisle 4\"","Walk them there"]],es:["Un cliente pregunta dónde están las tortillas. Debes:",["Señalar el pasillo","Decir \"pasillo 4\"","Acompañarlo hasta ahí"]],a:2},
- {en:["A customer is upset about a product. The first step is:",["Explain it's not your fault","Listen without interrupting","Call the vendor"]],es:["Un cliente está molesto por un producto. El primer paso es:",["Explicar que no es tu culpa","Escuchar sin interrumpir","Llamar al proveedor"]],a:1},
- {en:["The danger zone is:",["0°F–32°F","41°F–135°F","135°F–165°F"]],es:["La zona de peligro es:",["0°F–32°F","41°F–135°F","135°F–165°F"]],a:1},
- {en:["FIFO means:",["Fresh In, Fresh Out","First In, First Out","Fill It, Face It Often"]],es:["PEPS significa:",["Producto En Perfecto Servicio","Primero en Entrar, Primero en Salir","Precio Especial Por Semana"]],a:1},
- {en:["Where is raw meat stored in a cooler?",["Top shelf","Bottom shelf, below ready-to-eat food","Anywhere it fits"]],es:["¿Dónde se guarda la carne cruda en el refrigerador?",["En el anaquel de arriba","En el anaquel de abajo, debajo de lo listo para comer","Donde quepa"]],a:1},
- {en:["You see a spill in aisle 6. You:",["Tell someone at the end of your shift","Stop, Block, Clean","Walk around it"]],es:["Ves un derrame en el pasillo 6. Tú:",["Le avisas a alguien al final de tu turno","Detente, Bloquea, Limpia","Le das la vuelta"]],a:1},
- {en:["You see someone shoplifting. You:",["Chase them","Block the door","Don't confront — tell a manager"]],es:["Ves a alguien robando. Tú:",["Lo persigues","Bloqueas la puerta","No lo enfrentas — avisas a un gerente"]],a:2},
- {en:["What does PASS stand for?",["Pull, Aim, Squeeze, Sweep","Push, Alert, Spray, Stop","Point, Aim, Shoot, Sweep"]],es:["¿Qué significa PASS al usar un extintor?",["Jala, Apunta, Aprieta, Barre","Empuja, Avisa, Rocía, Para","Señala, Apunta, Dispara, Barre"]],a:0},
- {en:["You're running late. You:",["Call the store cell line, at least 2 hours before your shift when possible","Text a coworker","Explain when you arrive"]],es:["Vas a llegar tarde. Tú:",["Llamas al celular de la tienda, por lo menos 2 horas antes de tu turno cuando sea posible","Le mandas mensaje a un compañero","Lo explicas cuando llegues"]],a:0}
+ {en:["In V.I.S.T.A., what does the V stand for?",["Visually acknowledge the customer","Verify the price","Visit every aisle"]],es:["En V.I.S.T.A., ¿qué significa la V?",["Ve al cliente y reconócelo","Verifica el precio","Visita cada pasillo"]],a:0},
+ {en:["No customers are waiting at your area. What do you do?",["Check your phone","Greet, Clean, Stock","Take a short break"]],es:["No hay clientes esperando en tu área. ¿Qué haces?",["Revisas tu celular","Saluda, Limpia, Abastece","Tomas un descanso corto"]],a:1},
+ {en:["A customer has a complaint. What is the first step?",["Listen without interrupting","Tell them the store policy","Send them to another department"]],es:["Un cliente tiene una queja. ¿Cuál es el primer paso?",["Escuchar sin interrumpir","Explicarle las reglas de la tienda","Mandarlo a otro departamento"]],a:0},
+ {en:["You need a Saturday off. When is the last day to ask?",["The day before","By the Thursday 10 days before that week begins","When the schedule is posted"]],es:["Necesitas un sábado libre. ¿Cuál es el último día para pedirlo?",["Un día antes","A más tardar el jueves 10 días antes de que empiece esa semana","Cuando se publique el horario"]],a:1},
+ {en:["You're running late or can't come in. What do you do?",["Text a coworker","Post it in the group chat","Call the store cell line"]],es:["Vas a llegar tarde o no puedes venir. ¿Qué haces?",["Le mandas mensaje a un compañero","Lo pones en el chat del grupo","Llamas al celular de la tienda"]],a:2},
+ {en:["What does FIFO mean?",["Fresh items first, others later","First In, First Out: older product is sold first","Fill it full only"]],es:["¿Qué significa PEPS (FIFO)?",["Lo fresco primero y lo demás después","Primero en Entrar, Primero en Salir: lo más viejo se vende primero","Llenar el anaquel solo cuando esté vacío"]],a:1},
+ {en:["A cooler isn't working right and the product looks affected. What do you do?",["Tell your manager right away","Move the product somewhere else yourself","Wait until the end of your shift"]],es:["Un refrigerador no funciona bien y el producto se ve afectado. ¿Qué haces?",["Le avisas a tu gerente de inmediato","Mueves el producto tú mismo a otro lugar","Esperas al final de tu turno"]],a:0},
+ {en:["You see a spill in the aisle. What do you do?",["Walk past it and tell someone later","Stop, Block, Clean","Cover it with a box"]],es:["Ves un derrame en el pasillo. ¿Qué haces?",["Sigues de largo y avisas después","Detente, Bloquea, Limpia","Lo tapas con una caja"]],a:1},
+ {en:["You think someone is shoplifting. What do you do?",["Chase them to the door","Never confront or touch them. Tell a manager","Ask to check their bag"]],es:["Crees que alguien está robando. ¿Qué haces?",["Lo persigues hasta la puerta","Nunca lo confrontes ni lo toques. Avísale a un gerente","Le pides revisar su bolsa"]],a:1}
 ];
 
 const DAYS=["day1","day2","day3"];
-const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"read",min:5},{k:"phone",type:"read",min:4},{k:"clock",type:"read",min:3},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:5},{k:"quiz",type:"quiz"}];
+const REQ=()=>STEPS.filter(x=>!x.optional);
+const STEPS=[{k:"day1",type:"video",min:4},{k:"attendance",type:"video",min:4},{k:"phone",type:"read",min:4},{k:"clock",type:"read",min:3},{k:"day2",type:"video",min:4},{k:"day3",type:"video",min:5},{k:"quiz",type:"quiz"},{k:"sco",type:"video",min:5,optional:true}];
 const isMgr=()=>!!(me&&me.manager);
 const isDone=k=>k==="quiz"?!!(progress.quiz&&progress.quiz.passed):!!progress[k];
 const $=id=>document.getElementById(id);
@@ -462,7 +456,7 @@ const ss={get(k){try{return JSON.parse(sessionStorage.getItem(k))}catch(e){retur
 store.del("vt-me");                   // older versions remembered sign-in on the device
 let me=ss.get("vt-sess");             // {name,date,store,key,pin,cert:{code,at}} for this browser session only
 const makeKey=(n,st)=>n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim()+"|"+st;
-if(me&&!me.key)me=null;               // older saved sign-in without a key
+if(me&&!me.manager&&!me.dept)me=null;  // older sign-in from the PIN version
 const fmtDate=iso=>{if(!iso)return"";const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})};
 let progress={};                      // {day1:{at}, quiz:{score,total,passed}}
 let current=null;                     // lesson key in player
@@ -501,6 +495,20 @@ function applyState(d){
   ss.set("vt-sess",me);store.set(progKey(),progress);
 }
 /* Preview mode (no Supabase): same behavior, saved on this device only. */
+/* One sitting: progress lives in this browser tab until the employee submits. */
+function certList(best){const s=t(),l=s.certSteps(best);if(progress.sco)l.splice(l.length-1,0,s.days.sco);return l}
+function eventsPayload(){return Object.entries(progress).map(([item,v])=>item==="quiz"?{item,score:v.score,total:v.total,at:v.at}:{item,at:v.at})}
+async function submitAll(){
+  if(isMgr())return true;
+  try{
+    let d;
+    if(!LIVE){d={ok:true,cert_code:(me.cert&&me.cert.code)||("VT-"+Math.random().toString(16).slice(2,8).toUpperCase()),completed_at:(me.cert&&me.cert.at)||new Date().toISOString()}}
+    else{const r=await sb.rpc("training_submit",{p_key:me.key,p_name:me.name,p_store:me.store,p_department:me.dept,p_language:lang,p_events:eventsPayload()});if(r.error)throw r.error;d=r.data}
+    if(!d||!d.ok)throw new Error(d&&d.error||"submit");
+    if(d.cert_code)me.cert={code:d.cert_code,at:d.completed_at};
+    ss.set("vt-sess",me);return !!me.cert;
+  }catch(e){console.error(e);toast(t().errSubmit);return false}
+}
 const local={
   users(){return store.get("vt-users")||{}},
   save(u){store.set("vt-users",u)},
@@ -534,11 +542,8 @@ async function record(item,score=null,total=null){
   const at=new Date().toISOString();
   if(item==="quiz"){const prev=progress.quiz;if(!prev||score>prev.score)progress.quiz={score,total,passed:score>=CONFIG.PASS_SCORE,at}}
   else progress[item]={at};
-  store.set(progKey(),progress);
-  try{
-    const d=await api("training_record",{p_key:me.key,p_pin:me.pin,p_item:item,p_score:score,p_total:total,p_language:lang});
-    if(d&&d.ok)applyState(d);else toast(t().errSave);
-  }catch(e){console.error(e);toast(t().errSave)}
+  ss.set("vt-prog",progress);
+  if(item==="sco"&&me.cert)await submitAll();   // optional step done after the certificate: update the record
 }
 
 /* ---------- text ---------- */
@@ -548,7 +553,7 @@ function applyText(){
   const s=t();
   const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
   set("t-badge",s.badge);set("t-start-eyebrow",s.startEyebrow);set("t-start-title",s.startTitle);set("t-start-lead",s.startLead);
-  set("t-name",s.name);set("t-date",s.date);set("t-store",s.store);set("mode-new",s.modeNew);set("mode-back",s.modeBack);set("t-pin2",s.pin2);setMode(mode);
+  set("t-name",s.name);set("t-store",s.store);set("t-dept",s.dept);set("start-hint",s.startHint);set("t-start-btn",s.startBtn);
   set("t-course-eyebrow",s.courseEyebrow);set("t-signout",s.signout);set("t-rules",s.rules);
   set("t-back",s.back);set("t-back2",s.back);set("c-back10",s.back10);set("c-full",s.full);set("t-noskip",s.noskip);
   set("t-quiz-eyebrow",s.quizEyebrow);set("t-quiz-title",s.quizTitle);set("t-quiz-lead",s.quizLead);set("t-submit",s.submit);
@@ -557,6 +562,8 @@ function applyText(){
   const sel=$("f-store"),cur=sel.value;sel.innerHTML="";
   const o0=document.createElement("option");o0.value="";o0.textContent=s.pickStore;sel.appendChild(o0);
   CONFIG.STORES.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)});sel.value=cur;
+  const ds=$("f-dept"),dc=ds.value;ds.innerHTML="";const d0=document.createElement("option");d0.value="";d0.textContent=s.pickDept;ds.appendChild(d0);
+  CONFIG.DEPARTMENTS.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;ds.appendChild(o)});ds.value=dc;
   updatePlayBtn();
 }
 function setLang(l){lang=l;store.set("vt-lang",l);applyText();if(!$("v-course").hidden)renderCourse();if(!$("v-quiz").hidden)renderQuiz();if(!$("v-player").hidden&&current)openLesson(current);if(!$("v-read").hidden)openReading();}
@@ -565,7 +572,8 @@ function setLang(l){lang=l;store.set("vt-lang",l);applyText();if(!$("v-course").
 function stepState(i){
   const st=STEPS[i];
   if(isMgr())return st.type==="video"&&!CONFIG.VIDEOS[lang][st.k]?"soon":"open";
-  if(st.k==="quiz"){if(isDone("quiz"))return "passed";if(!STEPS.slice(0,i).every(x=>isDone(x.k)))return "locked";return progress.quiz?"retake":"next"}
+  if(st.optional)return isDone(st.k)?"done":CONFIG.VIDEOS[lang][st.k]?"open":"soon";
+  if(st.k==="quiz"){if(isDone("quiz"))return "passed";if(!STEPS.slice(0,i).filter(x=>!x.optional).every(x=>isDone(x.k)))return "locked";return progress.quiz?"retake":"next"}
   if(isDone(st.k))return "done";
   if(i>0&&!isDone(STEPS[i-1].k))return "locked";
   if(st.type==="video"&&!CONFIG.VIDEOS[lang][st.k])return "soon";
@@ -575,11 +583,11 @@ function renderCourse(){
   const s=t();
   const mg=isMgr();
   $("who-name").textContent=me.name;
-  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${fmtDate(me.date)}`;
+  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${me.dept}`;
   $("mgr-banner").hidden=!mg;$("meter").hidden=mg;$("t-rules").hidden=mg;
   $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Exit manager mode":s.signout;
-  const done=STEPS.filter(x=>isDone(x.k)).length;
-  $("meter-fill").style.width=(done/STEPS.length*100)+"%";$("meter-text").textContent=s.meter(done,STEPS.length);
+  const R=REQ(),done=R.filter(x=>isDone(x.k)).length;
+  $("meter-fill").style.width=(done/R.length*100)+"%";$("meter-text").textContent=s.meter(done,R.length);
   const cb=$("cert-open");cb.hidden=!me.cert||mg;cb.textContent="🎓 "+s.certOpen;cb.onclick=openCert;
   const box=$("lessons");box.innerHTML="";
   STEPS.forEach((stp,i)=>{
@@ -588,14 +596,14 @@ function renderCourse(){
     const open=st==="open"||st==="next"||st==="done"||st==="retake"||st==="passed";
     if(!open)b.setAttribute("aria-disabled","true");
     const tag=document.createElement("div");tag.className="tag";
-    tag.innerHTML=`<small></small><strong>${isQuiz?"✓":i+1}</strong>`;
-    tag.querySelector("small").textContent=isQuiz?s.quizTag:s.stepLabel;
+    tag.innerHTML=`<small></small><strong>${isQuiz?"✓":stp.optional?"+":i+1}</strong>`;
+    tag.querySelector("small").textContent=isQuiz?s.quizTag:stp.optional?s.optTag:s.stepLabel;
     const body=document.createElement("div");body.className="body";
     const h=document.createElement("h3");
     const sub=document.createElement("span");sub.className="muted";
     if(isQuiz){h.textContent=s.quizName;sub.textContent=progress.quiz?`${s.quizDesc} · ${progress.quiz.score}/${progress.quiz.total}`:s.quizDesc}
     else if(stp.type==="read"){h.textContent=readName(stp.k);sub.textContent=(stp.k==="attendance"&&CONFIG.VIDEOS[lang].attendance)?(lang==="es"?"Video y lectura · 8 min":"Video + read · 8 min"):s.readMin(stp.min)}
-    else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`}
+    else{const d=DAYS.indexOf(stp.k)+1;h.textContent=s.days[stp.k];sub.textContent=stp.optional?s.optSub(stp.min):d?`${s.dayLabel} ${d} · ${s.videoMin(stp.min)}`:s.videoMin(stp.min)}
     const chip=document.createElement("span");chip.className="chip";
     const map={open:[lang==="es"?"Abrir":"Open","next"],done:[s.chipDone,"done"],passed:[s.chipPassed,"done"],next:[s.chipNext,"next"],retake:[s.chipRetake,"next"],locked:[s.chipLocked,""],soon:[s.chipSoon,""]};
     chip.textContent=stp.type==="read"&&st==="done"?(lang==="es"?"Completo":"Complete"):map[st][0];if(map[st][1])chip.classList.add(map[st][1]);
@@ -879,7 +887,7 @@ const v=$("video");let maxT=0,lastSave=0;
 function updatePlayBtn(){$("c-play").textContent=v.paused?"▶ "+t().play:"❚❚ "+t().pause;$("big-play").hidden=!v.paused}
 function openLesson(k){
   current=k;const i=DAYS.indexOf(k);const s=t();
-  $("p-eyebrow").textContent=`${s.dayLabel} ${i+1}`;$("p-title").textContent=s.days[k];
+  $("p-eyebrow").textContent=i>=0?`${s.dayLabel} ${i+1}`:STEPS.find(x=>x.k===k).optional?s.optTag:`${s.stepLabel} ${STEPS.findIndex(x=>x.k===k)+1}`;$("p-title").textContent=s.days[k];
   $("p-done").hidden=!progress[k];$("p-done").textContent=s.done;$("p-next").hidden=true;if(progress[k])offerNext(k,$("p-next"),false);
   const src=CONFIG.VIDEOS[lang][k];
   v.pause();v.removeAttribute("src");
@@ -948,11 +956,12 @@ $("t-submit").addEventListener("click",async()=>{
   const score=ans.filter((a,i)=>a===QUIZ[i].a).length;
   $("t-submit").disabled=true;
   await record("quiz",score,QUIZ.length);
+  let sent=false;if(score>=CONFIG.PASS_SCORE&&!isMgr())sent=await submitAll();
   $("t-submit").disabled=false;
-  if(score>=CONFIG.PASS_SCORE&&me.cert){openCert();return}
-  showResult(score,ans);
+  if(sent&&me.cert){openCert();return}
+  showResult(score,ans,score>=CONFIG.PASS_SCORE&&!isMgr());
 });
-function showResult(score,ans){
+function showResult(score,ans,unsent){
   const s=t(),pass=score>=CONFIG.PASS_SCORE;
   $("r-eyebrow").textContent=pass?s.passEyebrow:s.failEyebrow;
   $("r-score").textContent=`${score}/${QUIZ.length}`;$("r-score").style.color=pass?"var(--ok)":"var(--carrot)";
@@ -961,6 +970,8 @@ function showResult(score,ans){
   if(pass){$("cert-name").textContent=me.name;$("cert-meta").textContent=`${me.store} · ${new Date().toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"})}`}
   $("r-btn").textContent=pass?s.home:s.retake;
   $("r-btn").onclick=()=>{if(pass){renderCourse();show("v-course")}else{markQuiz(ans);show("v-quiz");window.scrollTo(0,0)}};
+  if(unsent){$("r-lead").textContent=s.errSubmit;$("r-btn").textContent=s.trySave;
+    $("r-btn").onclick=async()=>{$("r-btn").disabled=true;const ok=await submitAll();$("r-btn").disabled=false;if(ok)openCert()}}
   if(isMgr()){
     $("r-eyebrow").textContent="Manager mode";$("r-title").textContent=pass?"That's a passing score.":"That score wouldn't pass.";
     $("r-lead").textContent=`Employees need ${CONFIG.PASS_SCORE} of ${QUIZ.length} to pass. Nothing was saved.`;$("r-cert").hidden=true;
@@ -985,9 +996,9 @@ function openCert(){
   const fdate=x=>new Date(x).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
   $("c-instr").textContent=s.certInstr;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
   $("c-name").textContent=me.name;$("c-line").textContent=s.certLine;
-  const ul=$("c-steps");ul.innerHTML="";s.certSteps(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
+  const ul=$("c-steps");ul.innerHTML="";certList(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
   $("c-l-store").textContent=s.certStore;$("c-store").textContent=me.store;
-  $("c-l-start").textContent=s.certStart;$("c-start").textContent=fmtDate(me.date);
+  $("c-l-start").textContent=s.certStart;$("c-start").textContent=me.dept||"";
   $("c-l-done").textContent=s.certDone;$("c-done").textContent=fdate(c.at);
   $("c-l-code").textContent=s.certCode;$("c-code").textContent=c.code;
   $("c-home").textContent=s.certHome;$("c-send").textContent=s.certSend;$("c-print").textContent=s.certPrint;
@@ -996,7 +1007,7 @@ function openCert(){
 function certSummary(){
   const s=t(),c=me.cert,best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
   const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  return [`${s.certKicker} — Vista Markets`,me.name,`${s.certStore}: ${me.store}`,`${s.certStart}: ${fmtDate(me.date)}`,`${s.certDone}: ${fd}`,`${s.certCode}: ${c.code}`,"",...s.certSteps(best).map(x=>"✓ "+x)].join("\n");
+  return [`${s.certKicker} — Vista Markets`,me.name,`${s.certStore}: ${me.store}`,`${s.certStart}: ${me.dept||""}`,`${s.certDone}: ${fd}`,`${s.certCode}: ${c.code}`,"",...certList(best).map(x=>"✓ "+x)].join("\n");
 }
 function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src})}
 async function certImage(){
@@ -1010,10 +1021,10 @@ async function certImage(){
   g.fillStyle="#1E1A24";g.font=`800 92px ${F}`;g.fillText(me.name,W/2,410,W-260);
   g.fillStyle="#FEC938";g.fillRect(W/2-420,440,840,6);
   g.fillStyle="#655E72";g.font=`600 32px ${F}`;g.fillText(s.certLine,W/2,500,W-260);
-  const steps=s.certSteps(best);g.textAlign="left";g.font=`700 32px ${F}`;
+  const steps=certList(best);g.textAlign="left";g.font=`700 32px ${F}`;
   const x0=W/2-330;steps.forEach((x,i)=>{const y=575+i*52;g.fillStyle="#23824F";g.beginPath();g.arc(x0,y-11,15,0,7);g.fill();g.fillStyle="#fff";g.font=`800 20px ${F}`;g.textAlign="center";g.fillText("✓",x0,y-4);g.textAlign="left";g.fillStyle="#1E1A24";g.font=`700 32px ${F}`;g.fillText(x,x0+32,y)});
   const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  const cols=[[s.certStore,me.store],[s.certStart,fmtDate(me.date)],[s.certDone,fd],[s.certCode,c.code]];
+  const cols=[[s.certStore,me.store],[s.certStart,me.dept||""],[s.certDone,fd],[s.certCode,c.code]];
   g.textAlign="center";cols.forEach(([l,v],i)=>{const cx=W*(i+1)/5+(i-1.5)*40;g.fillStyle="#655E72";g.font=`700 24px ${F}`;g.fillText(l.toUpperCase(),cx,1010);g.fillStyle=i===3?"#834B9E":"#1E1A24";g.font=`800 34px ${F}`;g.fillText(v,cx,1058,330)});
   return new Promise(r=>cv.toBlob(r,"image/png"));
 }
@@ -1033,42 +1044,15 @@ $("c-send").addEventListener("click",async()=>{
 $("c-home").addEventListener("click",()=>{renderCourse();show("v-course")});
 
 /* ---------- sign in ---------- */
-let mode="new";
-function setMode(m){
-  mode=m;const s=t(),isNew=m==="new";
-  $("mode-new").setAttribute("aria-pressed",isNew);$("mode-back").setAttribute("aria-pressed",!isNew);
-  $("w-date").hidden=!isNew;$("w-pin2").hidden=!isNew;
-  $("t-pin").textContent=isNew?s.pin:s.pinBack;$("pin-hint").textContent=isNew?s.pinHintNew:s.pinHintBack;
-  $("f-pin").autocomplete=isNew?"new-password":"current-password";
-  $("t-start-btn").textContent=isNew?s.startBtn:s.backBtn;$("start-err").hidden=true;
-}
-$("mode-new").addEventListener("click",()=>setMode("new"));
-$("mode-back").addEventListener("click",()=>setMode("back"));
-["f-pin","f-pin2"].forEach(id=>$(id).addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)}));
-$("start-form").addEventListener("submit",async e=>{
+$("start-form").addEventListener("submit",e=>{
   e.preventDefault();
-  const s=t(),err=$("start-err"),fail=m=>{err.textContent=m;err.hidden=false};
-  const name=$("f-name").value.trim().replace(/\s+/g," "),date=$("f-date").value,st=$("f-store").value,pin=$("f-pin").value;
-  if(!name||!st||(mode==="new"&&!date))return fail(s.errFill);
-  if(!/^\d{4}$/.test(pin))return fail(s.errPin);
-  if(mode==="new"&&pin!==$("f-pin2").value)return fail(s.errPin2);
-  err.hidden=true;const btn=$("t-start-btn");btn.disabled=true;
-  const key=makeKey(name,st);
-  try{
-    const d=mode==="new"
-      ?await api("training_register",{p_key:key,p_name:name,p_store:st,p_start_date:date,p_pin:pin,p_language:lang})
-      :await api("training_login",{p_key:key,p_pin:pin});
-    if(!d||!d.ok){
-      const map={exists:s.errExists,not_found:s.errNotFound,wrong:s.errWrong,locked:s.errLocked,no_pin:s.errNoPin,bad_pin:s.errPin,missing:s.errFill};
-      if(d&&d.error==="exists")setMode("back");
-      return fail(map[d&&d.error]||s.errNet);
-    }
-    me={name,date,store:st,key,pin};
-    applyState(d);
-    $("f-pin").value="";$("f-pin2").value="";
-    renderCourse();show("v-course");window.scrollTo(0,0);
-  }catch(x){console.error(x);fail(s.errNet)}
-  finally{btn.disabled=false}
+  const s=t(),err=$("start-err");
+  const name=$("f-name").value.trim().replace(/\s+/g," "),st=$("f-store").value,dept=$("f-dept").value;
+  if(!name||!st||!dept){err.textContent=s.errFill;err.hidden=false;return}
+  err.hidden=true;
+  const key=(crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)}));
+  me={name,store:st,dept,key,cert:null};progress={};ss.set("vt-sess",me);ss.set("vt-prog",progress);
+  renderCourse();show("v-course");window.scrollTo(0,0);
 });
 $("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-pin").focus()});
 $("m-pin").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
@@ -1083,17 +1067,16 @@ $("mgr-form").addEventListener("submit",async e=>{
   me={manager:true,name:"Manager mode",key:"manager",store:"",date:""};progress={};ss.set("vt-sess",me);
   renderCourse();show("v-course");window.scrollTo(0,0);
 });
-$("t-signout").addEventListener("click",()=>{ss.del("vt-sess");me=null;progress={};const d=$("f-date").value;$("start-form").reset();$("f-date").value=d;setMode("back");show("v-start")});
+$("t-signout").addEventListener("click",()=>{ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
 $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
 
 /* ---------- boot ---------- */
 applyText();
-(()=>{const n=new Date();$("f-date").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`})();
 (async()=>{
   if(me&&me.manager){progress={};renderCourse();show("v-course");return}
-  if(me&&me.pin){try{const d=await loadProgress();if(d&&d.ok){renderCourse();show("v-course");return}}catch(x){}
-    ss.del("vt-sess");me=null}
+  if(me&&me.key&&me.dept){progress=ss.get("vt-prog")||{};renderCourse();show("v-course");return}
+  ss.del("vt-sess");me=null;
   show("v-start");
 })();
 </script>
