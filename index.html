@@ -57,6 +57,11 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .lang button{border:0;background:none;color:var(--muted);font:700 .9rem var(--body);padding:10px 16px;min-height:44px;cursor:pointer}
 .lang button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:16px}
+.notice{display:grid;gap:4px;background:#FFF4E8;border:2px solid var(--carrot);border-radius:12px;padding:12px 14px;line-height:1.4}
+.notice b{font-size:1.05rem}
+.donebox{display:grid;gap:4px;background:var(--ok-bg);border:2px solid var(--ok);border-radius:12px;padding:14px 16px;line-height:1.4;text-align:center}
+.donebox b{font-size:1.2rem;color:var(--ok)}
+@media print{.donebox{display:none}}
 .banner{background:var(--warn-bg);border:1px solid var(--line);border-left:4px solid var(--carrot);border-radius:8px;padding:10px 12px;font-size:.9rem}
 label{display:grid;gap:6px;font-weight:700;font-size:.92rem}
 input,select{font:16px var(--body);padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);width:100%}
@@ -218,6 +223,7 @@ body.certmode{padding-block:12px 24px}
     <div class="eyebrow" id="t-start-eyebrow"></div>
     <h1 id="t-start-title"></h1>
     <p class="muted" id="t-start-lead"></p>
+    <div class="notice" id="t-notice"><b id="t-notice-h"></b><span id="t-notice-b"></span></div>
     <form id="start-form" novalidate class="panel" style="padding:0;border:0;background:none">
       <label for="f-name"><span id="t-name"></span><input id="f-name" autocomplete="name" required></label>
       <div class="row2">
@@ -246,6 +252,7 @@ body.certmode{padding-block:12px 24px}
       </div>
       <div class="banner mgr" id="mgr-banner" hidden>Manager mode: every step is open, videos can be skipped, and nothing is saved.</div>
       <div class="meter" id="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
+      <div class="notice" id="t-notice2"><b id="t-notice2-h"></b><span id="t-notice2-b"></span></div>
       <button class="btn" type="button" id="cert-open" hidden></button>
       <div class="lessons" id="lessons"></div>
       <p class="note" id="t-rules"></p>
@@ -304,7 +311,7 @@ body.certmode{padding-block:12px 24px}
   <!-- CERTIFICATE -->
   <section id="v-cert" hidden>
     <div class="wrap" style="gap:14px">
-      <div class="banner" id="c-instr"></div>
+      <div class="donebox"><b id="c-done-h"></b><span id="c-instr"></span></div>
       <div class="certcard" id="certcard">
         <div class="cc-top"><img src="logo.png" alt="Vista Markets" width="111" height="46"><span class="cc-badge" id="c-badge"></span></div>
         <div class="cc-kicker" id="c-kicker"></div>
@@ -370,14 +377,14 @@ const CONFIG = {
 
 const T = {
  en:{badge:"Training",startEyebrow:"New hire training",startTitle:"Welcome to the Vista team",
-  startLead:"Watch the training videos, read the phone and time clock rules, then take a 10-question quiz. It takes about 30 minutes. Please finish it all in one sitting.",dept:"Department",pickDept:"Choose your department",startHint:"Your results are sent to your manager when you pass the quiz.",errSubmit:"Your results didn't send. Check your internet and tap Try again.",trySave:"Try again",optTag:"Optional",optSub:m=>`Only if you work self-checkout · Video · ${m} min`,
+  startLead:"Watch the training videos, read the phone and time clock rules, then take a 10-question quiz.",noticeH:"Total time: about 30 minutes",noticeB:"Please don't close this page or leave until you complete every module and the quiz. When you're done, return to your supervisor or manager.",notice2H:"Stay on this page until you finish",notice2B:"About 30 minutes total. Complete every module and the quiz, then return to your supervisor or manager.",doneH:"Training complete",leaveWarn:"Your training isn't finished. If you leave, you'll have to start over.",dept:"Department",pickDept:"Choose your department",startHint:"Your results are sent to your manager when you pass the quiz.",errSubmit:"Your results didn't send. Check your internet and tap Try again.",trySave:"Try again",optTag:"Optional",optSub:m=>`Only if you work self-checkout · Video · ${m} min`,
   name:"Full name",date:"Date",modeNew:"I'm new",modeBack:"I'm coming back",pin:"Create a 4-digit PIN",pinBack:"Your 4-digit PIN",pin2:"Type the PIN again",
   pinHintNew:"Make up a PIN you'll remember. You'll use it with your name and store to come back if you need to finish later.",pinHintBack:"Forgot your PIN? Ask your manager to reset it, then tap I'm new to make a new one.",
   backBtn:"Continue my training",errPin:"Your PIN must be 4 numbers.",errPin2:"The two PINs don't match.",
   errExists:"You already started training. Enter your PIN to continue.",errNotFound:"We couldn't find you. Check that your name and store match what you used before.",
   errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
   errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
-  certOpen:"View my certificate",certInstr:"You did it. Tap Send to email your certificate to your manager, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
+  certOpen:"View my certificate",certInstr:"Return to your supervisor or manager now and show them this screen. Tap Send to email your certificate, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
   certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Department",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
   certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Time Clock & Lunch","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
   errFill:"Fill in your name, store and department.",errNet:"Couldn't connect. Check your internet and try again.",
@@ -398,14 +405,14 @@ const T = {
   demo:"Preview mode: progress saves on this device only. Connect Supabase in the settings to track employees.",
   demoUnlock:"Preview tools: unlock all steps",soonMsg:"This video isn't uploaded yet."},
  es:{badge:"Capacitación",startEyebrow:"Capacitación para nuevos empleados",startTitle:"Bienvenido al equipo Vista",
-  startLead:"Mira los videos de capacitación, lee las reglas de celulares y del reloj checador y luego contesta un examen de 10 preguntas. Toma unos 30 minutos. Termínalo todo en una sola sesión.",dept:"Departamento",pickDept:"Escoge tu departamento",startHint:"Tus resultados se le envían a tu gerente cuando apruebes el examen.",errSubmit:"Tus resultados no se enviaron. Revisa tu internet y toca Intentar otra vez.",trySave:"Intentar otra vez",optTag:"Opcional",optSub:m=>`Solo si trabajas en autocobro · Video · ${m} min`,
+  startLead:"Mira los videos de capacitación, lee las reglas de celulares y del reloj checador y luego contesta un examen de 10 preguntas.",noticeH:"Tiempo total: unos 30 minutos",noticeB:"No cierres esta página ni te salgas hasta completar todos los módulos y el examen. Cuando termines, regresa con tu supervisor o gerente.",notice2H:"Quédate en esta página hasta terminar",notice2B:"Unos 30 minutos en total. Completa todos los módulos y el examen y luego regresa con tu supervisor o gerente.",doneH:"Capacitación completa",leaveWarn:"Tu capacitación no está terminada. Si te sales, tendrás que empezar de nuevo.",dept:"Departamento",pickDept:"Escoge tu departamento",startHint:"Tus resultados se le envían a tu gerente cuando apruebes el examen.",errSubmit:"Tus resultados no se enviaron. Revisa tu internet y toca Intentar otra vez.",trySave:"Intentar otra vez",optTag:"Opcional",optSub:m=>`Solo si trabajas en autocobro · Video · ${m} min`,
   name:"Nombre completo",date:"Fecha",modeNew:"Soy nuevo",modeBack:"Ya empecé",pin:"Crea un PIN de 4 números",pinBack:"Tu PIN de 4 números",pin2:"Escribe el PIN otra vez",
   pinHintNew:"Inventa un PIN que recuerdes. Lo usarás con tu nombre y tienda para regresar si necesitas terminar después.",pinHintBack:"¿Olvidaste tu PIN? Pide a tu gerente que lo restablezca y luego toca Empezar para crear uno nuevo.",
   backBtn:"Continuar mi capacitación",errPin:"Tu PIN debe ser de 4 números.",errPin2:"Los dos PIN no coinciden.",
   errExists:"Ya empezaste tu capacitación. Toca Continuar y escribe tu PIN.",errNotFound:"No te encontramos. Revisa que tu nombre y tienda sean los mismos que usaste antes.",
   errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
   errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
-  certOpen:"Ver mi certificado",certInstr:"Lo lograste. Toca Enviar para mandar tu certificado por correo a tu gerente, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
+  certOpen:"Ver mi certificado",certInstr:"Regresa ahora con tu supervisor o gerente y muéstrale esta pantalla. Toca Enviar para mandar tu certificado por correo, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
   certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Departamento",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
   certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Reloj checador y comida","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
   errFill:"Escribe tu nombre, tienda y departamento.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
@@ -553,7 +560,7 @@ function applyText(){
   const s=t();
   const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
   set("t-badge",s.badge);set("t-start-eyebrow",s.startEyebrow);set("t-start-title",s.startTitle);set("t-start-lead",s.startLead);
-  set("t-name",s.name);set("t-store",s.store);set("t-dept",s.dept);set("start-hint",s.startHint);set("t-start-btn",s.startBtn);
+  set("t-notice-h",s.noticeH);set("t-notice-b",s.noticeB);set("t-notice2-h",s.notice2H);set("t-notice2-b",s.notice2B);set("t-name",s.name);set("t-store",s.store);set("t-dept",s.dept);set("start-hint",s.startHint);set("t-start-btn",s.startBtn);
   set("t-course-eyebrow",s.courseEyebrow);set("t-signout",s.signout);set("t-rules",s.rules);
   set("t-back",s.back);set("t-back2",s.back);set("c-back10",s.back10);set("c-full",s.full);set("t-noskip",s.noskip);
   set("t-quiz-eyebrow",s.quizEyebrow);set("t-quiz-title",s.quizTitle);set("t-quiz-lead",s.quizLead);set("t-submit",s.submit);
@@ -588,6 +595,7 @@ function renderCourse(){
   $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Exit manager mode":s.signout;
   const R=REQ(),done=R.filter(x=>isDone(x.k)).length;
   $("meter-fill").style.width=(done/R.length*100)+"%";$("meter-text").textContent=s.meter(done,R.length);
+  $("t-notice2").hidden=mg||!!me.cert;
   const cb=$("cert-open");cb.hidden=!me.cert||mg;cb.textContent="🎓 "+s.certOpen;cb.onclick=openCert;
   const box=$("lessons");box.innerHTML="";
   STEPS.forEach((stp,i)=>{
@@ -994,7 +1002,7 @@ function openCert(){
   const s=t(),c=me.cert;if(!c)return;
   const best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
   const fdate=x=>new Date(x).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  $("c-instr").textContent=s.certInstr;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
+  $("c-instr").textContent=s.certInstr;$("c-done-h").textContent="✓ "+s.doneH;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
   $("c-name").textContent=me.name;$("c-line").textContent=s.certLine;
   const ul=$("c-steps");ul.innerHTML="";certList(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
   $("c-l-store").textContent=s.certStore;$("c-store").textContent=me.store;
@@ -1070,6 +1078,8 @@ $("mgr-form").addEventListener("submit",async e=>{
 $("t-signout").addEventListener("click",()=>{ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
 $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
+
+window.addEventListener("beforeunload",e=>{if(me&&!me.manager&&!me.cert&&Object.keys(progress).length){e.preventDefault();e.returnValue=t().leaveWarn;return t().leaveWarn}});
 
 /* ---------- boot ---------- */
 applyText();
