@@ -234,6 +234,7 @@ body.certmode{padding-block:12px 24px}
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
+    <a class="linkish" href="first-day-form.pdf" target="_blank" rel="noopener" style="justify-self:center">Print First-Day sign-off form / Imprimir hoja del primer día</a>
     <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Admin login</button>
     <form id="mgr-form" novalidate class="panel mgrbox" hidden>
       <label for="m-email"><span>Admin email</span><input id="m-email" type="email" autocomplete="username" required></label>
@@ -330,6 +331,7 @@ body.certmode{padding-block:12px 24px}
         <button class="btn" type="button" id="c-send"></button>
         <button class="btn secondary" type="button" id="c-print"></button>
       </div>
+      <a class="btn secondary" id="c-form" href="first-day-form.pdf" target="_blank" rel="noopener" style="text-align:center;text-decoration:none"></a>
       <button class="btn secondary" type="button" id="c-home"></button>
     </div>
   </section>
@@ -385,7 +387,7 @@ const T = {
   errWrong:"That PIN isn't right. After 5 wrong tries it locks for 15 minutes.",errLocked:"Too many wrong PINs. Try again in 15 minutes, or ask your manager to reset your PIN.",
   errNoPin:"Your manager reset your PIN. Tap I'm new to make a new one.",errSave:"Couldn't save your progress. Check your internet and try again.",
   certOpen:"View my certificate",certInstr:"Return to your supervisor or manager now and show them this screen. Tap Send to email your certificate, or Print to print it.",certSend:"Send certificate",certPrint:"Print",certSubject:n=>`Training certificate: ${n}`,certBadge:"Training",certKicker:"Certificate of Completion",
-  certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Department",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",
+  certLine:"has completed Vista Markets New Hire Training",certStore:"Store",certStart:"Department",certDone:"Completed",certCode:"Certificate #",certHome:"Back to my training",certForm:"Manager: print First-Day sign-off form",
   certSteps:q=>["Customer Service","Attendance & Time Off","Phones & Earbuds","Time Clock & Lunch","Food Safety & Sanitation","Workplace Safety",`Knowledge check · ${q}`],store:"Store",pickStore:"Choose your store",startBtn:"Start training",
   errFill:"Fill in your name, store and department.",errNet:"Couldn't connect. Check your internet and try again.",
   courseEyebrow:"Your training",signout:"Not you? Sign out",
@@ -413,7 +415,7 @@ const T = {
   errWrong:"Ese PIN no es correcto. Después de 5 intentos se bloquea 15 minutos.",errLocked:"Demasiados intentos. Intenta en 15 minutos o pide a tu gerente que restablezca tu PIN.",
   errNoPin:"Tu gerente restableció tu PIN. Toca Empezar para crear uno nuevo.",errSave:"No se pudo guardar tu avance. Revisa tu internet e intenta de nuevo.",
   certOpen:"Ver mi certificado",certInstr:"Regresa ahora con tu supervisor o gerente y muéstrale esta pantalla. Toca Enviar para mandar tu certificado por correo, o Imprimir para imprimirlo.",certSend:"Enviar certificado",certPrint:"Imprimir",certSubject:n=>`Certificado de capacitación: ${n}`,certBadge:"Capacitación",certKicker:"Certificado de terminación",
-  certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Departamento",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",
+  certLine:"completó la Capacitación para Nuevos Empleados de Vista Markets",certStore:"Tienda",certStart:"Departamento",certDone:"Terminó",certCode:"Certificado #",certHome:"Regresar a mi capacitación",certForm:"Gerente: imprimir hoja del primer día",
   certSteps:q=>["Servicio al cliente","Asistencia y días libres","Celulares y audífonos","Reloj checador y comida","Seguridad alimentaria","Seguridad en el trabajo",`Examen · ${q}`],store:"Tienda",pickStore:"Escoge tu tienda",startBtn:"Empezar",
   errFill:"Escribe tu nombre, tienda y departamento.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
   courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
@@ -1009,7 +1011,7 @@ function openCert(){
   $("c-l-start").textContent=s.certStart;$("c-start").textContent=me.dept||"";
   $("c-l-done").textContent=s.certDone;$("c-done").textContent=fdate(c.at);
   $("c-l-code").textContent=s.certCode;$("c-code").textContent=c.code;
-  $("c-home").textContent=s.certHome;$("c-send").textContent=s.certSend;$("c-print").textContent=s.certPrint;
+  $("c-home").textContent=s.certHome;$("c-form").textContent=s.certForm;$("c-send").textContent=s.certSend;$("c-print").textContent=s.certPrint;
   show("v-cert");window.scrollTo(0,0);
 }
 function certSummary(){
