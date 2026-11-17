@@ -216,7 +216,7 @@ body.certmode{padding-block:12px 24px}
 <div class="wrap">
   <header class="top">
     <div class="mark"><img src="logo.png" alt="Vista Markets" width="111" height="46"><span id="t-badge">Training</span></div>
-    <div class="lang" role="group" aria-label="Language" hidden><!-- Spanish: remove "hidden" here and set SPANISH_ON to true below -->
+    <div class="lang" role="group" aria-label="Language">
       <button type="button" id="lang-en" aria-pressed="true">English</button>
       <button type="button" id="lang-es" aria-pressed="false">Español</button>
     </div>
@@ -375,11 +375,12 @@ const CONFIG = {
   // Put each video file in the /videos folder and list it here. Blank = "coming soon".
   VIDEOS: {
     en: { day1: "videos/day1-en.mp4", day2: "videos/day2-en.mp4", day3: "videos/day3-en.mp4", attendance: "videos/attendance-en.mp4", sco: "videos/self-checkout-en.mp4" },
-    es: { day1: "", day2: "", day3: "" }
+    es: { day1: "videos/day1-es.mp4", day2: "videos/day2-es.mp4", day3: "videos/day3-es.mp4", attendance: "videos/attendance-es.mp4", sco: "videos/self-checkout-es.mp4" }
   },
   // Store cell line employees call when late or absent. Blank = "your manager will give you the number".
   STORE_PHONES: { Alameda:"", Central:"", Doniphan:"", Horizon:"", Montana:"", Piedras:"", Urban:"" },
   PASS_SCORE: 8,
+  DEPT_ES: {"Cashier / Front End":"Cajero / Frente","Grocery / Stocker":"Abarrotes / Surtidor","Produce":"Frutas y verduras","Meat Market":"Carnicería","Hot Deli":"Deli caliente","Cold Deli":"Deli frío","Bakery":"Panadería","Cakes":"Pasteles","Tortilleria":"Tortillería","Pricing":"Precios","Management":"Gerencia","Other":"Otro"},
   DEPARTMENTS: ["Cashier / Front End","Grocery / Stocker","Produce","Meat Market","Hot Deli","Cold Deli","Bakery","Cakes","Tortilleria","Pricing","Management","Other"],
   // Where "Send certificate" emails go if the device can't open the share sheet (leave blank to let the employee type it).
   CORP_EMAIL: "",
@@ -469,7 +470,8 @@ const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){retu
 const LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY&&window.supabase);
 const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY):null;
 
-const SPANISH_ON=false;   // turn on when the Spanish videos are ready
+const SPANISH_ON=true;
+function dn(d){d=d||"";return lang==="es"?(CONFIG.DEPT_ES[d]||d):d}
 let lang=SPANISH_ON?(store.get("vt-lang")||"en"):"en";
 const ss={get(k){try{return JSON.parse(sessionStorage.getItem(k))}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
 store.del("vt-me");                   // older versions remembered sign-in on the device
@@ -582,7 +584,7 @@ function applyText(){
   const o0=document.createElement("option");o0.value="";o0.textContent=s.pickStore;sel.appendChild(o0);
   CONFIG.STORES.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)});sel.value=cur;
   const ds=$("f-dept"),dc=ds.value;ds.innerHTML="";const d0=document.createElement("option");d0.value="";d0.textContent=s.pickDept;ds.appendChild(d0);
-  CONFIG.DEPARTMENTS.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;ds.appendChild(o)});ds.value=dc;
+  CONFIG.DEPARTMENTS.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=lang==="es"?(CONFIG.DEPT_ES[n]||n):n;ds.appendChild(o)});ds.value=dc;
   updatePlayBtn();
 }
 function setLang(l){lang=l;store.set("vt-lang",l);applyText();if(!$("v-course").hidden)renderCourse();if(!$("v-quiz").hidden)renderQuiz();if(!$("v-player").hidden&&current)openLesson(current);if(!$("v-read").hidden)openReading();}
@@ -602,7 +604,7 @@ function renderCourse(){
   const s=t();
   const mg=isMgr();
   $("who-name").textContent=me.name;
-  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${me.dept}`;
+  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${dn(me.dept)}`;
   $("mgr-banner").hidden=!mg;$("meter").hidden=mg;$("t-rules").hidden=mg;
   $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Sign out of admin":s.signout;
   const R=REQ(),done=R.filter(x=>isDone(x.k)).length;
@@ -1018,7 +1020,7 @@ function openCert(){
   $("c-name").textContent=me.name;$("c-line").textContent=s.certLine;
   const ul=$("c-steps");ul.innerHTML="";certList(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
   $("c-l-store").textContent=s.certStore;$("c-store").textContent=me.store;
-  $("c-l-start").textContent=s.certStart;$("c-start").textContent=me.dept||"";
+  $("c-l-start").textContent=s.certStart;$("c-start").textContent=dn(me.dept);
   $("c-l-done").textContent=s.certDone;$("c-done").textContent=fdate(c.at);
   $("c-l-code").textContent=s.certCode;$("c-code").textContent=c.code;
   $("c-home").textContent=s.certHome;$("c-form").textContent=s.certForm;$("c-send").textContent=s.certSend;$("c-print").textContent=s.certPrint;
@@ -1027,7 +1029,7 @@ function openCert(){
 function certSummary(){
   const s=t(),c=me.cert,best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
   const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  return [`${s.certKicker} — Vista Markets`,me.name,`${s.certStore}: ${me.store}`,`${s.certStart}: ${me.dept||""}`,`${s.certDone}: ${fd}`,`${s.certCode}: ${c.code}`,"",...certList(best).map(x=>"✓ "+x)].join("\n");
+  return [`${s.certKicker} — Vista Markets`,me.name,`${s.certStore}: ${me.store}`,`${s.certStart}: ${dn(me.dept)}`,`${s.certDone}: ${fd}`,`${s.certCode}: ${c.code}`,"",...certList(best).map(x=>"✓ "+x)].join("\n");
 }
 function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src})}
 async function certImage(){
@@ -1044,7 +1046,7 @@ async function certImage(){
   const steps=certList(best);g.textAlign="left";g.font=`700 32px ${F}`;
   const x0=W/2-330;steps.forEach((x,i)=>{const y=575+i*52;g.fillStyle="#23824F";g.beginPath();g.arc(x0,y-11,15,0,7);g.fill();g.fillStyle="#fff";g.font=`800 20px ${F}`;g.textAlign="center";g.fillText("✓",x0,y-4);g.textAlign="left";g.fillStyle="#1E1A24";g.font=`700 32px ${F}`;g.fillText(x,x0+32,y)});
   const fd=new Date(c.at).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  const cols=[[s.certStore,me.store],[s.certStart,me.dept||""],[s.certDone,fd],[s.certCode,c.code]];
+  const cols=[[s.certStore,me.store],[s.certStart,dn(me.dept)],[s.certDone,fd],[s.certCode,c.code]];
   g.textAlign="center";cols.forEach(([l,v],i)=>{const cx=W*(i+1)/5+(i-1.5)*40;g.fillStyle="#655E72";g.font=`700 24px ${F}`;g.fillText(l.toUpperCase(),cx,1010);g.fillStyle=i===3?"#834B9E":"#1E1A24";g.font=`800 34px ${F}`;g.fillText(v,cx,1058,330)});
   return new Promise(r=>cv.toBlob(r,"image/png"));
 }
