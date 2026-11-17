@@ -297,7 +297,6 @@ body.certmode{padding-block:12px 24px}
     <div class="ctrls">
       <button class="btn" type="button" id="c-play"></button>
       <button class="btn secondary" type="button" id="c-back10"></button>
-      <button class="btn secondary" type="button" id="c-fwd10" hidden>10 sec ⟳</button>
       <button class="btn secondary" type="button" id="c-full"></button>
       <span class="time" id="c-time">0:00 / 0:00</span>
     </div>
@@ -939,7 +938,7 @@ function openLesson(k){
   v.pause();v.removeAttribute("src");
   if(src){v.src=src;v.load()}else{$("p-done").hidden=false;$("p-done").textContent=s.soonMsg}
   maxT=progress[k]||isMgr()?Infinity:(store.get(posKey(k))||0);
-  $("c-fwd10").hidden=!isMgr();$("t-noskip").hidden=isMgr();
+  $("t-noskip").hidden=isMgr();
   show("v-player");updatePlayBtn();drawTrack();window.scrollTo(0,0);
 }
 v.addEventListener("loadedmetadata",()=>{if(isFinite(maxT)&&maxT>0)v.currentTime=Math.min(maxT,v.duration-1);drawTrack()});
@@ -973,7 +972,14 @@ function drawTrack(){
 const togglePlay=()=>{if(!v.src)return;v.paused?v.play().catch(()=>{}):v.pause()};
 $("c-play").addEventListener("click",togglePlay);$("big-play").addEventListener("click",togglePlay);v.addEventListener("click",togglePlay);
 $("c-back10").addEventListener("click",()=>{v.currentTime=Math.max(0,v.currentTime-10)});
-$("c-fwd10").addEventListener("click",()=>{if(isMgr()&&v.duration)v.currentTime=Math.min(v.duration-0.1,v.currentTime+10)});
+// Block skip-ahead from the iPad lock screen / full-screen / headphone controls (employees only).
+if("mediaSession" in navigator){
+  const capTo=t=>{if(!isFinite(maxT)){v.currentTime=t;return}v.currentTime=Math.min(t,maxT)};
+  try{navigator.mediaSession.setActionHandler("seekforward",()=>{if(!isFinite(maxT))v.currentTime=Math.min(v.duration||0,v.currentTime+10)})}catch(e){}
+  try{navigator.mediaSession.setActionHandler("seekbackward",()=>{v.currentTime=Math.max(0,v.currentTime-10)})}catch(e){}
+  try{navigator.mediaSession.setActionHandler("seekto",d=>{if(d&&typeof d.seekTime==="number")capTo(d.seekTime)})}catch(e){}
+  try{navigator.mediaSession.setActionHandler("nexttrack",null)}catch(e){}
+}
 $("c-full").addEventListener("click",()=>{const box=$("vbox");
   if(box.requestFullscreen)box.requestFullscreen().catch(()=>{if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()});
   else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();});
