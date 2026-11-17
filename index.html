@@ -258,13 +258,12 @@ body.certmode{padding-block:12px 24px}
       <p class="err" id="start-err" hidden></p>
       <button class="btn" type="submit" id="t-start-btn"></button>
     </form>
-    <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Admin login</button>
+    <button class="linkish" type="button" id="mgr-link" style="justify-self:center">Manager preview · Vista previa para gerentes</button>
     <form id="mgr-form" novalidate class="panel mgrbox" hidden>
-      <label for="m-email"><span>Admin email</span><input id="m-email" type="email" autocomplete="username" required></label>
-      <label for="m-pass"><span>Password</span><input id="m-pass" type="password" autocomplete="current-password" required></label>
-      <p class="muted" style="font-size:.9rem">Same login as the manager report. Opens every step so you can preview or present the training. Videos can be skipped and nothing is saved.</p>
+      <label for="m-code"><span>Manager code · Código de gerente</span><input id="m-code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" required></label>
+      <p class="muted" style="font-size:.9rem">Opens every step so you can watch the full videos, see the completion screen, and practice Send and Print. Nothing is saved.<br><span style="color:#2F7A22">Abre todos los pasos para ver los videos completos, la pantalla final y practicar Enviar e Imprimir. No se guarda nada.</span></p>
       <p class="err" id="mgr-err" hidden></p>
-      <button class="btn" type="submit" id="mgr-btn">Sign in as admin</button>
+      <button class="btn" type="submit" id="mgr-btn">Open preview · Abrir vista previa</button>
     </form>
   </section>
 
@@ -275,7 +274,7 @@ body.certmode{padding-block:12px 24px}
         <div><div class="eyebrow" id="t-course-eyebrow"></div><h1 id="who-name"></h1><p class="muted" id="who-meta"></p></div>
         <button class="linkish" type="button" id="t-signout"></button>
       </div>
-      <div class="banner mgr" id="mgr-banner" hidden>Admin mode: every step is open, videos can be skipped, and nothing is saved.</div>
+      <div class="banner mgr" id="mgr-banner" hidden><span id="mgr-banner-t"></span> <button class="linkish" type="button" id="mgr-jump" style="padding:4px 0;min-height:0"></button></div>
       <div class="meter" id="meter"><div class="bar"><i id="meter-fill"></i></div><span class="muted" id="meter-text"></span></div>
       <div class="notice" id="t-notice2"><b id="t-notice2-h"></b><span id="t-notice2-b"></span></div>
       <button class="btn" type="button" id="cert-open" hidden></button>
@@ -396,7 +395,8 @@ const CONFIG = {
   DEPARTMENTS: ["Cashier / Front End","Grocery / Stocker","Produce","Meat Market","Hot Deli","Cold Deli","Bakery","Cakes","Tortilleria","Pricing","Management","Other"],
   // Where "Send certificate" emails go if the device can't open the share sheet (leave blank to let the employee type it).
   CORP_EMAIL: "",
-  // Admin mode uses the same Supabase manager logins as manager.html (no PIN).
+  // Manager preview code (4 digits). Change it here anytime.
+  PREVIEW_CODE: "1234",
 };
 /* ============================================== */
 
@@ -483,6 +483,15 @@ const LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY&&window.supabase);
 const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY):null;
 
 const SPANISH_ON=true;
+const PV={en:{banner:"Manager preview: every step is open, videos can be skipped, and nothing is saved.",jump:"Show the completion screen →",meta:"Preview · show any step, in any order",eyebrow:"Manager preview",exit:"Exit preview",
+  instr:"PREVIEW: this is what employees see when they finish. Practice Send and Print here. Nothing is saved.",readOk:"All answers are correct. Preview: nothing was saved.",vidDone:"Video finished.",name:"Sample Employee",bad:"That code isn't right."},
+ es:{banner:"Vista previa para gerentes: todos los pasos están abiertos, los videos se pueden adelantar y no se guarda nada.",jump:"Ver la pantalla final →",meta:"Vista previa · cualquier paso, en cualquier orden",eyebrow:"Vista previa para gerentes",exit:"Salir de la vista previa",
+  instr:"VISTA PREVIA: esto es lo que ven los empleados al terminar. Practica Enviar e Imprimir aquí. No se guarda nada.",readOk:"Todas las respuestas son correctas. Vista previa: no se guardó nada.",vidDone:"Video terminado.",name:"Empleado de muestra",bad:"Ese código no es correcto."}};
+const pv=()=>PV[lang]||PV.en;
+function previewCert(score){
+  progress.quiz={score:score==null?QUIZ.length:score,total:QUIZ.length,passed:true,at:new Date().toISOString()};
+  me.name=pv().name;me.cert={code:"VT-SAMPLE",at:new Date().toISOString()};openCert();
+}
 function dn(d){d=d||"";return lang==="es"?(CONFIG.DEPT_ES[d]||d):d}
 let lang=SPANISH_ON?(store.get("vt-lang")||"en"):"en";
 const ss={get(k){try{return JSON.parse(sessionStorage.getItem(k))}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
@@ -616,9 +625,11 @@ function renderCourse(){
   const s=t();
   const mg=isMgr();
   $("who-name").textContent=me.name;
-  $("who-meta").textContent=mg?"Show any step, in any order":`${me.store} · ${dn(me.dept)}`;
+  if(mg)me.name=pv().name;$("who-name").textContent=me.name;
+  $("who-meta").textContent=mg?pv().meta:`${me.store} · ${dn(me.dept)}`;
+  $("mgr-banner-t").textContent=pv().banner;$("mgr-jump").textContent=pv().jump;
   $("mgr-banner").hidden=!mg;$("meter").hidden=mg;$("t-rules").hidden=mg;
-  $("t-course-eyebrow").textContent=mg?"Training preview":s.courseEyebrow;$("t-signout").textContent=mg?"Sign out of admin":s.signout;
+  $("t-course-eyebrow").textContent=mg?pv().eyebrow:s.courseEyebrow;$("t-signout").textContent=mg?pv().exit:s.signout;
   const R=REQ(),done=R.filter(x=>isDone(x.k)).length;
   $("meter-fill").style.width=(done/R.length*100)+"%";$("meter-text").textContent=s.meter(done,R.length);
   $("t-notice2").hidden=mg||!!me.cert;
@@ -907,7 +918,7 @@ $("rd-done").addEventListener("click",async()=>{
     if(pick)pick.parentElement.classList.add(good?"right":"wrong");
     fb.hidden=false;fb.className="fb "+(good?"ok":"no");fb.textContent=good?"✓":fs.dataset.why;if(!good)ok=false});
   if(!ok){err.textContent=a.errQ;err.hidden=false;return}
-  if(isMgr()){err.hidden=true;$("rd-done").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent="All answers are correct. Admin mode: nothing was saved.";$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});return}
+  if(isMgr()){err.hidden=true;$("rd-done").hidden=true;$("rd-complete").hidden=false;$("rd-complete").textContent=pv().readOk;$("rd-complete").scrollIntoView({behavior:"smooth",block:"center"});return}
   const norm=x=>x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
   if(norm($("rd-sign").value)!==norm(me.name)){err.textContent=a.errSign;err.hidden=false;$("rd-sign").focus();return}
   err.hidden=true;await record(rdKey);
@@ -946,7 +957,7 @@ v.addEventListener("play",updatePlayBtn);v.addEventListener("pause",updatePlayBt
 v.addEventListener("ended",async()=>{
   if(!isFinite(maxT)||maxT>=v.duration-3){
     if(!progress[current]&&!isMgr()){await record(current);store.del(posKey(current))}
-    maxT=Infinity;$("p-done").hidden=false;$("p-done").textContent=isMgr()?"Video finished.":t().done;offerNext(current,$("p-next"),true);
+    maxT=Infinity;$("p-done").hidden=false;$("p-done").textContent=isMgr()?pv().vidDone:t().done;offerNext(current,$("p-next"),true);
     if(v.webkitDisplayingFullscreen&&v.webkitExitFullscreen)v.webkitExitFullscreen();
     if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
   }
@@ -990,6 +1001,7 @@ $("t-submit").addEventListener("click",async()=>{
   await record("quiz",score,QUIZ.length);
   let sent=false;if(score>=CONFIG.PASS_SCORE&&!isMgr())sent=await submitAll();
   $("t-submit").disabled=false;
+  if(isMgr()&&score>=CONFIG.PASS_SCORE){previewCert(score);return}
   if(sent&&me.cert){openCert();return}
   showResult(score,ans,score>=CONFIG.PASS_SCORE&&!isMgr());
 });
@@ -1004,11 +1016,6 @@ function showResult(score,ans,unsent){
   $("r-btn").onclick=()=>{if(pass){renderCourse();show("v-course")}else{markQuiz(ans);show("v-quiz");window.scrollTo(0,0)}};
   if(unsent){$("r-lead").textContent=s.errSubmit;$("r-btn").textContent=s.trySave;
     $("r-btn").onclick=async()=>{$("r-btn").disabled=true;const ok=await submitAll();$("r-btn").disabled=false;if(ok)openCert()}}
-  if(isMgr()){
-    $("r-eyebrow").textContent="Admin mode";$("r-title").textContent=pass?"That's a passing score.":"That score wouldn't pass.";
-    $("r-lead").textContent=`Employees need ${CONFIG.PASS_SCORE} of ${QUIZ.length} to pass. Nothing was saved.`;$("r-cert").hidden=true;
-    $("r-btn").textContent="Review answers";$("r-btn").onclick=()=>{reviewQuiz(ans);show("v-quiz");window.scrollTo(0,0)};
-  }
   show("v-result");window.scrollTo(0,0);
 }
 function reviewQuiz(ans){
@@ -1026,7 +1033,7 @@ function openCert(){
   const s=t(),c=me.cert;if(!c)return;
   const best=progress.quiz?`${progress.quiz.score}/${progress.quiz.total}`:"";
   const fdate=x=>new Date(x).toLocaleDateString(lang==="es"?"es-MX":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  $("c-instr").textContent=s.certInstr;$("c-done-h").textContent="✓ "+s.doneH;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
+  $("c-instr").textContent=isMgr()?pv().instr:s.certInstr;$("c-done-h").textContent="✓ "+s.doneH;$("c-badge").textContent=s.certBadge;$("c-kicker").textContent=s.certKicker;
   $("c-name").textContent=me.name;$("c-line").textContent=s.certLine;
   const ul=$("c-steps");ul.innerHTML="";certList(best).forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.append(li)});
   $("c-l-store").textContent=s.certStore;$("c-store").textContent=me.store;
@@ -1086,22 +1093,16 @@ $("start-form").addEventListener("submit",e=>{
   me={name,store:st,dept,key,cert:null};progress={};ss.set("vt-sess",me);ss.set("vt-prog",progress);
   renderCourse();show("v-course");window.scrollTo(0,0);
 });
-$("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-email").focus()});
-// Separate client that never stores the admin session on the device: it ends when the page closes.
-const sbAdmin=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"vt-admin"}}):null;
-$("mgr-form").addEventListener("submit",async e=>{
-  e.preventDefault();const err=$("mgr-err"),btn=$("mgr-btn"),email=$("m-email").value.trim(),pass=$("m-pass").value;
-  if(!email||!pass){err.textContent="Enter your admin email and password.";err.hidden=false;return}
-  if(!sbAdmin){err.textContent="Admin login needs an internet connection.";err.hidden=false;return}
-  btn.disabled=true;
-  let ok=false;try{const r=await sbAdmin.auth.signInWithPassword({email,password:pass});ok=!r.error&&!!(r.data&&r.data.session)}catch(x){console.error(x)}
-  btn.disabled=false;$("m-pass").value="";
-  if(!ok){err.textContent="That email or password isn't right.";err.hidden=false;return}
+$("mgr-link").addEventListener("click",()=>{const f=$("mgr-form");f.hidden=!f.hidden;if(!f.hidden)$("m-code").focus()});
+$("mgr-form").addEventListener("submit",e=>{
+  e.preventDefault();const err=$("mgr-err"),code=$("m-code").value.trim();$("m-code").value="";
+  if(code!==String(CONFIG.PREVIEW_CODE)){err.textContent=pv().bad;err.hidden=false;return}
   err.hidden=true;$("mgr-form").hidden=true;
-  me={manager:true,name:"Admin mode",key:"admin",store:"",dept:""};progress={};
+  me={manager:true,name:pv().name,key:"preview",store:"Central",dept:"Cashier / Front End",cert:null};progress={};
   renderCourse();show("v-course");window.scrollTo(0,0);
 });
-$("t-signout").addEventListener("click",()=>{if(me&&me.manager&&sbAdmin)sbAdmin.auth.signOut().catch(()=>{});ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
+$("mgr-jump").addEventListener("click",()=>{if(isMgr())previewCert()});
+$("t-signout").addEventListener("click",()=>{ss.del("vt-sess");ss.del("vt-prog");me=null;progress={};$("start-form").reset();show("v-start")});
 $("lang-en").addEventListener("click",()=>setLang("en"));$("lang-es").addEventListener("click",()=>setLang("es"));
 $("demo-unlock").addEventListener("click",async()=>{for(const x of STEPS.filter(x=>x.type!=="quiz"))if(!progress[x.k])await record(x.k);renderCourse()});
 
