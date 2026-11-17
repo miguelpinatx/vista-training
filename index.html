@@ -285,7 +285,6 @@ body.certmode{padding-block:12px 24px}
       <button class="btn" type="button" id="c-play"></button>
       <button class="btn secondary" type="button" id="c-back10"></button>
       <button class="btn secondary" type="button" id="c-fwd10" hidden>10 sec ⟳</button>
-      <button class="btn secondary" type="button" id="c-speed" aria-label="Playback speed">1x</button>
       <button class="btn secondary" type="button" id="c-full"></button>
       <span class="time" id="c-time">0:00 / 0:00</span>
     </div>
@@ -403,7 +402,7 @@ const T = {
   errFill:"Fill in your name, store and department.",errNet:"Couldn't connect. Check your internet and try again.",
   courseEyebrow:"Your training",signout:"Not you? Sign out",
   meter:(d,t)=>`${d} of ${t} steps done`,
-  rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video or change its speed, but you can't skip ahead. The quiz opens after the Workplace Safety video.",
+  rules:"Steps open in order, and each one takes you to the next when you finish. You can rewind a video, but you can't skip ahead or speed it up. The quiz opens after the Workplace Safety video.",
   days:{attendance:"Attendance & Time Off",sco:"Self-Checkout Training",day1:"Welcome & Customer Service",day2:"Food Safety & Sanitation",day3:"Workplace Safety"},
   dayLabel:"Module",stepLabel:"Step",videoMin:m=>`Video · ${m} min`,readMin:m=>`Read · ${m} min`,attName:"Attendance & Time Off",phoneName:"Phones & Earbuds",clockName:"Time Clock & Lunch",quizTag:"Quiz",quizName:"Knowledge check",quizDesc:"10 questions · 8 to pass",
   chipDone:"Watched",chipNext:"Start here",chipLocked:"Locked",chipSoon:"Coming soon",chipPassed:"Passed",chipRetake:"Retake",
@@ -431,7 +430,7 @@ const T = {
   errFill:"Escribe tu nombre, tienda y departamento.",errNet:"No hay conexión. Revisa tu internet e intenta de nuevo.",
   courseEyebrow:"Tu capacitación",signout:"¿No eres tú? Salir",
   meter:(d,t)=>`${d} de ${t} pasos completos`,
-  rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video o cambiar su velocidad, pero no adelantarlo. El examen se abre después del video de Seguridad en el trabajo.",
+  rules:"Los pasos se abren en orden y cada uno te lleva al siguiente al terminar. Puedes regresar un video, pero no adelantarlo ni acelerarlo. El examen se abre después del video de Seguridad en el trabajo.",
   days:{attendance:"Asistencia y días libres",sco:"Capacitación de autocobro",day1:"Bienvenida y servicio al cliente",day2:"Seguridad alimentaria y limpieza",day3:"Seguridad en el trabajo"},
   dayLabel:"Módulo",stepLabel:"Paso",videoMin:m=>`Video · ${m} min`,readMin:m=>`Lectura · ${m} min`,attName:"Asistencia y días libres",phoneName:"Celulares y audífonos",clockName:"Reloj checador y comida",quizTag:"Examen",quizName:"Examen final",quizDesc:"10 preguntas · 8 para aprobar",
   chipDone:"Visto",chipNext:"Empieza aquí",chipLocked:"Bloqueado",chipSoon:"Próximamente",chipPassed:"Aprobado",chipRetake:"Repetir",
@@ -925,11 +924,9 @@ v.addEventListener("timeupdate",()=>{
   drawTrack();
 });
 v.addEventListener("seeking",()=>{if(isFinite(maxT)&&v.currentTime>maxT+0.75)v.currentTime=maxT});
-const SPEEDS=[1,1.25,1.5,0.75];let speed=1;
-const setSpeed=r=>{speed=r;v.playbackRate=r;$("c-speed").textContent=(r===1?"1":String(r))+"x"};
-v.addEventListener("ratechange",()=>{if(v.playbackRate!==speed)v.playbackRate=speed});
-v.addEventListener("loadeddata",()=>{v.playbackRate=speed});
-$("c-speed").addEventListener("click",()=>setSpeed(SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length]));
+// Always normal speed: block speed-ups from any player menu (including iPad full screen).
+v.addEventListener("ratechange",()=>{if(v.playbackRate!==1&&!isMgr())v.playbackRate=1});
+v.addEventListener("loadeddata",()=>{v.playbackRate=1});
 $("track").addEventListener("click",e=>{const d=v.duration;if(!d)return;const r=$("track").getBoundingClientRect();
   const want=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*d;const cap=isFinite(maxT)?maxT:d;v.currentTime=Math.min(want,cap)});
 v.addEventListener("play",updatePlayBtn);v.addEventListener("pause",updatePlayBtn);
