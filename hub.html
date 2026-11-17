@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vista Hub</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--purple:#834B9E;--blue:#007BC4;--yellow:#FEC938;--orange:#F47321;--green:#3E8E2F;--ink:#222;--muted:#5E5E5E;--bg:#F6F3F8;--card:#fff;--line:#E4DEE8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#F2EEF5;--muted:#B9B0C0;--bg:#17131A;--card:#221C26;--line:#3A3140}}
+:root[data-theme="dark"]{--ink:#F2EEF5;--muted:#B9B0C0;--bg:#17131A;--card:#221C26;--line:#3A3140}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+header img{height:52px;background:#fff;border-radius:10px;padding:4px 8px}
+h1{margin:0;font-size:1.9rem;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:4px 0 22px}
+.band{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:14px 0 22px}.band span:nth-child(1){flex:3;background:var(--purple)}.band span:nth-child(2){flex:1;background:var(--yellow)}.band span:nth-child(3){flex:1;background:var(--orange)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+a.card{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:inherit;min-height:120px;transition:transform .12s,border-color .12s}
+a.card:hover{transform:translateY(-2px);border-color:var(--c)}
+a.card:active{transform:none}
+a.card.soon{opacity:.6;cursor:default}a.card.soon:hover{transform:none;border-color:var(--line)}
+.pill{display:inline-block;margin-top:8px;font-size:.75rem;font-weight:700;letter-spacing:.04em;background:var(--line);color:var(--muted);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.ico{flex:none;width:52px;height:52px;border-radius:14px;background:var(--c);display:grid;place-items:center}
+.ico svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.t b{display:block;font-size:1.15rem}
+.t .es{display:block;color:var(--c);font-weight:600;font-size:.92rem;margin:1px 0 6px}
+.t span.d{color:var(--muted);font-size:.92rem}
+h2{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px}
+footer{margin-top:32px;color:var(--muted);font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="logo.png" alt="Vista Markets"><div><h1>Vista Hub</h1></div></header>
+  <p class="sub">Every Vista tool in one place · Todas las herramientas de Vista en un solo lugar</p>
+  <div class="band"><span></span><span></span><span></span></div>
+
+  <h2>People · Personal</h2>
+  <div class="grid">
+    <a class="card" style="--c:var(--green)" href="https://miguelpinatx.github.io/vista-training/">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg></div>
+      <div class="t"><b>New Hire Training</b><span class="es">Capacitación de nuevo ingreso</span><span class="d">Videos, readings and quiz for new employees.</span></div>
+    </a>
+    <a class="card" style="--c:var(--purple)" href="https://miguelpinatx.github.io/vista-hiring/">
+      <div class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M19 8v6M16 11h6"/></svg></div>
+      <div class="t"><b>Hiring Tracker</b><span class="es">Seguimiento de contrataciones</span><span class="d">Applicants, interviews and offers for every store.</span></div>
+    </a>
+    <a class="card soon" style="--c:var(--blue)" aria-disabled="true">
+      <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h7"/></svg></div>
+      <div class="t"><b>Schedule Builder</b><span class="es">Horarios</span><span class="d">Build and review weekly store schedules.</span><span class="pill">Coming soon · Próximamente</span></div>
+    </a>
+  </div>
+
+  <h2>Training records · Registros</h2>
+  <div class="grid">
+    <a class="card" style="--c:var(--orange)" href="https://miguelpinatx.github.io/vista-training/manager.html" target="_blank" rel="noopener">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></div>
+      <div class="t"><b>Training Report</b><span class="es">Reporte de capacitación</span><span class="d">Who finished training, quiz scores and certificates.</span></div>
+    </a>
+  </div>
+
+  <h2>Manager forms · Hojas para gerentes</h2>
+  <div class="grid">
+    <a class="card" style="--c:var(--green)" href="https://miguelpinatx.github.io/vista-training/first-day-form.pdf" target="_blank" rel="noopener">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></div>
+      <div class="t"><b>First-Day Form</b><span class="es">Hoja del primer día</span><span class="d">New employee sign-off. Send to Corporate Office (Betty).</span></div>
+    </a>
+    <a class="card" style="--c:var(--purple)" href="https://miguelpinatx.github.io/vista-training/refresher-form.pdf" target="_blank" rel="noopener">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div>
+      <div class="t"><b>Existing Employee Refresher</b><span class="es">Repaso para empleados actuales</span><span class="d">Refresher sign-off and Food Handler / TABC audit. Kept at the store.</span></div>
+    </a>
+    <a class="card" style="--c:var(--blue)" href="https://miguelpinatx.github.io/vista-training/coaching-form.pdf" target="_blank" rel="noopener">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <div class="t"><b>Coaching Form</b><span class="es">Hoja de coaching</span><span class="d">One-on-one coaching, recognition or warnings.</span></div>
+    </a>
+    <a class="card" style="--c:var(--orange)" href="https://miguelpinatx.github.io/vista-training/refresher-log.pdf" target="_blank" rel="noopener">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></div>
+      <div class="t"><b>Group Refresher Log</b><span class="es">Registro de repaso en grupo</span><span class="d">Sign-in sheet for huddles and quarterly refreshers.</span></div>
+    </a>
+  </div>
+
+  <footer>Questions? Contact Miguel · ¿Preguntas? Comunícate con Miguel</footer>
+</div>
+</body>
+</html>
