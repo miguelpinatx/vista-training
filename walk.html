@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vista Daily Walk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="robots" content="noindex,nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Same look as the Store Audit short form: sticky score bar, stacked section cards, tap-to-grade rows */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --sunk:#e8ece6; --fg:#18201b; --muted:#5b665e; --line:#d5dcd3;
+  --accent:#1f6b4a; --accent-fg:#ffffff; --accent-soft:#dcefe4;
+  --g1:#c43d2f; --g2:#d9762b; --g3:#c9a227; --g4:#6f9d34; --g5:#2c8a4e; --na:#7a847c;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 140px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--body);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 96px max(16px,env(safe-area-inset-left,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px))}
+.top-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand h1{font-size:20px;line-height:1.1}
+.brand span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px;flex-shrink:0}
+.seg button{border:0;background:transparent;color:var(--muted);padding:6px 10px;border-radius:6px;font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px;border-bottom:2px solid transparent;font-weight:600;font-family:var(--display);font-size:16px;letter-spacing:.02em}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.progress{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.live{font-family:var(--display);font-weight:700;font-size:15px;color:var(--fg)}
+.shiftnow{font-family:var(--display);font-weight:700;font-size:13px;padding:2px 8px;border-radius:20px;color:#fff;background:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+input[type=text],input[type=date],input[type=number],input[type=time],textarea,select{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+textarea{resize:vertical;min-height:70px}
+details.scale summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent);list-style:none}
+details.scale summary::-webkit-details-marker{display:none}
+.scale-list{display:grid;gap:6px;margin-top:10px}
+.scale-row{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:13.5px}
+.chip{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;color:#fff;font-weight:700;font-family:var(--display);font-size:17px}
+.shift-pick{margin-top:14px}
+.shift-pick .seg{display:flex;width:100%}
+.shift-pick .seg button{flex:1;padding:10px;font-size:15px;font-family:var(--display);font-weight:700;letter-spacing:.03em}
+.shift-pick .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}
+.sec-head h2{font-size:21px;line-height:1.15}
+.sec-head h2 small{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;display:block;text-transform:uppercase;margin-bottom:2px}
+.when{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:20px;margin-left:6px;vertical-align:1px;background:var(--accent-soft);color:var(--accent)}
+.sec-meta{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sec-meta b{font-family:var(--display);font-size:22px;display:block;line-height:1}
+.sec-meta span{font-size:12px;color:var(--muted)}
+.sec.collapsed .qs{display:none}
+.q{padding:14px 0;border-top:1px solid var(--line)}
+.q:first-child{margin-top:12px}
+.q-text{display:grid;grid-template-columns:28px 1fr;gap:6px;font-size:15px}
+.q-num{font-family:var(--display);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.q-by{font-size:11px;font-weight:700;color:var(--muted);margin-left:6px}
+.grades{display:grid;grid-template-columns:repeat(5,1fr) 1.1fr;gap:6px;margin-top:10px;padding-left:34px}
+@media (max-width:420px){.grades{padding-left:0}}
+.gbtn{height:44px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font-family:var(--display);font-weight:700;font-size:19px;transition:background .12s,border-color .12s,color .12s}
+.gbtn.na{font-size:14px;letter-spacing:.04em}
+.gbtn[aria-pressed="true"]{color:#fff;border-color:transparent}
+.gbtn[data-v="1"][aria-pressed="true"]{background:var(--g1)}
+.gbtn[data-v="2"][aria-pressed="true"]{background:var(--g2)}
+.gbtn[data-v="3"][aria-pressed="true"]{background:var(--g3)}
+.gbtn[data-v="4"][aria-pressed="true"]{background:var(--g4)}
+.gbtn[data-v="5"][aria-pressed="true"]{background:var(--g5)}
+.gbtn[data-v="na"][aria-pressed="true"]{background:var(--na)}
+.note-toggle{margin:8px 0 0 34px;border:0;background:none;color:var(--accent);font-size:13px;font-weight:600;padding:4px 0}
+@media (max-width:420px){.note-toggle{margin-left:0}}
+.note{margin:6px 0 0 34px}
+@media (max-width:420px){.note{margin-left:0}}
+.q.flag .q-num{color:var(--g1)}
+.q.flag .note-toggle{color:var(--g1)}
+
+/* extra blocks inside sections */
+.block{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.temps{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.temp{border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--surface)}
+.temp b{display:block;font-size:13px}
+.temp span{font-size:11.5px;color:var(--muted)}
+.temp .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.temp input{font:700 17px var(--display);text-align:center;padding:7px 4px;background:var(--bg)}
+.temp input::placeholder{font-size:12px;font-family:var(--body);font-weight:600;color:#a8b0aa}
+.temp input.t-ok{border-color:var(--g5);background:#e3f2e8}
+.temp input.t-warn{border-color:var(--g3);background:#fbf3d6}
+.temp input.t-no{border-color:var(--g1);background:#f9e1de;color:var(--g1)}
+.orow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.orow:first-of-type{border-top:0}
+.orow > span{flex:1;min-width:0;font-weight:600;font-size:14px}
+.oseg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px;flex-shrink:0}
+.oseg button{border:0;background:transparent;color:var(--muted);padding:7px 9px;border-radius:6px;font-weight:600;font-size:12.5px}
+.oseg button[aria-pressed="true"][data-v="sent"]{background:var(--g5);color:#fff}
+.oseg button[aria-pressed="true"][data-v="late"]{background:var(--g1);color:#fff}
+.oseg button[aria-pressed="true"][data-v="notday"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+@media (max-width:520px){.orow{flex-direction:column;align-items:stretch;gap:6px}.oseg{display:flex}.oseg button{flex:1}}
+.lst{display:grid;gap:6px;margin-top:8px}
+.li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;background:var(--bg);border-radius:9px;padding:9px 11px;font-size:13.5px}
+.li .x{border:0;background:none;color:var(--muted);font-size:19px;line-height:1;padding:0 4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:20px;margin-right:6px;vertical-align:1px;color:#fff}
+.addrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media (max-width:520px){.addrow{grid-template-columns:1fr}}
+.addrow .full{grid-column:1/-1}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.check input{width:20px;height:20px}
+
+.results h2{font-size:24px}
+.final{display:flex;align-items:center;gap:16px;margin:12px 0 4px}
+.final-num{font-family:var(--display);font-size:54px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.final-lbl{font-weight:600}
+.final-lbl small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.minis{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.mini-k{background:var(--bg);border-radius:9px;padding:8px 12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.mini-k b{font:700 19px var(--display);color:var(--fg);margin-right:4px}
+.rows{display:grid;gap:8px;margin-top:12px}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 120px 40px;gap:10px;align-items:center;font-size:14px}
+.rrow .mini{height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.rrow .mini i{display:block;height:100%}
+@media (max-width:480px){.rrow{grid-template-columns:minmax(0,1fr) 64px 40px}}
+.rrow b{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--display);font-size:17px}
+.rrow span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flags{margin-top:10px;display:grid;gap:6px}
+.flag-item{display:grid;grid-template-columns:30px 1fr;gap:8px;font-size:13.5px;align-items:start}
+.empty{color:var(--muted);font-size:14px}
+.r-h{margin-top:18px;font-size:17px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:11px 16px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.danger{color:var(--g1)}
+.btn.small{padding:8px 12px;font-size:13.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.status{font-size:13.5px;margin-top:10px;min-height:1.2em}
+.status.ok{color:var(--g5)} .status.err{color:var(--g1)}
+.confirm{margin-top:10px;padding:12px;border-radius:9px;background:var(--sunk);font-size:14px}
+.handoff{background:#fbf3d6;border:1px solid #ecd889;border-radius:12px;padding:12px 14px;margin-top:14px;font-size:14px}
+.handoff b{font-family:var(--display);font-size:16px}
+.handoff p{margin:4px 0 0;white-space:pre-wrap}
+
+.stores{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;display:grid;gap:2px}
+.st h3{font-size:17px}
+.st b{font:700 28px var(--display);line-height:1.05;font-variant-numeric:tabular-nums}
+.st p{margin:0;font-size:12px;color:var(--muted)}
+.hist-list{display:grid;gap:10px;margin-top:14px}
+.hist{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;color:var(--fg);width:100%}
+.hist .score{font-family:var(--display);font-size:26px;font-weight:700;color:#fff;border-radius:9px;height:48px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.hist h3{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.toolbar select{flex:1;min-width:160px}
+.detail-q{display:grid;grid-template-columns:30px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.detail-q em{display:block;color:var(--muted);font-style:normal;margin-top:2px}
+
+.photos{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.ph-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ph{position:relative;width:76px;height:76px;border-radius:9px;overflow:hidden;background:var(--sunk);flex-shrink:0}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph a{display:block;width:100%;height:100%}
+.ph .x{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center}
+.ph.busy{display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted)}
+.ph-add{width:76px;height:76px;border-radius:9px;border:1.5px dashed var(--line);background:transparent;color:var(--accent);font-weight:600;font-size:12px;display:grid;place-items:center;text-align:center;line-height:1.2;padding:4px}
+.ph-add b{display:block;font-size:22px;line-height:1}
+.ph-msg{font-size:12.5px;color:var(--muted);margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* v3: checklist bullets + one score per section */
+.b{padding:10px 0;border-top:1px solid var(--line)}
+.b:first-child{margin-top:10px}
+.b-row{display:flex;align-items:center;gap:8px}
+.ck{width:44px;height:44px;flex-shrink:0;border-radius:10px;border:1.8px solid var(--line);background:var(--surface);display:grid;place-items:center;font:700 20px var(--display);color:transparent}
+.ck[aria-pressed="true"]{background:var(--g5);border-color:var(--g5);color:#fff}
+.b-text{flex:1;min-width:0;font-size:15px;line-height:1.3}
+.b-text .q-by{margin-left:4px}
+.iss{width:44px;height:44px;flex-shrink:0;border-radius:10px;border:1.8px solid var(--line);background:var(--surface);font:700 18px var(--display);color:var(--g2)}
+.iss[aria-pressed="true"]{background:var(--g1);border-color:var(--g1);color:#fff}
+.info{width:30px;height:30px;flex-shrink:0;border-radius:50%;border:0;background:var(--sunk);color:var(--muted);font:700 14px Georgia,serif;font-style:italic}
+.info[aria-expanded="true"]{background:var(--accent);color:#fff}
+.std{margin:8px 0 0 52px;padding:8px 11px;border-radius:8px;background:var(--accent-soft);font-size:13px;color:#174d36}
+.b.is-iss .b-text{color:var(--g1);font-weight:600}
+.b.is-ok .b-text{color:var(--muted)}
+.issbox{margin:8px 0 0 52px;padding:10px;border-radius:9px;background:#f9e1de;border:1px solid #efc2bc}
+@media(max-width:460px){.std,.issbox{margin-left:0}}
+.issbox .oseg{margin-top:8px}
+.oseg button[aria-pressed="true"][data-v="fixed"]{background:var(--g5);color:#fff}
+.oseg button[aria-pressed="true"][data-v="follow"]{background:var(--g1);color:#fff}
+.allgood{margin-top:10px;border:1.5px dashed var(--g5);background:transparent;color:var(--g5);border-radius:9px;padding:9px 14px;font-weight:700;font-size:14px;width:100%}
+.rate{margin-top:14px;padding:12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.rate .label{margin-bottom:0}
+.rate .grades{padding-left:0}
+.rate .hint{margin-top:4px}
+.need-rate .label{color:var(--g1)}
+
+.sw{position:relative;width:48px;height:28px;flex-shrink:0;border-radius:20px;border:0;background:#c9d0c8;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--g5)}
+.sw[aria-checked="true"]::after{left:23px}
+.arow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.arow:first-of-type{border-top:0}
+.arow > div{flex:1;min-width:0}
+.arow b{display:block;font-size:15px}
+.arow span{font-size:12.5px;color:var(--muted)}
+.asec{border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden}
+.asec-h{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg)}
+.asec-h button.t{flex:1;text-align:left;border:0;background:none;font:700 17px var(--display);padding:0}
+.asec-h small{font:600 12px var(--body);color:var(--muted)}
+.atask{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-top:1px solid var(--line);font-size:14px}
+.atask > div{flex:1;min-width:0}
+.atask em{display:block;font-style:normal;color:var(--muted);font-size:12.5px}
+.atask.off > div{opacity:.45;text-decoration:line-through}
+.aedit{display:grid;gap:6px;padding:10px 12px;border-top:1px dashed var(--line);background:#fbfcfa}
+.aedit input,.aedit textarea{font-size:14px;padding:8px 10px}
+.savebar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:14px;background:var(--fg);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.savebar .btn{border-color:transparent}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form class="card" id="login-form" novalidate style="max-width:420px;margin:12vh auto 0">
+    <h1 style="font-size:26px">Vista Daily Walk</h1>
+    <p class="hint" id="li-sub" style="margin:4px 0 14px">Manager sign-in · Inicio de sesión de gerente</p>
+    <label class="label" for="li-email">Email</label><input type="text" id="li-email" autocomplete="username" inputmode="email" style="margin-bottom:10px">
+    <label class="label" for="li-pass" id="li-l-pass">Password / Contraseña</label><input type="password" id="li-pass" autocomplete="current-password">
+    <div class="actions"><button class="btn primary" type="submit" id="li-btn" style="width:100%">Sign in / Entrar</button></div>
+    <div class="status err" id="li-err"></div>
+  </form>
+</div>
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="top-row">
+      <div class="brand"><h1 id="t-title">Recorrido Diario</h1><span id="t-sub">Vista Markets · Gerentes AM y PM</span></div>
+      <div style="display:flex;gap:6px;align-items:center"><button class="btn small" id="b-signout" style="padding:6px 9px;font-size:12px">⎋</button><div class="seg" role="group" aria-label="Language">
+        <button id="lang-en" aria-pressed="true">EN</button><button id="lang-es" aria-pressed="false">ES</button>
+      </div></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-form" aria-selected="true">Recorrido</button>
+      <button role="tab" id="tab-hist" aria-selected="false">Historial</button>
+      <button role="tab" id="tab-admin" aria-selected="false" hidden>Admin</button>
+    </div>
+    <div class="progress" id="prog"><div class="bar"><i id="prog-bar"></i></div><span id="prog-txt">0 / 0</span><span class="shiftnow" id="prog-shift">AM</span><span class="live" id="prog-live">–</span></div>
+  </header>
+
+  <main id="view-form">
+    <section class="card">
+      <div class="grid2">
+        <div><label class="label" for="f-store" id="l-store">Tienda</label><select id="f-store"></select></div>
+        <div><label class="label" for="f-date" id="l-date">Fecha</label><input type="date" id="f-date"></div>
+        <div><label class="label" for="f-am" id="l-am">Gerente AM</label><input type="text" id="f-am" autocomplete="off"></div>
+        <div><label class="label" for="f-pm" id="l-pm">Gerente PM</label><input type="text" id="f-pm" autocomplete="off"></div>
+      </div>
+      <div class="shift-pick"><span class="label" id="l-shift">¿Quién está calificando ahora?</span>
+        <div class="seg" role="group"><button id="sh-am" aria-pressed="true">AM</button><button id="sh-pm" aria-pressed="false">PM</button></div>
+        <p class="hint" id="l-shift-hint">Cada calificación queda marcada con el turno. El gerente PM sigue en el mismo recorrido.</p></div>
+      <details class="scale" style="margin-top:14px"><summary id="l-scale">Escala de evaluación ▾</summary><div class="scale-list" id="scale-list"></div></details>
+    </section>
+    <div id="handoff-top"></div>
+    <div id="sections"></div>
+
+    <section class="card" id="needs-card"></section>
+    <section class="card" id="notes-card"></section>
+
+    <section class="card results" id="results">
+      <h2 id="l-results">Resultados del día</h2>
+      <div class="final"><div class="final-num" id="r-final">–</div><div class="final-lbl" id="r-final-lbl"></div></div>
+      <div class="minis" id="r-minis"></div>
+      <div class="rows" id="r-rows"></div>
+      <div id="r-extra"></div>
+      <div class="actions">
+        <button class="btn primary" id="b-submit">Enviar</button>
+        <button class="btn" id="b-copy">Copiar resumen</button>
+        <button class="btn danger" id="b-clear">Empezar de nuevo</button>
+      </div>
+      <div class="confirm" id="clear-confirm" hidden><span id="l-clear-q"></span>
+        <div class="actions" style="margin-top:8px"><button class="btn danger" id="b-clear-yes"></button><button class="btn" id="b-clear-no"></button></div></div>
+      <div class="status" id="status" role="status"></div>
+    </section>
+  </main>
+
+  <main id="view-admin" hidden></main>
+
+  <main id="view-hist" hidden>
+    <div id="h-stores"></div>
+    <div class="toolbar"><select id="h-store"></select></div>
+    <div class="hist-list" id="h-list"></div>
+    <section class="card" id="h-detail" hidden></section>
+  </main>
+</div>
+
+<script>
+/* ================= CONTENT ================= */
+const STORES=["Central","Alameda","Doniphan","Horizon","Montana","Piedras","Urban"];
+// Each bullet: [en, es, standard en, standard es]. Each section gets ONE 1–5 score.
+const BASE=[
+ {id:"open",en:"Opening",es:"Apertura",shift:"am",b:[
+  ["Store opened on time with all departments ready for business","La tienda abrió a tiempo con todos los departamentos listos para la venta","Complete a full store walk 30 minutes before opening. Cases stocked, registers operational and lighting on at opening time.","Realizar un recorrido completo 30 minutos antes de abrir. Vitrinas surtidas, cajas en operación y luces encendidas a la hora de apertura."],
+  ["Entrance, parking lot and carts clean and orderly","Entrada, estacionamiento y carritos limpios y en orden","The entrance sets the customer's first impression: no debris, carts collected, mats and doors clean.","La entrada es la primera impresión del cliente: sin basura, carritos recogidos, tapetes y puertas limpios."],
+  ["Restrooms clean and fully stocked","Baños limpios y completamente surtidos","Verify soap, paper towels and tissue at opening, mid-day and closing.","Verificar jabón, toallas y papel al abrir, a mediodía y al cerrar."],
+  ["Sales floor clear of freight, pallets and spills","Piso de venta libre de mercancía, tarimas y derrames","All freight worked or removed before opening. Spills addressed immediately to prevent slip-and-fall incidents.","Toda la mercancía trabajada o retirada antes de abrir. Los derrames se atienden de inmediato para prevenir caídas."],
+  ["Pricing, weekly ad and signage accurate","Precios, oferta semanal y letreros correctos","Ad items signed and priced correctly from the first day of the ad. Pricing errors erode customer trust.","Productos en oferta con letrero y precio correcto desde el primer día. Los errores de precio dañan la confianza del cliente."]]},
+ {id:"front",en:"Front End",es:"Frente y cajas",shift:"",b:[
+  ["Registers ready; prior-day deposit completed and secured","Cajas listas; depósito del día anterior completo y resguardado","Follow the cash office procedure for drawers and deposits.","Seguir el procedimiento de oficina para cajas y depósitos."],
+  ["Register coverage matches customer traffic","Cobertura de cajas de acuerdo al tráfico de clientes","Open an additional register when more than three customers are waiting in line.","Abrir otra caja cuando haya más de tres clientes esperando en fila."],
+  ["Self-checkout operational, stocked and attended","Autocobro en operación, surtido y con encargado","Receipt paper and bags stocked. The attendant greets customers and reminds them of accepted payments (card, EBT, WIC).","Papel y bolsas surtidos. El encargado saluda y recuerda las formas de pago aceptadas (tarjeta, EBT, WIC)."],
+  ["Cashiers greet and thank every customer","Los cajeros saludan y agradecen a cada cliente","Follow V.I.S.T.A.: acknowledge, invite, serve with care, thank, and invite them back.","Seguir V.I.S.T.A.: reconocer, invitar, servir con cuidado, agradecer e invitar a regresar."]]},
+ {id:"recv",en:"Receiving & Vendors",es:"Recepción y proveedores",shift:"",extra:"vendors",b:[
+  ["All deliveries counted against the invoice before signing","Todas las entregas contadas contra la factura antes de firmar","Never sign for product that has not been counted and verified.","Nunca firmar por producto que no haya sido contado y verificado."],
+  ["Product condition, dates and temperatures verified at delivery","Condición, fechas y temperatura verificadas al recibir","Refuse damaged or short-dated product. Refrigerated and frozen product must arrive cold and solid.","Rechazar producto dañado o con fecha corta. El producto refrigerado y congelado debe llegar frío y sólido."],
+  ["Shortages, damages and credits documented on the invoice","Faltantes, daños y créditos documentados en la factura","Note discrepancies on the invoice, obtain the driver's initials and report them the same day.","Anotar las diferencias en la factura, obtener iniciales del chofer y reportarlas el mismo día."],
+  ["Refrigerated and frozen product put away first","Producto refrigerado y congelado se guarda primero","Maintain the cold chain: cold and frozen product stored within 15–20 minutes of delivery.","Mantener la cadena de frío: guardar lo refrigerado y congelado dentro de 15–20 minutos."],
+  ["Vendors supervised; DSD vendors rotate and pull expired product","Proveedores supervisados; los de ruta rotan y retiran producto vencido","Vendors are not left unattended in the back room. Bread, soda, snack and dairy vendors rotate stock and remove out-of-date product.","Ningún proveedor sin supervisión en la bodega. Pan, refrescos, botanas y lácteos rotan su producto y retiran lo vencido."]]},
+ {id:"equip",en:"Equipment & Storage",es:"Equipo y almacenamiento",shift:"",b:[
+  ["All coolers, freezers and hot cases operating properly","Todos los refrigeradores, congeladores y vitrinas calientes funcionando","If any unit is not holding temperature, move product and report it to Paola or Joe immediately. Log it under Store Needs.","Si algún equipo no mantiene temperatura, mover el producto y reportarlo de inmediato a Paola o Joe. Registrarlo en Necesidades."],
+  ["Thawed product tagged with an expiration date based on thaw date","Producto descongelado etiquetado con fecha de vencimiento según su descongelación","Read the case instructions. If none are listed, use 7–10 days from thaw or consult a manager. Thaw under refrigeration only.","Leer las instrucciones de la caja. Si no indica, usar 7–10 días desde la descongelación o consultar a un gerente. Descongelar solo en refrigeración."],
+  ["Back room and walk-ins organized, product off the floor","Bodega y cuartos fríos ordenados, producto fuera del piso","Store product six inches off the floor, with raw meat on the lowest shelf.","Almacenar a seis pulgadas del piso, con la carne cruda en la repisa más baja."],
+  ["FIFO rotation followed throughout the store","Rotación PEPS en toda la tienda","First in, first out on every shelf, case and cooler.","Primero en entrar, primero en salir en anaqueles, vitrinas y refrigeradores."]]},
+ {id:"hotdeli",en:"Hot Deli",es:"Hot Deli",shift:"",b:[
+  ["Hot case full and on time for the AM and PM shifts","Vitrina caliente llena y a tiempo para el turno AM y PM","Top sellers (brisket, chile con queso) set first, following the department production guide.","Los productos de mayor venta (brisket, chile con queso) primero, según la guía de producción del departamento."],
+  ["Production monitored to prevent over-production","Producción supervisada para evitar sobreproducción","Produce to the daily sets. Excess production becomes waste.","Producir según los sets diarios. Lo que se produce de más se convierte en merma."],
+  ["Heat & serve items held no more than 4 hours in the warmer","Productos de calentar y servir no más de 4 horas en el calentador","Rotate and replace heat & serve product before it reaches four hours in the warmer.","Rotar y reemplazar el producto antes de cumplir cuatro horas en el calentador."],
+  ["All product dated and labeled","Todo el producto con fecha y etiqueta","Preparation date on every pan and container, following the shelf-life chart.","Fecha de preparación en cada charola y recipiente, según la tabla de vida útil."],
+  ["Hairnets, gloves, clean uniforms and a clean station","Red, guantes, uniforme y estación limpios","Wash hands before putting on gloves; change gloves between tasks.","Lavar manos antes de usar guantes; cambiar guantes entre tareas."]]},
+ {id:"colddeli",en:"Cold Deli & Salads",es:"Cold Deli y ensaladas",shift:"",b:[
+  ["Case fully merchandised: aguas frescas, cut fruit, salads, meats and cheeses","Vitrina completa: aguas frescas, fruta picada, ensaladas, carnes frías y quesos","Aguas frescas are the department's leading item and should never be out of stock.","Las aguas frescas son el producto principal del departamento y no deben agotarse."],
+  ["All product dated and within shelf life","Todo el producto con fecha y dentro de su vida útil","Most items carry a 4–5 day shelf life. Pull and scan expired product as waste.","La mayoría tiene 4–5 días de vida útil. Retirar y escanear como merma lo vencido."],
+  ["Slicers cleaned and sanitized","Rebanadoras limpias y sanitizadas","At least every four hours and when changing between meats and cheeses.","Por lo menos cada cuatro horas y al cambiar entre carnes y quesos."],
+  ["Hairnets, gloves and a clean station","Red, guantes y estación limpia","Same food-handling standard as the Hot Deli.","El mismo estándar de manejo de alimentos que el Hot Deli."]]},
+ {id:"meat",en:"Meat Market",es:"Carnicería",shift:"",b:[
+  ["Case full and well presented; packages sealed with no leaks","Vitrina llena y bien presentada; paquetes sellados sin fugas","Re-wrap leaking packages immediately.","Reempacar de inmediato los paquetes con fugas."],
+  ["Pack and sell-by dates accurate (5-day window)","Fechas de empaque y venta correctas (5 días)","Five days from pack date to sell-by date. Oldest product rotated forward.","Cinco días desde la fecha de empaque hasta la de venta. Rotar lo más antiguo al frente."],
+  ["Raw product separated; saws and grinders clean","Producto crudo separado; sierras y molinos limpios","Prevent cross-contamination. Clean and sanitize equipment between products.","Evitar la contaminación cruzada. Limpiar y sanitizar el equipo entre productos."]]},
+ {id:"produce",en:"Produce",es:"Frutas y verduras",shift:"",b:[
+  ["Displays full and fresh; product culled","Exhibidores llenos y frescos; producto revisado","Cull displays every morning and afternoon.","Revisar y retirar producto en mal estado cada mañana y tarde."],
+  ["Prices and PLU signs accurate","Precios y letreros con PLU correctos","Accurate PLUs are required for registers and self-checkout.","Los PLU correctos son necesarios para las cajas y el autocobro."],
+  ["Backstock rotated; cooler organized","Reserva rotada; refrigerador ordenado","Oldest product goes to the floor first.","El producto más antiguo sale primero al piso."]]},
+ {id:"bakery",en:"Bakery & Cakes",es:"Panadería y pasteles",shift:"",b:[
+  ["Bolillo ready before opening (half-batch rule)","Bolillo listo antes de abrir (regla de media tanda)","Begin with a half batch so bread is available at opening. No dough prepared the night before.","Iniciar con media tanda para tener pan al abrir. No preparar masa la noche anterior."],
+  ["Production adjusted based on leftover bread","Producción ajustada según el pan sobrante","Review the prior day's leftover bread and adjust batch sizes accordingly.","Revisar el pan sobrante del día anterior y ajustar el tamaño de las tandas."],
+  ["PM: trays consolidated starting at 6–7 PM through close","PM: consolidar charolas a partir de las 6–7 PM hasta el cierre","Condense trays in the evening to keep the case full while reducing end-of-day waste.","Consolidar charolas por la tarde para mantener la vitrina llena y reducir la merma al cierre."],
+  ["Bread case full and served from behind the counter","Vitrina de pan llena y servida detrás del mostrador","Tongs or gloves at all times.","Pinzas o guantes en todo momento."],
+  ["Cake case full (tres leches), dated and labeled","Vitrina de pasteles llena (tres leches), con fecha y etiqueta","Offer a written message and suggest pairing with floral.","Ofrecer mensaje escrito y sugerir combinarlo con flores."]]},
+ {id:"tortilla",en:"Tortilleria",es:"Tortillería",shift:"",b:[
+  ["Fresh tortillas ready on time and in sufficient quantity","Tortillas frescas listas a tiempo y en cantidad suficiente","Plan production around morning and pre-dinner peak hours.","Planear la producción para las horas pico de la mañana y antes de la cena."],
+  ["Machine and work area clean; hairnets and gloves in use","Máquina y área limpias; red y guantes en uso","Clean the machine at the end of each production run.","Limpiar la máquina al terminar cada tanda de producción."]]},
+ {id:"grocery",en:"Grocery, Dairy & Frozen",es:"Abarrotes, lácteos y congelados",shift:"",extra:"oos",b:[
+  ["Shelves full and faced","Anaqueles llenos y acomodados","Face all aisles at opening and before the evening rush.","Acomodar todos los pasillos al abrir y antes de la hora pico de la tarde."],
+  ["Essential items in stock (milk, eggs, tortillas, bread, water, ice, soda)","Productos básicos en existencia (leche, huevo, tortillas, pan, agua, hielo, refrescos)","Out-of-stocks on essentials send customers to competitors.","La falta de productos básicos envía a los clientes a la competencia."],
+  ["Expired and damaged product pulled and scanned","Producto vencido y dañado retirado y escaneado","Scan waste daily for accurate reporting.","Escanear la merma a diario para reportes precisos."],
+  ["Endcaps and ad items stocked and signed","Cabeceras y productos en oferta surtidos y con letrero","Endcaps generate the highest sales per foot in the store.","Las cabeceras generan la mayor venta por espacio en la tienda."]]},
+ {id:"orders",en:"Orders: AFI & Commissary",es:"Pedidos: AFI y comisaría",shift:"",extra:"orders",b:[
+  ["AFI orders submitted on each department's scheduled order day","Pedidos de AFI enviados el día programado de cada departamento","Submit before the cutoff, based on sales history and on-hand inventory.","Enviar antes del corte, según el historial de venta y el inventario disponible."],
+  ["Commissary (EPPF) order submitted before 12 PM, one day in advance","Pedido a comisaría (EPPF) enviado antes de las 12 PM, un día antes","Communicate any shortages to the commissary the same day.","Comunicar los faltantes a la comisaría el mismo día."],
+  ["EPPF inventory counted and recorded twice weekly","Inventario de EPPF contado y registrado dos veces por semana","Count before ordering to prevent over-ordering.","Contar antes de pedir para evitar pedir de más."]]},
+ {id:"people",en:"People & Service",es:"Equipo y servicio",shift:"",b:[
+  ["Full attendance; call-outs documented and covered","Asistencia completa; faltas documentadas y cubiertas","Record each call-out and who covered the shift.","Registrar cada falta y quién cubrió el turno."],
+  ["Dress code followed; no phones or earbuds on the sales floor","Código de vestimenta cumplido; sin celulares ni audífonos en el piso","Phones put away when customers are present. Earbuds are not permitted for safety reasons.","Celulares guardados cuando hay clientes. Los audífonos no se permiten por seguridad."],
+  ["Daily huddle completed (Vista Way focus)","Junta diaria realizada (enfoque Vista Way)","Five minutes: daily focus, sales goal and assignments.","Cinco minutos: enfoque del día, meta de venta y asignaciones."],
+  ["Customers acknowledged and assisted; complaints resolved and documented","Clientes reconocidos y atendidos; quejas resueltas y documentadas","Never leave a customer unacknowledged.","Nunca dejar a un cliente sin reconocer."]]},
+ {id:"improve",en:"Manager Walk: Areas for Improvement",es:"Recorrido del gerente: áreas de mejora",shift:"",b:[
+  ["Full store walk completed to identify improvements in customer service, cleanliness and merchandising","Recorrido completo de la tienda para identificar mejoras en servicio al cliente, limpieza y exhibición","Walk the store from the customer's perspective. Use ⚠ to record each opportunity and the action taken.","Recorrer la tienda desde la perspectiva del cliente. Usar ⚠ para registrar cada oportunidad y la acción tomada."],
+  ["Weekly deep-cleaning schedule set for each department on slow days","Calendario semanal de limpieza profunda por departamento en días de menor venta","Assign each department a deep-cleaning day and confirm it was completed.","Asignar a cada departamento un día de limpieza profunda y confirmar que se realizó."]]},
+ {id:"close",en:"Closing",es:"Cierre",shift:"pm",b:[
+  ["Waste scanned in every department","Merma escaneada en todos los departamentos","Every department, every night.","Todos los departamentos, todas las noches."],
+  ["Hot food properly cooled or discarded","Comida caliente enfriada correctamente o desechada","Cool from 135°F to 70°F within 2 hours and to 41°F within 4 additional hours; otherwise discard.","Enfriar de 135°F a 70°F en 2 horas y a 41°F en 4 horas más; de lo contrario, desechar."],
+  ["Slicers, 3-compartment sink and prep tables cleaned and sanitized","Rebanadoras, tarja de 3 compartimientos y mesas limpias y sanitizadas","Wash, rinse, sanitize and air dry.","Lavar, enjuagar, sanitizar y secar al aire."],
+  ["Trash removed; dumpster area clean","Basura retirada; área del contenedor limpia","A clean dumpster area prevents pest activity.","Un área de contenedor limpia previene plagas."],
+  ["Registers closed out; safe and deposit prepared","Cajas cerradas; caja fuerte y depósito preparados","Follow the cash office closing procedure.","Seguir el procedimiento de cierre de oficina."],
+  ["Doors locked, alarm set, lights off","Puertas cerradas, alarma activada, luces apagadas","Two employees exit the building together.","Dos empleados salen juntos del edificio."]]}
+];
+const DEPTS=[["hotdeli","Hot Deli","Hot Deli"],["colddeli","Cold Deli","Cold Deli"],["meat","Meat Market","Carnicería"],["produce","Produce","Frutas y verduras"],["bakery","Bakery & Cakes","Panadería y pasteles"],["tortilleria","Tortilleria","Tortillería"],["grocery","Grocery / Dairy / Frozen","Abarrotes / lácteos / congelados"],["eppf","Commissary (EPPF)","Comisaría (EPPF)"]];
+const TEMPS_OFF=[["dairy","Dairy cooler","Lácteos","cold"],["meatc","Meat case","Vitrina de carne","cold"],["deli","Cold Deli case","Vitrina Cold Deli","cold"],["prod","Produce cooler","Refri. verduras","cold"],["walk","Walk-in cooler","Cuarto frío","cold"],["frz","Freezer","Congelador","frozen"],["hot","Hot case","Vitrina caliente","hot"]];
+const TEMPS=[]; // temperature log removed for now
+const VENDORS=["AFI (Affiliated)","El Paso Prep Foods","Bread / Pan","Soda / Refrescos","Milk / Leche","Chips / Botanas","Beer / Cerveza","Other / Otro"];
+const NEEDCATS=[["maint","Maintenance","Mantenimiento"],["refr","Refrigeration / AC","Refrigeración / AC"],["supply","Cleaning supplies (Spectrum)","Limpieza (Spectrum)"],["equip","Equipment / registers","Equipo / cajas"],["staff","Staffing","Personal"],["other","Other","Otro"]];
+const SCALE=[
+ {en:["Unsatisfactory","Fails to meet expectations; fix it now."],es:["Insatisfactorio","No cumple; corregir de inmediato."]},
+ {en:["Needs Improvement","Partly meets; needs follow-up or training."],es:["Necesita mejora","Cumple en parte; requiere seguimiento o capacitación."]},
+ {en:["Satisfactory","Meets the standard."],es:["Satisfactorio","Cumple con el estándar."]},
+ {en:["Very Good","Meets and sometimes exceeds."],es:["Muy bueno","Cumple y a veces supera."]},
+ {en:["Excellent","Exceeds the standard."],es:["Excelente","Supera el estándar."]}];
+const T={
+ en:{title:"Daily Walk",sub:"Vista Markets · AM & PM managers",tabForm:"Walk",tabHist:"History",store:"Store",date:"Date",am:"AM manager",pm:"PM manager",shift:"Who is walking now?",shiftHint:"Check off each task as you walk. Tap ⚠ to record an issue. Score each section once at the end.",scale:"Grading scale ▾",section:"Section",
+  results:"Daily results",final:"Daily grade",finalSub:"Average of section scores",done:"tasks done",issuesOpen:"open issues",tempsOut:"temps out",flags:"Issues found",noFlags:"No issues flagged.",lowSec:"Sections scored 1–2",
+  na:"N/A",photos:"Photos",addPhoto:"Add photo",uploading:"Uploading…",phOff:"Photo uploads aren't available with your access.",phWait:"Wait for photos to finish uploading.",
+  allGood:"✓ Mark remaining tasks complete",rate:"Score this section",rateHint:"1 = fix now · 3 = meets standard · 5 = excellent",rateNeed:"Score this section (it has issues)",issNote:"Describe the issue and action taken",fixed:"Fixed now",follow:"Needs follow-up",
+  temps:"Temperature readings (°F)",tGoal:{cold:"41°F or below",frozen:"0°F or below",hot:"135°F or above"},
+  vendors:"Vendor log",vTime:"Time",vOk:"All good",vIss:"Problem",vNote:"Note: shorts, damage, credit",noV:"No vendors logged yet.",
+  orders:"Today's orders",sent:"Sent",late:"Pending",notday:"Not today",oos:"Out of stock today",oosPh:"E.g. bolillo at 5pm, whole milk gallon, avocados…",
+  needs:"Store needs",needsSub:"Maintenance, refrigeration, supplies, equipment, staffing",needDesc:"What's needed?",urgent:"Urgent",noNeeds:"No needs logged.",add:"Add",
+  notes:"Shift notes",handoff:"AM → PM: what the PM manager needs to know",handoffPh:"E.g. short one cashier at 4pm, dairy cooler is noisy, bread came short…",pmnotes:"PM → tomorrow's AM",pmnotesPh:"E.g. order more chicken for the weekend, check walk-in compressor…",
+  fromAM:"From the AM manager",fromPM:"From last night's PM manager",
+  vIssues:"Vendor problems",oLate:"Orders pending",submit:"Submit daily report",copy:"Copy summary",clear:"Start over",clearQ:"Clear everything for this store and date?",clearYes:"Clear form",keep:"Keep",
+  needMgr:"Add the AM or PM manager's name before submitting.",needAny:"Check or score something before submitting.",saving:"Submitting…",saved:"Report submitted. It now shows under History.",resub:"Submitted. Changes? Submit again to update it.",saveErr:"Couldn't submit: ",noDb:"Saving isn't available in this view. Use Copy summary.",copied:"Summary copied.",copyErr:"Copy blocked here.",
+  allStores:"All stores",latest:"Latest report per store",noReport:"No report",noHist:"No reports submitted yet.",loading:"Loading reports…",back:"← Back to list",del:"Delete report",delQ:"Delete this report permanently?",today:"today",yday:"yesterday",daysAgo:"days ago",
+  grade:["","Unsatisfactory","Needs Improvement","Satisfactory","Very Good","Excellent"]},
+ es:{title:"Recorrido Diario",sub:"Vista Markets · Gerentes AM y PM",tabForm:"Recorrido",tabHist:"Historial",store:"Tienda",date:"Fecha",am:"Gerente AM",pm:"Gerente PM",shift:"¿Quién está haciendo el recorrido?",shiftHint:"Marca cada tarea durante el recorrido. Toca ⚠ para registrar un problema. Califica cada sección una vez al final.",scale:"Escala de evaluación ▾",section:"Sección",
+  results:"Resultados del día",final:"Calificación del día",finalSub:"Promedio de las secciones",done:"tareas hechas",issuesOpen:"pendientes",tempsOut:"temps fuera",flags:"Problemas encontrados",noFlags:"Ningún problema marcado.",lowSec:"Secciones con 1–2",
+  na:"N/A",photos:"Fotos",addPhoto:"Agregar foto",uploading:"Subiendo…",phOff:"No tienes acceso para subir fotos.",phWait:"Espera a que terminen de subir las fotos.",
+  allGood:"✓ Marcar el resto como completo",rate:"Califica esta sección",rateHint:"1 = corregir ya · 3 = cumple · 5 = excelente",rateNeed:"Califica esta sección (tiene problemas)",issNote:"Describe el problema y la acción tomada",fixed:"Corregido",follow:"Requiere seguimiento",
+  temps:"Lecturas de temperatura (°F)",tGoal:{cold:"41°F o menos",frozen:"0°F o menos",hot:"135°F o más"},
+  vendors:"Registro de proveedores",vTime:"Hora",vOk:"Todo bien",vIss:"Problema",vNote:"Nota: faltantes, daños, crédito",noV:"Aún no hay proveedores registrados.",
+  orders:"Pedidos de hoy",sent:"Enviado",late:"Pendiente",notday:"No toca",oos:"Agotados hoy",oosPh:"Ej. bolillo a las 5pm, leche entera galón, aguacate…",
+  needs:"Necesidades de la tienda",needsSub:"Mantenimiento, refrigeración, limpieza, equipo, personal",needDesc:"¿Qué se necesita?",urgent:"Urgente",noNeeds:"Sin necesidades registradas.",add:"Agregar",
+  notes:"Notas del turno",handoff:"AM → PM: lo que el gerente PM debe saber",handoffPh:"Ej. falta un cajero a las 4pm, el refri. de lácteos hace ruido, el pan llegó incompleto…",pmnotes:"PM → AM de mañana",pmnotesPh:"Ej. pedir más pollo para el fin de semana, revisar compresor del cuarto frío…",
+  fromAM:"Del gerente AM",fromPM:"Del gerente PM de anoche",
+  vIssues:"Problemas con proveedores",oLate:"Pedidos pendientes",submit:"Enviar reporte del día",copy:"Copiar resumen",clear:"Empezar de nuevo",clearQ:"¿Borrar todo de esta tienda y fecha?",clearYes:"Borrar formulario",keep:"Conservar",
+  needMgr:"Escribe el nombre del gerente AM o PM antes de enviar.",needAny:"Marca o califica algo antes de enviar.",saving:"Enviando…",saved:"Reporte enviado. Ya aparece en Historial.",resub:"Enviado. ¿Cambios? Envíalo otra vez para actualizarlo.",saveErr:"No se pudo enviar: ",noDb:"No se puede guardar en esta vista. Usa Copiar resumen.",copied:"Resumen copiado.",copyErr:"No se pudo copiar aquí.",
+  allStores:"Todas las tiendas",latest:"Último reporte de cada tienda",noReport:"Sin reporte",noHist:"Aún no hay reportes enviados.",loading:"Cargando reportes…",back:"← Volver a la lista",del:"Eliminar reporte",delQ:"¿Eliminar este reporte permanentemente?",today:"hoy",yday:"ayer",daysAgo:"días",
+  grade:["","Insatisfactorio","Necesita mejora","Satisfactorio","Muy bueno","Excelente"]}
+};
+
+/* ================= STATE ================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const gColor=v=>v==null||isNaN(v)?"var(--na)":`var(--g${Math.min(5,Math.max(1,Math.round(v)))})`;
+const fmt=v=>v==null||isNaN(v)?"–":v.toFixed(2);
+/* ---------- settings (admin) ---------- */
+const DEF_CFG={needs:false,vendors:true,orders:true,oos:true,notes:true,off:{},taskOff:{},edits:{},custom:{}};
+let CFG=JSON.parse(JSON.stringify(DEF_CFG));
+try{const c=JSON.parse(localStorage.getItem("dw-cfg")||"null"); if(c) CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),c);}catch(e){}
+const FEAT={vendors:"vendors",orders:"orders",oos:"oos"};
+function derive(){ return BASE.filter(s=>!CFG.off[s.id]).map(s=>{
+  const items=s.b.map((b,i)=>({k:`${s.id}.${i}`,b})).concat((CFG.custom[s.id]||[]).map(c=>({k:c.k,b:[c.en,c.es,c.sen||"",c.ses||""]})));
+  const b=items.filter(x=>!CFG.taskOff[x.k]).map(x=>{const e=CFG.edits[x.k]; const v=e?[e.en||x.b[0],e.es||x.b[1],e.sen??x.b[2],e.ses??x.b[3]]:x.b.slice(0,4); v[4]=x.k; return v;});
+  return Object.assign({},s,{b,extra:s.extra&&CFG[FEAT[s.extra]]===false?undefined:s.extra}); }).filter(s=>s.b.length||s.extra); }
+let SECTIONS=derive();
+let TOTAL=SECTIONS.reduce((n,s)=>n+s.b.length,0);
+const bk=(si,bi)=>SECTIONS[si].b[bi][4];
+function applyCfg(){ SECTIONS=derive(); TOTAL=SECTIONS.reduce((n,s)=>n+s.b.length,0); try{localStorage.setItem("dw-cfg",JSON.stringify(CFG))}catch(e){} }
+let lang="en", shift="am";
+try{const l=localStorage.getItem("dw-lang2"); if(l==="en"||l==="es") lang=l; const s=localStorage.getItem("dw-shift"); if(s==="am"||s==="pm") shift=s;}catch(e){}
+let curStore="Central", curDate=today();
+try{const s=localStorage.getItem("dw-store"); if(STORES.includes(s)) curStore=s;}catch(e){}
+const blank=()=>({store:curStore,date:curDate,amMgr:"",pmMgr:"",checks:{},by:{},fix:{},notes:{},rate:{},rateBy:{},photos:{},temps:{am:{},pm:{}},orders:{},vendors:[],needs:[],oos:"",handoff:"",pmnotes:"",submittedAt:null,_t:null});
+const key=()=>`dw3:${curStore}:${curDate}`, docId=()=>`${curStore}_${curDate}`;
+function load(){ try{const d=JSON.parse(localStorage.getItem(key())||"null"); if(d) return Object.assign(blank(),d);}catch(e){} return blank(); }
+let S=load(), prevNotes="", openStd={};
+let t1,t2; function save(){ S._t=new Date().toISOString(); clearTimeout(t1); t1=setTimeout(()=>{try{localStorage.setItem(key(),JSON.stringify(S))}catch(e){}},250); clearTimeout(t2); t2=setTimeout(syncDraft,2500); }
+async function syncDraft(){ if(!db) return; try{ await db.doc("drafts/"+docId()).set(Object.assign({},S,{updatedAt:S._t})); }catch(e){} }
+
+/* ================= SCORING ================= */
+function tState(k,v){ if(v===""||v==null||isNaN(+v)) return null; v=+v;
+  if(k==="cold") return v<=39?"ok":v<=41?"warn":"no"; if(k==="frozen") return v<=0?"ok":v<=5?"warn":"no"; return v>=140?"ok":v>=135?"warn":"no"; }
+function compute(src){
+  const ch=src.checks||{}, rate=src.rate||{};
+  const secs=SECTIONS.map((s,si)=>typeof rate[s.id]==="number"?rate[s.id]:null);
+  const have=secs.filter(v=>v!=null); const final=have.length?have.reduce((a,b)=>a+b,0)/have.length:null;
+  let done=0, iss=0, open=0; SECTIONS.forEach((s,si)=>s.b.forEach((b,bi)=>{const v=ch[bk(si,bi)]; if(v) done++; if(v==="iss"){iss++; if((src.fix||{})[bk(si,bi)]!=="fixed") open++;}}));
+  let tOut=0; ["am","pm"].forEach(sh=>TEMPS.forEach(t=>{ if(tState(t[3],(src.temps||{})[sh]?.[t[0]])==="no") tOut++; }));
+  return {secs,final,done,iss,open,tOut};
+}
+
+/* ================= FORM ================= */
+const L=a=>lang==="en"?a[0]:a[1];
+const LS=b=>lang==="en"?b[2]:b[3];
+function bulletHTML(si,bi){ const s=SECTIONS[si], b=s.b[bi], k=bk(si,bi), v=S.checks[k], t=T[lang];
+  return `<div class="b ${v==="iss"?"is-iss":v==="ok"?"is-ok":""}" id="b-${k.replace(".","-")}">
+    <div class="b-row"><button class="ck" data-ck="${k}" aria-pressed="${v==="ok"}" aria-label="ok">✓</button>
+      <div class="b-text">${esc(L(b))}${v&&S.by[k]?`<span class="q-by">${S.by[k].toUpperCase()}</span>`:""}</div>
+      <button class="info" data-std="${k}" aria-expanded="${!!openStd[k]}" aria-label="standard">i</button>
+      <button class="iss" data-iss="${k}" aria-pressed="${v==="iss"}" aria-label="issue">⚠</button></div>
+    ${openStd[k]?`<div class="std">${esc(LS(b))}</div>`:""}
+    ${v==="iss"?`<div class="issbox"><label class="label" for="n-${k}" style="color:var(--g1)">${t.issNote}</label><textarea id="n-${k}" data-note="${k}" rows="2">${esc(S.notes[k]||"")}</textarea>
+      <div class="oseg" role="group">${["fixed","follow"].map(x=>`<button data-fix="${k}" data-v="${x}" aria-pressed="${S.fix[k]===x}">${t[x]}</button>`).join("")}</div></div>`:""}
+  </div>`; }
+function sectionInner(si){ const s=SECTIONS[si], t=T[lang]; const r=S.rate[s.id]; const hasIss=s.b.some((b,bi)=>S.checks[bk(si,bi)]==="iss");
+  const allDone=s.b.every((b,bi)=>S.checks[bk(si,bi)]);
+  return s.b.map((b,bi)=>bulletHTML(si,bi)).join("")
+   +(allDone?"":`<button class="allgood" data-allgood="${si}">${t.allGood}</button>`)
+   +(s.extra?`<div class="block" id="x-${s.extra}"></div>`:"")
+   +`<div class="rate ${hasIss&&r==null?"need-rate":""}"><span class="label">${hasIss?t.rateNeed:t.rate}${r!=null&&S.rateBy[s.id]?` <span class="q-by">${S.rateBy[s.id].toUpperCase()}</span>`:""}</span><p class="hint">${t.rateHint}</p>
+     <div class="grades" role="group">${[1,2,3,4,5].map(v=>`<button class="gbtn" data-rate="${s.id}" data-v="${v}" aria-pressed="${r===v}" title="${t.grade[v]}">${v}</button>`).join("")}<button class="gbtn na" data-rate="${s.id}" data-v="na" aria-pressed="${r==="na"}">${t.na}</button></div></div>`
+   +`<div class="photos"><span class="label">${t.photos}</span><div class="ph-row" id="phr-${si}"></div><input type="file" id="pf-${si}" accept="image/*" multiple hidden><div class="ph-msg" id="phm-${si}"></div></div>`; }
+function buildForm(){ const t=T[lang];
+  $("sections").innerHTML=SECTIONS.map((s,si)=>`<section class="card sec" id="sec-${si}">
+    <div class="sec-head" data-sec="${si}" role="button" tabindex="0" aria-expanded="true">
+      <h2><small>${t.section} ${si+1}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
+      <div class="sec-meta"><b id="sa-${si}">–</b><span id="sc-${si}">0/${s.b.length}</span></div></div>
+    <div class="qs" id="qs-${si}">${sectionInner(si)}</div></section>`).join("");
+  $("scale-list").innerHTML=SCALE.map((s,i)=>`<div class="scale-row"><span class="chip" style="background:var(--g${i+1})">${i+1}</span><span><b>${esc(s[lang][0])}</b> — ${esc(s[lang][1])}</span></div>`).join("");
+  SECTIONS.forEach((s,si)=>{ renderExtra(si); renderPhotos(si); });
+  renderNeeds(); renderNotes(); renderHandoff(); refresh(); }
+function rerenderSection(si){ const el=$("qs-"+si); if(!el) return; el.innerHTML=sectionInner(si); renderExtra(si); renderPhotos(si); refresh(); }
+function renderExtra(si){ const x=SECTIONS[si].extra; if(x==="temps") renderTemps(); else if(x==="vendors") renderVendors(); else if(x==="orders") renderOrders(); else if(x==="oos") renderOos(); }
+function renderTemps(){ const t=T[lang], el=$("x-temps"); if(!el) return;
+  el.innerHTML=`<span class="label">${t.temps}</span><div class="temps">${TEMPS.map(x=>`<div class="temp"><b>${esc(L([x[1],x[2]]))}</b><span>${t.tGoal[x[3]]}</span>
+    <div class="pair">${["am","pm"].map(sh=>{const v=S.temps[sh][x[0]]??""; const st=tState(x[3],v); return `<input type="number" inputmode="decimal" step="0.1" placeholder="${sh.toUpperCase()}" data-temp="${sh}.${x[0]}" value="${esc(v)}" class="${st?"t-"+st:""}" aria-label="${esc(x[1])} ${sh}">`}).join("")}</div></div>`).join("")}</div>`; }
+function renderVendors(){ const t=T[lang], el=$("x-vendors"); if(!el) return;
+  el.innerHTML=`<span class="label">${t.vendors}</span><div class="lst">${S.vendors.length?S.vendors.map((v,i)=>`<div class="li"><div><span class="tag" style="background:${v.ok?"var(--g5)":"var(--g1)"}">${v.ok?t.vOk:t.vIss}</span><b>${esc(v.name)}</b>${v.time?` · ${esc(v.time)}`:""} <span class="q-by">${(v.shift||"").toUpperCase()}</span>${v.note?`<br><span style="color:var(--muted)">${esc(v.note)}</span>`:""}</div><button class="x" data-rmv="${i}" aria-label="remove">×</button></div>`).join(""):`<p class="empty" style="margin:0">${t.noV}</p>`}</div>
+  <div class="addrow"><select id="v-name">${VENDORS.map(v=>`<option>${esc(v)}</option>`).join("")}</select><input type="time" id="v-time" aria-label="${t.vTime}">
+   <input type="text" id="v-note" class="full" placeholder="${esc(t.vNote)}">
+   <div class="full" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-vadd="1" style="color:var(--g5)">✓ ${t.vOk}</button><button class="btn small" data-vadd="0" style="color:var(--g1)">✗ ${t.vIss}</button></div></div>`; }
+function renderOrders(){ const t=T[lang], el=$("x-orders"); if(!el) return;
+  el.innerHTML=`<span class="label">${t.orders}</span>${DEPTS.map(d=>{const v=S.orders[d[0]]||""; return `<div class="orow"><span>${esc(L([d[1],d[2]]))}</span><div class="oseg" role="group">${["sent","late","notday"].map(x=>`<button data-ord="${d[0]}" data-v="${x}" aria-pressed="${v===x}">${t[x]}</button>`).join("")}</div></div>`}).join("")}`; }
+function renderOos(){ const t=T[lang], el=$("x-oos"); if(!el) return; el.innerHTML=`<label class="label" for="f-oos">${t.oos}</label><textarea id="f-oos" rows="2" placeholder="${esc(t.oosPh)}">${esc(S.oos)}</textarea>`; }
+function renderNeeds(){ const t=T[lang]; $("needs-card").hidden=!CFG.needs; if(!CFG.needs) return;
+  $("needs-card").innerHTML=`<div class="sec-head" style="cursor:default"><h2><small>${t.needsSub}</small>${t.needs}</h2><div class="sec-meta"><b style="color:${S.needs.some(n=>n.urg)?"var(--g1)":"var(--fg)"}">${S.needs.length}</b></div></div>
+   <div class="lst">${S.needs.length?S.needs.map((n,i)=>`<div class="li"><div>${n.urg?`<span class="tag" style="background:var(--g1)">${t.urgent}</span>`:""}<span class="tag" style="background:var(--accent)">${esc(L((NEEDCATS.find(c=>c[0]===n.cat)||["","",""]).slice(1)))}</span>${esc(n.desc)} <span class="q-by">${(n.shift||"").toUpperCase()}</span></div><button class="x" data-rmn="${i}" aria-label="remove">×</button></div>`).join(""):`<p class="empty" style="margin:0">${t.noNeeds}</p>`}</div>
+   <div class="addrow"><select id="n-cat">${NEEDCATS.map(c=>`<option value="${c[0]}">${esc(L(c.slice(1)))}</option>`).join("")}</select>
+    <label class="check"><input type="checkbox" id="n-urg"> ${t.urgent}</label>
+    <input type="text" id="n-desc" class="full" placeholder="${esc(t.needDesc)}">
+    <button class="btn small primary" id="n-add" style="justify-self:start">${t.add}</button></div>`; }
+function renderNotes(){ const t=T[lang]; $("notes-card").hidden=!CFG.notes; if(!CFG.notes) return;
+  $("notes-card").innerHTML=`<div class="sec-head" style="cursor:default"><h2>${t.notes}</h2></div>
+   <label class="label" for="f-handoff" style="margin-top:12px">${t.handoff}</label><textarea id="f-handoff" rows="3" placeholder="${esc(t.handoffPh)}">${esc(S.handoff)}</textarea>
+   <label class="label" for="f-pmnotes" style="margin-top:12px">${t.pmnotes}</label><textarea id="f-pmnotes" rows="3" placeholder="${esc(t.pmnotesPh)}">${esc(S.pmnotes)}</textarea>`; }
+function renderHandoff(){ const t=T[lang]; let h="";
+  if(shift==="pm"&&S.handoff) h+=`<div class="handoff"><b>☀ ${t.fromAM}${S.amMgr?` · ${esc(S.amMgr)}`:""}</b><p>${esc(S.handoff)}</p></div>`;
+  if(shift==="am"&&prevNotes) h+=`<div class="handoff"><b>☾ ${t.fromPM}</b><p>${esc(prevNotes)}</p></div>`;
+  $("handoff-top").innerHTML=h; }
+function applyText(){ const t=T[lang]; document.documentElement.lang=lang;
+  $("t-title").textContent=t.title; $("t-sub").textContent=t.sub; $("tab-form").textContent=t.tabForm; $("tab-hist").textContent=t.tabHist;
+  $("l-store").textContent=t.store; $("l-date").textContent=t.date; $("l-am").textContent=t.am; $("l-pm").textContent=t.pm; $("l-shift").textContent=t.shift; $("l-shift-hint").textContent=t.shiftHint;
+  $("l-scale").textContent=t.scale; $("l-results").textContent=t.results; $("r-final-lbl").innerHTML=`${t.final}<small>${t.finalSub}</small>`;
+  $("b-submit").textContent=t.submit; $("b-copy").textContent=t.copy; $("b-clear").textContent=t.clear; $("l-clear-q").textContent=t.clearQ; $("b-clear-yes").textContent=t.clearYes; $("b-clear-no").textContent=t.keep;
+  $("lang-en").setAttribute("aria-pressed",lang==="en"); $("lang-es").setAttribute("aria-pressed",lang==="es");
+  $("sh-am").setAttribute("aria-pressed",shift==="am"); $("sh-pm").setAttribute("aria-pressed",shift==="pm"); $("prog-shift").textContent=shift.toUpperCase(); }
+function fillDay(){ $("f-store").innerHTML=STORES.map(s=>`<option ${s===curStore?"selected":""}>${esc(s)}</option>`).join(""); $("f-date").value=curDate; $("f-am").value=S.amMgr; $("f-pm").value=S.pmMgr; }
+function refresh(){ const t=T[lang]; const r=compute(S);
+  SECTIONS.forEach((s,si)=>{ const c=s.b.filter((b,bi)=>S.checks[bk(si,bi)]).length, is=s.b.filter((b,bi)=>S.checks[bk(si,bi)]==="iss").length;
+    $("sc-"+si).innerHTML=`${c}/${s.b.length}${is?` · <span style="color:var(--g1);font-weight:700">⚠ ${is}</span>`:""}`;
+    const el=$("sa-"+si); el.textContent=r.secs[si]==null?"–":r.secs[si]; el.style.color=r.secs[si]==null?"var(--muted)":gColor(r.secs[si]); });
+  $("prog-bar").style.width=(r.done/TOTAL*100)+"%"; $("prog-txt").textContent=`${r.done} / ${TOTAL} ${t.done}`;
+  $("prog-live").textContent=fmt(r.final); $("prog-live").style.color=r.final==null?"var(--muted)":gColor(r.final);
+  $("r-final").textContent=fmt(r.final); $("r-final").style.color=r.final==null?"var(--muted)":gColor(r.final);
+  $("r-minis").innerHTML=`<span class="mini-k"><b>${r.done}/${TOTAL}</b>${t.done}</span><span class="mini-k"><b style="color:${r.open?"var(--g1)":"var(--fg)"}">${r.open}</b>${t.issuesOpen}</span>`;
+  $("r-rows").innerHTML=SECTIONS.map((s,si)=>`<div class="rrow"><span>${si+1}. ${esc(s[lang])}</span><div class="mini"><i style="width:${r.secs[si]==null?0:r.secs[si]/5*100}%;background:${gColor(r.secs[si])}"></i></div><b style="color:${r.secs[si]==null?"var(--muted)":gColor(r.secs[si])}">${r.secs[si]==null?"–":r.secs[si]}</b></div>`).join("");
+  $("r-extra").innerHTML=extrasHTML(S); }
+function extrasHTML(src){ const t=T[lang]; let h=`<h3 class="r-h">${t.flags}</h3>`; const fl=[];
+  SECTIONS.forEach((s,si)=>s.b.forEach((b,bi)=>{const k=bk(si,bi); if((src.checks||{})[k]==="iss") fl.push({sec:s[lang],q:L(b),note:(src.notes||{})[k],by:(src.by||{})[k],fix:(src.fix||{})[k]});}));
+  ["am","pm"].forEach(sh=>TEMPS.forEach(x=>{const v=src.temps?.[sh]?.[x[0]]; if(tState(x[3],v)==="no") fl.push({sec:"°F",q:`${L([x[1],x[2]])}: ${v}°F (${t.tGoal[x[3]]})`,by:sh});}));
+  h+=fl.length?`<div class="flags">${fl.map(f=>`<div class="flag-item"><span class="chip" style="background:${f.fix==="fixed"?"var(--g5)":"var(--g1)"};width:26px;height:26px;font-size:14px">${f.fix==="fixed"?"✓":"!"}</span><span><b>${esc(f.sec)}:</b> ${esc(f.q)} <span class="q-by">${(f.by||"").toUpperCase()}${f.fix?" · "+(f.fix==="fixed"?t.fixed:t.follow):""}</span>${f.note?`<br><span style="color:var(--muted)">${esc(f.note)}</span>`:""}</span></div>`).join("")}</div>`:`<p class="empty">${t.noFlags}</p>`;
+  const needs=src.needs||[]; if(needs.length) h+=`<h3 class="r-h">${t.needs} (${needs.length})</h3><div class="lst">${needs.map(n=>`<div class="li" style="grid-template-columns:1fr"><div>${n.urg?`<span class="tag" style="background:var(--g1)">${t.urgent}</span>`:""}${esc(n.desc)}</div></div>`).join("")}</div>`;
+  const vi=(src.vendors||[]).filter(v=>!v.ok); if(vi.length) h+=`<h3 class="r-h">${t.vIssues}</h3><div class="lst">${vi.map(v=>`<div class="li" style="grid-template-columns:1fr"><div><b>${esc(v.name)}</b>${v.time?" · "+esc(v.time):""}${v.note?" — "+esc(v.note):""}</div></div>`).join("")}</div>`;
+  const late=Object.entries(src.orders||{}).filter(([,v])=>v==="late").map(([k])=>L((DEPTS.find(d=>d[0]===k)||[k,k,k]).slice(1)));
+  if(late.length) h+=`<h3 class="r-h">${t.oLate}</h3><p style="margin:6px 0 0">${late.map(esc).join(" · ")}</p>`;
+  if(src.oos) h+=`<h3 class="r-h">${t.oos}</h3><p style="white-space:pre-wrap;margin:6px 0 0">${esc(src.oos)}</p>`;
+  if(src.handoff||src.pmnotes) h+=`<h3 class="r-h">${t.notes}</h3>${src.handoff?`<p style="white-space:pre-wrap;margin:6px 0 0"><b>AM → PM:</b> ${esc(src.handoff)}</p>`:""}${src.pmnotes?`<p style="white-space:pre-wrap;margin:6px 0 0"><b>PM → AM:</b> ${esc(src.pmnotes)}</p>`:""}`;
+  if(src===S&&S.submittedAt) h+=`<p class="status ok">✓ ${t.resub}</p>`;
+  return h; }
+
+/* ================= EVENTS ================= */
+const secOf=k=>SECTIONS.findIndex(s=>s.b.some(b=>b[4]===k));
+document.addEventListener("click",e=>{
+  const ck=e.target.closest("[data-ck]"); if(ck){ const k=ck.dataset.ck; if(S.checks[k]==="ok"){delete S.checks[k];delete S.by[k];} else {S.checks[k]="ok";S.by[k]=shift;delete S.fix[k];} save(); rerenderSection(secOf(k)); return; }
+  const is=e.target.closest("[data-iss]"); if(is){ const k=is.dataset.iss; if(S.checks[k]==="iss"){delete S.checks[k];delete S.by[k];delete S.fix[k];} else {S.checks[k]="iss";S.by[k]=shift;} save(); rerenderSection(secOf(k)); if(S.checks[k]==="iss"){const ta=$("n-"+k); if(ta) ta.focus({preventScroll:true});} return; }
+  const sd=e.target.closest("[data-std]"); if(sd){ const k=sd.dataset.std; openStd[k]=!openStd[k]; rerenderSection(secOf(k)); return; }
+  const fx=e.target.closest("[data-fix]"); if(fx){ const k=fx.dataset.fix,v=fx.dataset.v; if(S.fix[k]===v) delete S.fix[k]; else S.fix[k]=v; save(); rerenderSection(secOf(k)); return; }
+  const ag=e.target.closest("[data-allgood]"); if(ag){ const si=+ag.dataset.allgood; SECTIONS[si].b.forEach((b,bi)=>{const k=bk(si,bi); if(!S.checks[k]){S.checks[k]="ok";S.by[k]=shift;}}); save(); rerenderSection(si); return; }
+  const rt=e.target.closest("[data-rate]"); if(rt){ const id=rt.dataset.rate,v=rt.dataset.v==="na"?"na":+rt.dataset.v; if(S.rate[id]===v){delete S.rate[id];delete S.rateBy[id];} else {S.rate[id]=v;S.rateBy[id]=shift;} save(); rerenderSection(SECTIONS.findIndex(s=>s.id===id)); return; }
+  const sh=e.target.closest(".sec-head[data-sec]"); if(sh){ const sec=sh.parentElement; sec.classList.toggle("collapsed"); sh.setAttribute("aria-expanded",String(!sec.classList.contains("collapsed"))); return; }
+  const od=e.target.closest("[data-ord]"); if(od){ const id=od.dataset.ord,v=od.dataset.v; if(S.orders[id]===v) delete S.orders[id]; else S.orders[id]=v; save(); renderOrders(); refresh(); return; }
+  const va=e.target.closest("[data-vadd]"); if(va){ S.vendors.push({name:$("v-name").value,time:$("v-time").value,ok:va.dataset.vadd==="1",note:$("v-note").value.trim(),shift}); save(); renderVendors(); refresh(); return; }
+  const rv=e.target.closest("[data-rmv]"); if(rv){ S.vendors.splice(+rv.dataset.rmv,1); save(); renderVendors(); refresh(); return; }
+  if(e.target.id==="n-add"){ const d=$("n-desc").value.trim(); if(!d){$("n-desc").focus();return;} S.needs.push({cat:$("n-cat").value,desc:d,urg:$("n-urg").checked,shift,at:new Date().toISOString()}); save(); renderNeeds(); refresh(); return; }
+  const rn=e.target.closest("[data-rmn]"); if(rn){ S.needs.splice(+rn.dataset.rmn,1); save(); renderNeeds(); refresh(); return; }
+  const ap=e.target.closest("[data-addph]"); if(ap){ $("pf-"+ap.dataset.addph).click(); return; }
+  const x=e.target.closest("[data-rmph]"); if(x){ e.preventDefault(); const [si,id]=x.dataset.rmph.split(":"); S.photos[si]=(S.photos[si]||[]).filter(v=>v!==id); save(); renderPhotos(+si); if(assets) assets.delete(id).catch(()=>{}); return; }
+});
+document.addEventListener("keydown",e=>{ const sh=e.target.closest&&e.target.closest(".sec-head[data-sec]"); if(sh&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); sh.click();} });
+document.addEventListener("input",e=>{ const el=e.target, id=el.id||"";
+  if(el.dataset.note){ const k=el.dataset.note; if(el.value) S.notes[k]=el.value; else delete S.notes[k]; save(); clearTimeout(window._rf); window._rf=setTimeout(refresh,500); return; }
+  if(el.dataset.temp){ const [sh,tid]=el.dataset.temp.split("."); if(el.value==="") delete S.temps[sh][tid]; else S.temps[sh][tid]=el.value; const x=TEMPS.find(q=>q[0]===tid); const st=tState(x[3],el.value); el.className=st?"t-"+st:""; save(); clearTimeout(window._rf); window._rf=setTimeout(refresh,400); return; }
+  if(id==="f-am"){S.amMgr=el.value;save();} else if(id==="f-pm"){S.pmMgr=el.value;save();}
+  else if(id==="f-oos"){S.oos=el.value;save();} else if(id==="f-handoff"){S.handoff=el.value;save();} else if(id==="f-pmnotes"){S.pmnotes=el.value;save();}
+  else return; clearTimeout(window._rf); window._rf=setTimeout(refresh,500);
+});
+document.addEventListener("change",e=>{ const el=e.target;
+  if(el.id==="f-store"||el.id==="f-date"){ try{localStorage.setItem(key(),JSON.stringify(S))}catch(x){} syncDraft(); curStore=$("f-store").value; curDate=$("f-date").value||today(); try{localStorage.setItem("dw-store",curStore)}catch(x){} S=load(); fillDay(); buildForm(); loadRemote(); loadPrev(); return; }
+  if(el.id==="h-store"){ hStore=el.value; renderHist(); return; }
+  if(el.id&&el.id.startsWith("pf-")&&el.files.length){ addPhotos(+el.id.slice(3),[...el.files]); el.value=""; }
+});
+function setShift(s){ shift=s; try{localStorage.setItem("dw-shift",s)}catch(e){} applyText(); renderHandoff(); }
+$("sh-am").onclick=()=>setShift("am"); $("sh-pm").onclick=()=>setShift("pm");
+function setLang(l){ lang=l; try{localStorage.setItem("dw-lang2",l)}catch(e){} applyText(); buildForm(); renderHist(); }
+$("lang-en").onclick=()=>setLang("en"); $("lang-es").onclick=()=>setLang("es");
+function setTab(w){ const f=w==="form"; $("view-form").hidden=!f; $("view-hist").hidden=w!=="hist"; $("view-admin").hidden=w!=="admin"; $("prog").hidden=!f; $("tab-form").setAttribute("aria-selected",f); $("tab-hist").setAttribute("aria-selected",w==="hist"); $("tab-admin").setAttribute("aria-selected",w==="admin"); if(w==="hist") renderHist(); if(w==="admin") renderAdmin(); window.scrollTo(0,0); }
+$("tab-form").onclick=()=>setTab("form"); $("tab-hist").onclick=()=>setTab("hist"); $("tab-admin").onclick=()=>setTab("admin");
+$("b-clear").onclick=()=>$("clear-confirm").hidden=false; $("b-clear-no").onclick=()=>$("clear-confirm").hidden=true;
+$("b-clear-yes").onclick=()=>{ S=blank(); try{localStorage.removeItem(key())}catch(e){} syncDraft(); fillDay(); buildForm(); $("clear-confirm").hidden=true; setStatus(""); window.scrollTo(0,0); };
+
+/* ================= SUMMARY / SUBMIT ================= */
+function setStatus(m,k){ const s=$("status"); s.textContent=m||""; s.className="status"+(k?" "+k:""); }
+function summaryText(src){ const t=T[lang], r=compute(src);
+  let s=`VISTA · ${t.title} — ${src.store} — ${src.date}\n${t.am}: ${src.amMgr||"-"} · ${t.pm}: ${src.pmMgr||"-"}\n${t.final}: ${fmt(r.final)} · ${r.done}/${TOTAL} ${t.done} · ${r.open} ${t.issuesOpen}\n\n`;
+  SECTIONS.forEach((sec,si)=>{ s+=`${si+1}. ${sec[lang]}: ${r.secs[si]??"–"}\n`; });
+  const fl=[]; SECTIONS.forEach((sec,si)=>sec.b.forEach((b,bi)=>{const k=bk(si,bi); if(src.checks?.[k]==="iss") fl.push(`  [${(src.by?.[k]||"").toUpperCase()}] ${sec[lang]}: ${L(b)}${src.notes?.[k]?" — "+src.notes[k]:""}${src.fix?.[k]?" ("+(src.fix[k]==="fixed"?t.fixed:t.follow)+")":""}`);}));
+  ["am","pm"].forEach(sh=>TEMPS.forEach(x=>{const v=src.temps?.[sh]?.[x[0]]; if(tState(x[3],v)==="no") fl.push(`  [${sh.toUpperCase()}] ${L([x[1],x[2]])}: ${v}°F`);}));
+  if(fl.length) s+=`\n${t.flags}:\n${fl.join("\n")}\n`;
+  if(src.needs?.length) s+=`\n${t.needs}:\n${src.needs.map(n=>`  ${n.urg?"["+t.urgent+"] ":""}${n.desc}`).join("\n")}\n`;
+  const vi=(src.vendors||[]).filter(v=>!v.ok); if(vi.length) s+=`\n${t.vIssues}:\n${vi.map(v=>`  ${v.name} ${v.time||""} — ${v.note||""}`).join("\n")}\n`;
+  if(src.oos) s+=`\n${t.oos}: ${src.oos}\n`; if(src.handoff) s+=`\nAM → PM: ${src.handoff}\n`; if(src.pmnotes) s+=`PM → AM: ${src.pmnotes}\n`;
+  return s; }
+async function copyText(txt,stEl){ try{ await navigator.clipboard.writeText(txt); (stEl||$("status")).textContent=T[lang].copied; }catch(e){ (stEl||$("status")).textContent=T[lang].copyErr; } }
+$("b-copy").onclick=()=>copyText(summaryText(S));
+$("b-submit").onclick=async()=>{ const t=T[lang];
+  if(!S.amMgr.trim()&&!S.pmMgr.trim()){ setStatus(t.needMgr,"err"); $("f-am").focus(); return; }
+  if(!Object.keys(S.checks).length&&!Object.keys(S.rate).length){ setStatus(t.needAny,"err"); return; }
+  if(pending>0){ setStatus(t.phWait,"err"); return; }
+  if(!db){ setStatus(t.noDb,"err"); return; }
+  const r=compute(S); const now=new Date().toISOString();
+  const doc=Object.assign({},S,{final:r.final,sectionScores:r.secs,doneCount:r.done,total:TOTAL,issueCount:r.iss,openCount:r.open,tempsOut:r.tOut,urgentCount:S.needs.filter(n=>n.urg).length,submittedAt:now,lang,form:"daily-walk-v3"});
+  $("b-submit").disabled=true; setStatus(t.saving);
+  try{ await db.doc("walks/"+docId()).set(doc); S.submittedAt=now; save(); refresh(); setStatus(t.saved,"ok"); }
+  catch(e){ setStatus(t.saveErr+((e&&e.message)||(e&&e.code)||"error"),"err"); }
+  finally{ $("b-submit").disabled=false; } };
+
+/* ================= HISTORY ================= */
+let walks=[], wState="loading", hStore="", openId=null, isEditor=false;
+function ago(d){ const t=T[lang]; const n=Math.round((new Date(today())-new Date(d))/864e5); return n<=0?t.today:n===1?t.yday:`${n} ${t.daysAgo}`; }
+function renderHist(){ const t=T[lang];
+  if(openId){ showDetail(openId); return; }
+  $("h-detail").hidden=true; $("h-list").hidden=false; document.querySelector(".toolbar").hidden=false;
+  $("h-store").innerHTML=`<option value="">${t.allStores}</option>`+STORES.map(s=>`<option ${s===hStore?"selected":""}>${esc(s)}</option>`).join("");
+  if(wState!=="ready"){ $("h-stores").innerHTML=""; $("h-list").innerHTML=`<p class="empty">${wState==="off"?t.noDb:t.loading}</p>`; return; }
+  const latest={}; walks.forEach(w=>{ if(!latest[w.store]||w.date>latest[w.store].date) latest[w.store]=w; });
+  $("h-stores").innerHTML=`<section class="card"><span class="label">${t.latest}</span><div class="stores">${STORES.map(s=>{const w=latest[s]; return `<button class="st" ${w?`data-open="${esc(w.id)}"`:"disabled"}><h3>${esc(s)}</h3><b style="color:${w?gColor(w.final):"var(--na)"}">${w?fmt(w.final):"–"}</b><p>${w?`${ago(w.date)} · ${w.doneCount||0}/${w.total||TOTAL} · ${w.openCount?`<span style="color:var(--g1);font-weight:700">⚠ ${w.openCount}</span>`:"⚠ 0"}${w.urgentCount?` · <span style="color:var(--g1);font-weight:700">${w.urgentCount} ${t.urgent.toLowerCase()}</span>`:""}`:t.noReport}</p></button>`}).join("")}</div></section>`;
+  const rows=walks.filter(w=>!hStore||w.store===hStore);
+  $("h-list").innerHTML=rows.length?rows.map(w=>`<button class="hist" data-open="${esc(w.id)}"><span class="score" style="background:${gColor(w.final)}">${fmt(w.final)}</span><span style="min-width:0"><h3>${esc(w.store)} · ${esc(w.date)}</h3><p>AM ${esc(w.amMgr||"—")} · PM ${esc(w.pmMgr||"—")} · ${w.doneCount||0}/${w.total||TOTAL}${w.openCount?` · ⚠ ${w.openCount}`:""}</p></span></button>`).join(""):`<p class="empty">${t.noHist}</p>`;
+}
+document.addEventListener("click",e=>{ const o=e.target.closest("[data-open]"); if(o){ openId=o.dataset.open; showDetail(openId); window.scrollTo(0,0); } });
+function showDetail(id){ const a=walks.find(x=>x.id===id); if(!a){ openId=null; renderHist(); return; } const t=T[lang], r=compute(a);
+  $("h-list").hidden=true; $("h-stores").innerHTML=""; document.querySelector(".toolbar").hidden=true; const d=$("h-detail"); d.hidden=false;
+  d.innerHTML=`<button class="btn" id="b-back">${t.back}</button>
+   <h2 style="margin-top:14px;font-size:24px">${esc(a.store)}</h2><p class="empty" style="margin:4px 0 0">${esc(a.date)} · AM ${esc(a.amMgr||"—")} · PM ${esc(a.pmMgr||"—")}</p>
+   <div class="final"><div class="final-num" style="color:${gColor(r.final)}">${fmt(r.final)}</div><div class="final-lbl">${t.final}<small>${t.finalSub}</small></div></div>
+   <div class="minis"><span class="mini-k"><b>${r.done}/${TOTAL}</b>${t.done}</span><span class="mini-k"><b style="color:${r.open?"var(--g1)":"var(--fg)"}">${r.open}</b>${t.issuesOpen}</span></div>
+   <div class="rows">${SECTIONS.map((s,si)=>`<div class="rrow"><span>${si+1}. ${esc(s[lang])}</span><div class="mini"><i style="width:${r.secs[si]==null?0:r.secs[si]/5*100}%;background:${gColor(r.secs[si])}"></i></div><b style="color:${gColor(r.secs[si])}">${r.secs[si]??"–"}</b></div>`).join("")}</div>
+   ${extrasHTML(a)}
+   <div style="margin-top:16px">${SECTIONS.map((s,si)=>`<h3 style="font-size:17px;margin-top:14px">${si+1}. ${esc(s[lang])}</h3>`+s.b.map((b,bi)=>{const k=bk(si,bi),v=(a.checks||{})[k]; return `<div class="detail-q"><span class="chip" style="width:26px;height:26px;font-size:14px;background:${v==="ok"?"var(--g5)":v==="iss"?"var(--g1)":"var(--sunk)"};color:${v?"#fff":"var(--muted)"}">${v==="ok"?"✓":v==="iss"?"!":"·"}</span><span>${esc(L(b))} <span class="q-by">${v&&a.by?.[k]?a.by[k].toUpperCase():""}</span>${a.notes?.[k]?`<em>${esc(a.notes[k])}</em>`:""}</span></div>`}).join("")+(((a.photos||{})[si]||[]).length?`<div class="ph-row" style="margin-top:8px">${a.photos[si].map(id=>`<div class="ph"><a href="#" data-phref="${esc(id)}" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-ph="${esc(id)}" alt="" loading="lazy"></a></div>`).join("")}</div>`:"")).join("")}</div>
+   <div class="actions"><button class="btn" id="b-dcopy">${t.copy}</button>${isEditor?`<button class="btn danger" id="b-del">${t.del}</button>`:""}</div>
+   <div class="confirm" id="del-c" hidden>${t.delQ}<div class="actions" style="margin-top:8px"><button class="btn danger" id="b-del-yes">${t.del}</button><button class="btn" id="b-del-no">${t.keep}</button></div></div>
+   <div class="status" id="d-status"></div>`;
+  $("b-back").onclick=()=>{ openId=null; renderHist(); window.scrollTo(0,0); };
+  $("b-dcopy").onclick=()=>copyText(summaryText(a),$("d-status"));
+  if($("b-del")){ $("b-del").onclick=()=>$("del-c").hidden=false; $("b-del-no").onclick=()=>$("del-c").hidden=true; $("b-del-yes").onclick=async()=>{ try{ await db.doc("walks/"+a.id).delete(); openId=null; renderHist(); }catch(e){ $("d-status").textContent=(e&&e.message)||"error"; } }; }
+}
+
+/* ================= ADMIN ================= */
+let adminDirty=false, aOpen={}, aEdit=null, DRAFT=null;
+const AT={
+ es:{title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
+  f:{needs:["Necesidades de la tienda","Mantenimiento, refrigeración, limpieza, equipo, personal"],vendors:["Registro de proveedores","Dentro de Recepción"],orders:["Estado de pedidos por departamento","Dentro de Pedidos"],oos:["Agotados hoy","Dentro de Abarrotes"],notes:["Notas del turno","AM → PM y PM → AM"]},
+  tasks:"tareas",edit:"Editar",done:"Listo",add:"+ Agregar tarea",custom:"Personalizada",en:"Tarea (inglés)",es:"Tarea (español)",sen:"Estándar ⓘ (inglés)",ses:"Estándar ⓘ (español)",del:"Eliminar",reset:"Restaurar texto original",
+  unsaved:"Cambios sin guardar",save:"Guardar",discard:"Descartar",saved:"Guardado. Ya aplica en todas las tiendas.",err:"No se pudo guardar: ",noAccess:"Solo el dueño o editores pueden cambiar la configuración.",resetAll:"Restaurar todo a la versión original",resetQ:"¿Restaurar todas las secciones, tareas y funciones a la versión original?",yes:"Restaurar",no:"Cancelar"},
+ en:{title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
+  f:{needs:["Store needs","Maintenance, refrigeration, supplies, equipment, staffing"],vendors:["Vendor log","Inside Receiving"],orders:["Order status by department","Inside Orders"],oos:["Out of stock today","Inside Grocery"],notes:["Shift notes","AM → PM and PM → AM"]},
+  tasks:"tasks",edit:"Edit",done:"Done",add:"+ Add task",custom:"Custom",en:"Task (English)",es:"Task (Spanish)",sen:"Standard ⓘ (English)",ses:"Standard ⓘ (Spanish)",del:"Delete",reset:"Restore original text",
+  unsaved:"Unsaved changes",save:"Save",discard:"Discard",saved:"Saved. Now live for every store.",err:"Couldn't save: ",noAccess:"Only the owner or editors can change settings.",resetAll:"Restore everything to the original",resetQ:"Restore all sections, tasks and features to the original?",yes:"Restore",no:"Cancel"}};
+function startDraft(){ if(!DRAFT) DRAFT=JSON.parse(JSON.stringify(CFG)); }
+function markDirty(){ adminDirty=true; renderAdmin(); }
+function renderAdmin(){ const a=AT[lang], v=$("view-admin"); if(!isEditor){ v.innerHTML=`<section class="card"><p class="empty">${a.noAccess}</p></section>`; return; }
+  startDraft(); const C=DRAFT;
+  const sw=(on,attr)=>`<button class="sw" role="switch" aria-checked="${!!on}" ${attr}></button>`;
+  let h=`<section class="card"><h2 style="font-size:24px">${a.title}</h2><p class="hint" style="margin-top:4px">${a.sub}</p></section>
+   <section class="card"><span class="label">${a.feat}</span>${["needs","vendors","orders","oos","notes"].map(f=>`<div class="arow"><div><b>${a.f[f][0]}</b><span>${a.f[f][1]}</span></div>${sw(C[f]!==false&&(f!=="needs"||C.needs),`data-feat="${f}"`)}</div>`).join("")}</section>
+   <section class="card"><span class="label">${a.sections}</span>`;
+  BASE.forEach(s=>{ const on=!C.off[s.id]; const items=s.b.map((b,i)=>({k:`${s.id}.${i}`,b,custom:false})).concat((C.custom[s.id]||[]).map(c=>({k:c.k,b:[c.en,c.es,c.sen||"",c.ses||""],custom:true})));
+    const nOn=items.filter(x=>!C.taskOff[x.k]).length;
+    h+=`<div class="asec"><div class="asec-h"><button class="t" data-aopen="${s.id}">${aOpen[s.id]?"▾":"▸"} ${esc(s[lang])} <small>· ${nOn}/${items.length} ${a.tasks}</small></button>${sw(on,`data-asec="${s.id}"`)}</div>`;
+    if(aOpen[s.id]){ items.forEach(x=>{ const e=C.edits[x.k]||{}; const cur=[e.en||x.b[0],e.es||x.b[1],e.sen??x.b[2],e.ses??x.b[3]]; const off=!!C.taskOff[x.k];
+      h+=`<div class="atask ${off?"off":""}"><div>${esc(L(cur))}${x.custom?` <span class="tag" style="background:var(--g3)">${a.custom}</span>`:""}${C.edits[x.k]?` <span class="tag" style="background:var(--accent)">✎</span>`:""}<em>${esc(lang==="en"?cur[2]:cur[3])}</em></div>
+        <button class="btn small" data-aedit="${x.k}">${aEdit===x.k?a.done:a.edit}</button>${sw(!off,`data-atask="${x.k}"`)}</div>`;
+      if(aEdit===x.k) h+=`<div class="aedit"><label class="label">${a.en}</label><input type="text" data-af="en" data-ak="${x.k}" value="${esc(cur[0])}"><label class="label">${a.sen}</label><textarea rows="2" data-af="sen" data-ak="${x.k}">${esc(cur[2])}</textarea>
+        <label class="label">${a.es}</label><input type="text" data-af="es" data-ak="${x.k}" value="${esc(cur[1])}"><label class="label">${a.ses}</label><textarea rows="2" data-af="ses" data-ak="${x.k}">${esc(cur[3])}</textarea>
+        <div class="actions" style="margin-top:4px">${x.custom?`<button class="btn small danger" data-adel="${x.k}">${a.del}</button>`:(C.edits[x.k]?`<button class="btn small" data-areset="${x.k}">${a.reset}</button>`:"")}</div></div>`; });
+      h+=`<div class="aedit"><button class="btn small" data-aadd="${s.id}">${a.add}</button></div>`; }
+    h+=`</div>`; });
+  h+=`<div class="actions"><button class="btn danger small" id="a-resetall">${a.resetAll}</button></div><div class="confirm" id="a-rc" hidden>${a.resetQ}<div class="actions" style="margin-top:8px"><button class="btn danger" id="a-rc-yes">${a.yes}</button><button class="btn" id="a-rc-no">${a.no}</button></div></div></section>`;
+  if(adminDirty) h+=`<div class="savebar"><b>${a.unsaved}</b><span style="display:flex;gap:8px"><button class="btn small" id="a-discard">${a.discard}</button><button class="btn small primary" id="a-save">${a.save}</button></span></div>`;
+  h+=`<div class="status" id="a-status"></div>`;
+  const y=window.scrollY; v.innerHTML=h; window.scrollTo(0,y);
+}
+document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; const a=AT[lang];
+  const f=e.target.closest("[data-feat]"); if(f){ startDraft(); const k=f.dataset.feat; DRAFT[k]=!(k==="needs"?DRAFT.needs:DRAFT[k]!==false); markDirty(); return; }
+  const as=e.target.closest("[data-asec]"); if(as){ startDraft(); const id=as.dataset.asec; if(DRAFT.off[id]) delete DRAFT.off[id]; else DRAFT.off[id]=true; markDirty(); return; }
+  const at=e.target.closest("[data-atask]"); if(at){ startDraft(); const k=at.dataset.atask; if(DRAFT.taskOff[k]) delete DRAFT.taskOff[k]; else DRAFT.taskOff[k]=true; markDirty(); return; }
+  const ao=e.target.closest("[data-aopen]"); if(ao){ aOpen[ao.dataset.aopen]=!aOpen[ao.dataset.aopen]; renderAdmin(); return; }
+  const ae=e.target.closest("[data-aedit]"); if(ae){ aEdit=aEdit===ae.dataset.aedit?null:ae.dataset.aedit; renderAdmin(); return; }
+  const aa=e.target.closest("[data-aadd]"); if(aa){ startDraft(); const id=aa.dataset.aadd; const k=`${id}.c${Date.now().toString(36)}`; (DRAFT.custom[id]=DRAFT.custom[id]||[]).push({k,en:"New task",es:"Nueva tarea",sen:"",ses:""}); aEdit=k; markDirty(); return; }
+  const ad=e.target.closest("[data-adel]"); if(ad){ startDraft(); const k=ad.dataset.adel, id=k.split(".")[0]; DRAFT.custom[id]=(DRAFT.custom[id]||[]).filter(c=>c.k!==k); delete DRAFT.taskOff[k]; aEdit=null; markDirty(); return; }
+  const ar=e.target.closest("[data-areset]"); if(ar){ startDraft(); delete DRAFT.edits[ar.dataset.areset]; markDirty(); return; }
+  if(e.target.id==="a-resetall"){ $("a-rc").hidden=false; return; } if(e.target.id==="a-rc-no"){ $("a-rc").hidden=true; return; }
+  if(e.target.id==="a-rc-yes"){ DRAFT=JSON.parse(JSON.stringify(DEF_CFG)); aEdit=null; markDirty(); return; }
+  if(e.target.id==="a-discard"){ DRAFT=null; adminDirty=false; aEdit=null; renderAdmin(); return; }
+  if(e.target.id==="a-save"){ const st=$("a-status"); if(!db){ st.textContent=T[lang].noDb; return; }
+    try{ await db.doc("settings/main").set(Object.assign({},DRAFT,{updatedAt:new Date().toISOString()})); CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),DRAFT); applyCfg(); DRAFT=null; adminDirty=false; buildForm(); renderAdmin(); $("a-status").className="status ok"; $("a-status").textContent=a.saved; }
+    catch(err){ st.className="status err"; st.textContent=a.err+((err&&err.message)||"error"); } }
+});
+document.addEventListener("input",e=>{ const el=e.target; if(!el.dataset||!el.dataset.ak) return; startDraft(); const k=el.dataset.ak, fld=el.dataset.af; const id=k.split(".")[0];
+  const cu=(DRAFT.custom[id]||[]).find(c=>c.k===k);
+  if(cu){ cu[fld]=el.value; } else { const e2=DRAFT.edits[k]=DRAFT.edits[k]||{}; e2[fld]=el.value; }
+  if(!adminDirty){ adminDirty=true; const sb=document.querySelector(".savebar"); if(!sb) { const ai=document.activeElement, pos=ai&&ai.selectionStart; renderAdmin(); const n=document.querySelector(`[data-ak="${CSS.escape(k)}"][data-af="${fld}"]`); if(n){ n.focus(); try{n.setSelectionRange(pos,pos)}catch(x){} } } }
+});
+
+/* ================= PHOTOS ================= */
+let assets=null, assetsState="loading", pending=0; const pendingBy={};
+function renderPhotos(si){ const row=$("phr-"+si); if(!row) return; const t=T[lang]; const ids=(S.photos&&S.photos[si])||[];
+  let h=ids.map(id=>`<div class="ph"><a href="#" data-phref="${esc(id)}" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-ph="${esc(id)}" alt="" loading="lazy"></a><button class="x" data-rmph="${si}:${esc(id)}" aria-label="remove">×</button></div>`).join("");
+  for(let i=0;i<(pendingBy[si]||0);i++) h+=`<div class="ph busy">${t.uploading}</div>`;
+  if(assets) h+=`<button class="ph-add" data-addph="${si}"><span><b>+</b>${t.addPhoto}</span></button>`;
+  row.innerHTML=h; $("phm-"+si).textContent=assets||assetsState==="loading"?"":t.phOff; }
+function shrink(file){ return new Promise(res=>{ const url=URL.createObjectURL(file); const img=new Image();
+  img.onload=()=>{ const m=1600; let w=img.naturalWidth,h=img.naturalHeight; const r=Math.min(1,m/Math.max(w,h)); w=Math.round(w*r); h=Math.round(h*r); const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); URL.revokeObjectURL(url); c.toBlob(b=>res(b&&b.size?b:file),"image/jpeg",.82); };
+  img.onerror=()=>{URL.revokeObjectURL(url);res(file)}; img.src=url; }); }
+async function addPhotos(si,files){ for(const f of files){ pending++; pendingBy[si]=(pendingBy[si]||0)+1; renderPhotos(si);
+  try{ const b=await shrink(f); const r=await assets.upload(b); (S.photos[si]=S.photos[si]||[]).push(r.id); save(); }catch(e){ $("phm-"+si).textContent=(e&&e.message)||"error"; }
+  finally{ pending--; pendingBy[si]--; renderPhotos(si); } } }
+
+/* ================= DB ================= */
+let db=null;
+async function loadRemote(){ if(!db) return; const want=key();
+  try{ const snap=await db.doc("drafts/"+docId()).get(); if(key()!==want) return; const d=snap&&typeof snap.data==="function"?snap.data():null;
+    if(d&&d.updatedAt&&(!S._t||d.updatedAt>S._t)){ S=Object.assign(blank(),d); S._t=d.updatedAt; try{localStorage.setItem(key(),JSON.stringify(S))}catch(e){} fillDay(); buildForm(); } }catch(e){} }
+async function loadPrev(){ prevNotes=""; const d=new Date(curDate+"T12:00:00"); d.setDate(d.getDate()-1); const pd=d.toISOString().slice(0,10);
+  try{ const l=JSON.parse(localStorage.getItem(`dw3:${curStore}:${pd}`)||"null"); if(l&&l.pmnotes) prevNotes=l.pmnotes; }catch(e){}
+  if(!prevNotes&&db){ try{ const s=await db.doc("walks/"+curStore+"_"+pd).get(); const v=s&&typeof s.data==="function"?s.data():null; if(v&&v.pmnotes) prevNotes=v.pmnotes; }catch(e){} }
+  renderHandoff(); }
+
+/* ================= SUPABASE ================= */
+const SUPABASE_URL="https://uplaxcwnhicggztytppt.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwbGF4Y3duaGljZ2d6dHl0cHB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjg3NjgsImV4cCI6MjEwODcwNDc2OH0.xECvTE9mgOKyN_lQhG1o1J-FMr9lfMypaOquCezhTtE";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const BUCKET="walk-photos";
+const TBL={drafts:"walk_drafts",walks:"store_walks",settings:"walk_settings"};
+let me=null;
+function snapOf(row){ return {exists:!!row, data:()=>row?row.data:null}; }
+const dbApi={
+  doc(path){ const [coll,id]=path.split("/"); const table=TBL[coll];
+    return {
+      async get(){ const {data,error}=await sb.from(table).select("data").eq("id",id).maybeSingle(); if(error) throw error; return snapOf(data); },
+      async set(obj){ const row={id,data:obj,updated_at:new Date().toISOString(),updated_by:me&&me.id};
+        if(coll==="walks") Object.assign(row,{store:obj.store,walk_date:obj.date,final:obj.final,submitted_at:obj.submittedAt});
+        const {error}=await sb.from(table).upsert(row); if(error) throw error; },
+      async delete(){ const {error}=await sb.from(table).delete().eq("id",id); if(error) throw error; },
+      onSnapshot(cb,err){ this.get().then(cb).catch(err||(()=>{})); }
+    }; }
+};
+async function loadWalks(){ const {data,error}=await sb.from(TBL.walks).select("id,data").order("walk_date",{ascending:false}).limit(400);
+  if(error){ wState=walks.length?"ready":"off"; } else { walks=data.map(r=>Object.assign({id:r.id},r.data)); wState="ready"; }
+  if(!$("view-hist").hidden) renderHist(); }
+const assetsApi={
+  async upload(blob){ const p=`${curStore}/${curDate}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}.jpg`;
+    const {error}=await sb.storage.from(BUCKET).upload(p,blob,{contentType:blob.type||"image/jpeg",upsert:false}); if(error) throw error; return {id:p}; },
+  async delete(p){ await sb.storage.from(BUCKET).remove([p]); }
+};
+const urlCache={};
+async function resolvePhotos(root){ const els=[...(root||document).querySelectorAll("[data-ph],[data-phref]")]; if(!els.length) return;
+  const need=[...new Set(els.map(e=>e.dataset.ph||e.dataset.phref))].filter(p=>!urlCache[p]);
+  if(need.length){ const {data}=await sb.storage.from(BUCKET).createSignedUrls(need,3600); (data||[]).forEach(d=>{ if(d.signedUrl) urlCache[d.path]=d.signedUrl; }); }
+  els.forEach(e=>{ const p=e.dataset.ph||e.dataset.phref; const u=urlCache[p]; if(!u) return; if(e.dataset.ph&&e.src!==u) e.src=u; if(e.dataset.phref&&e.href!==u) e.href=u; }); }
+let rpT; new MutationObserver(()=>{ clearTimeout(rpT); rpT=setTimeout(()=>resolvePhotos().catch(()=>{}),150); }).observe(document.body,{childList:true,subtree:true});
+
+async function startApp(){
+  $("login").hidden=true; $("app").hidden=false;
+  db=dbApi; assets=assetsApi; assetsState="ready";
+  try{ const {data}=await sb.rpc("is_walk_admin"); isEditor=!!data; }catch(e){ isEditor=false; }
+  $("tab-admin").hidden=!isEditor;
+  try{ const s=await db.doc("settings/main").get(); const d=s.data(); if(d){ CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),d); applyCfg(); } }catch(e){}
+  applyText(); fillDay(); buildForm(); loadRemote(); loadPrev(); loadWalks();
+  setInterval(loadWalks,60000);
+}
+$("tab-hist").addEventListener("click",()=>loadWalks());
+$("login-form").addEventListener("submit",async e=>{ e.preventDefault(); $("li-err").textContent=""; $("li-btn").disabled=true;
+  const {data,error}=await sb.auth.signInWithPassword({email:$("li-email").value.trim(),password:$("li-pass").value});
+  $("li-btn").disabled=false; if(error){ $("li-err").textContent="Sign-in failed / No se pudo entrar: "+error.message; return; } me=data.user; startApp(); });
+$("b-signout").onclick=async()=>{ await sb.auth.signOut(); location.reload(); };
+(async()=>{ const {data}=await sb.auth.getSession(); if(data&&data.session){ me=data.session.user; startApp(); } else { $("login").hidden=false; } })();
+</script>
+</body>
+</html>
