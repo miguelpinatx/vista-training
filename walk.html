@@ -232,6 +232,7 @@ details.scale summary::-webkit-details-marker{display:none}
 .aedit input,.aedit textarea{font-size:14px;padding:8px 10px}
 .savebar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:14px;background:var(--fg);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .savebar .btn{border-color:transparent}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -269,6 +270,7 @@ details.scale summary::-webkit-details-marker{display:none}
         <div><label class="label" for="f-am" id="l-am">Gerente AM</label><input type="text" id="f-am" autocomplete="off"></div>
         <div><label class="label" for="f-pm" id="l-pm">Gerente PM</label><input type="text" id="f-pm" autocomplete="off"></div>
       </div>
+      <div class="shift-pick"><span class="label" id="l-day">Today is</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="dt-order" aria-pressed="false">Order Day</button><button class="btn small" id="dt-delivery" aria-pressed="false">Delivery Day</button><span class="tag" id="dt-tue" style="background:var(--g3);align-self:center" hidden>Tuesday</span></div><p class="hint" id="l-day-hint"></p></div>
       <div class="shift-pick"><span class="label" id="l-shift">¿Quién está calificando ahora?</span>
         <div class="seg" role="group"><button id="sh-am" aria-pressed="true">AM</button><button id="sh-pm" aria-pressed="false">PM</button></div>
         <p class="hint" id="l-shift-hint">Cada calificación queda marcada con el turno. El gerente PM sigue en el mismo recorrido.</p></div>
@@ -312,80 +314,132 @@ details.scale summary::-webkit-details-marker{display:none}
 const STORES=["Central","Alameda","Doniphan","Horizon","Montana","Piedras","Urban"];
 // Each bullet: [en, es, standard en, standard es]. Each section gets ONE 1–5 score.
 const BASE=[
- {id:"open",en:"Opening",es:"Apertura",shift:"am",b:[
-  ["Store opened on time with all departments ready for business","La tienda abrió a tiempo con todos los departamentos listos para la venta","Complete a full store walk 30 minutes before opening. Cases stocked, registers operational and lighting on at opening time.","Realizar un recorrido completo 30 minutos antes de abrir. Vitrinas surtidas, cajas en operación y luces encendidas a la hora de apertura."],
-  ["Entrance, parking lot and carts clean and orderly","Entrada, estacionamiento y carritos limpios y en orden","The entrance sets the customer's first impression: no debris, carts collected, mats and doors clean.","La entrada es la primera impresión del cliente: sin basura, carritos recogidos, tapetes y puertas limpios."],
-  ["Restrooms clean and fully stocked","Baños limpios y completamente surtidos","Verify soap, paper towels and tissue at opening, mid-day and closing.","Verificar jabón, toallas y papel al abrir, a mediodía y al cerrar."],
-  ["Sales floor clear of freight, pallets and spills","Piso de venta libre de mercancía, tarimas y derrames","All freight worked or removed before opening. Spills addressed immediately to prevent slip-and-fall incidents.","Toda la mercancía trabajada o retirada antes de abrir. Los derrames se atienden de inmediato para prevenir caídas."],
-  ["Pricing, weekly ad and signage accurate","Precios, oferta semanal y letreros correctos","Ad items signed and priced correctly from the first day of the ad. Pricing errors erode customer trust.","Productos en oferta con letrero y precio correcto desde el primer día. Los errores de precio dañan la confianza del cliente."]]},
- {id:"front",en:"Front End",es:"Frente y cajas",shift:"",b:[
-  ["Registers ready; prior-day deposit completed and secured","Cajas listas; depósito del día anterior completo y resguardado","Follow the cash office procedure for drawers and deposits.","Seguir el procedimiento de oficina para cajas y depósitos."],
-  ["Register coverage matches customer traffic","Cobertura de cajas de acuerdo al tráfico de clientes","Open an additional register when more than three customers are waiting in line.","Abrir otra caja cuando haya más de tres clientes esperando en fila."],
-  ["Self-checkout operational, stocked and attended","Autocobro en operación, surtido y con encargado","Receipt paper and bags stocked. The attendant greets customers and reminds them of accepted payments (card, EBT, WIC).","Papel y bolsas surtidos. El encargado saluda y recuerda las formas de pago aceptadas (tarjeta, EBT, WIC)."],
-  ["Cashiers greet and thank every customer","Los cajeros saludan y agradecen a cada cliente","Follow V.I.S.T.A.: acknowledge, invite, serve with care, thank, and invite them back.","Seguir V.I.S.T.A.: reconocer, invitar, servir con cuidado, agradecer e invitar a regresar."]]},
- {id:"recv",en:"Receiving & Vendors",es:"Recepción y proveedores",shift:"",extra:"vendors",b:[
-  ["All deliveries counted against the invoice before signing","Todas las entregas contadas contra la factura antes de firmar","Never sign for product that has not been counted and verified.","Nunca firmar por producto que no haya sido contado y verificado."],
-  ["Product condition, dates and temperatures verified at delivery","Condición, fechas y temperatura verificadas al recibir","Refuse damaged or short-dated product. Refrigerated and frozen product must arrive cold and solid.","Rechazar producto dañado o con fecha corta. El producto refrigerado y congelado debe llegar frío y sólido."],
-  ["Shortages, damages and credits documented on the invoice","Faltantes, daños y créditos documentados en la factura","Note discrepancies on the invoice, obtain the driver's initials and report them the same day.","Anotar las diferencias en la factura, obtener iniciales del chofer y reportarlas el mismo día."],
-  ["Refrigerated and frozen product put away first","Producto refrigerado y congelado se guarda primero","Maintain the cold chain: cold and frozen product stored within 15–20 minutes of delivery.","Mantener la cadena de frío: guardar lo refrigerado y congelado dentro de 15–20 minutos."],
-  ["Vendors supervised; DSD vendors rotate and pull expired product","Proveedores supervisados; los de ruta rotan y retiran producto vencido","Vendors are not left unattended in the back room. Bread, soda, snack and dairy vendors rotate stock and remove out-of-date product.","Ningún proveedor sin supervisión en la bodega. Pan, refrescos, botanas y lácteos rotan su producto y retiran lo vencido."]]},
- {id:"equip",en:"Equipment & Storage",es:"Equipo y almacenamiento",shift:"",b:[
-  ["All coolers, freezers and hot cases operating properly","Todos los refrigeradores, congeladores y vitrinas calientes funcionando","If any unit is not holding temperature, move product and report it to Paola or Joe immediately. Log it under Store Needs.","Si algún equipo no mantiene temperatura, mover el producto y reportarlo de inmediato a Paola o Joe. Registrarlo en Necesidades."],
-  ["Thawed product tagged with an expiration date based on thaw date","Producto descongelado etiquetado con fecha de vencimiento según su descongelación","Read the case instructions. If none are listed, use 7–10 days from thaw or consult a manager. Thaw under refrigeration only.","Leer las instrucciones de la caja. Si no indica, usar 7–10 días desde la descongelación o consultar a un gerente. Descongelar solo en refrigeración."],
-  ["Back room and walk-ins organized, product off the floor","Bodega y cuartos fríos ordenados, producto fuera del piso","Store product six inches off the floor, with raw meat on the lowest shelf.","Almacenar a seis pulgadas del piso, con la carne cruda en la repisa más baja."],
-  ["FIFO rotation followed throughout the store","Rotación PEPS en toda la tienda","First in, first out on every shelf, case and cooler.","Primero en entrar, primero en salir en anaqueles, vitrinas y refrigeradores."]]},
- {id:"hotdeli",en:"Hot Deli",es:"Hot Deli",shift:"",b:[
-  ["Hot case full and on time for the AM and PM shifts","Vitrina caliente llena y a tiempo para el turno AM y PM","Top sellers (brisket, chile con queso) set first, following the department production guide.","Los productos de mayor venta (brisket, chile con queso) primero, según la guía de producción del departamento."],
-  ["Production monitored to prevent over-production","Producción supervisada para evitar sobreproducción","Produce to the daily sets. Excess production becomes waste.","Producir según los sets diarios. Lo que se produce de más se convierte en merma."],
-  ["Heat & serve items held no more than 4 hours in the warmer","Productos de calentar y servir no más de 4 horas en el calentador","Rotate and replace heat & serve product before it reaches four hours in the warmer.","Rotar y reemplazar el producto antes de cumplir cuatro horas en el calentador."],
-  ["All product dated and labeled","Todo el producto con fecha y etiqueta","Preparation date on every pan and container, following the shelf-life chart.","Fecha de preparación en cada charola y recipiente, según la tabla de vida útil."],
-  ["Hairnets, gloves, clean uniforms and a clean station","Red, guantes, uniforme y estación limpios","Wash hands before putting on gloves; change gloves between tasks.","Lavar manos antes de usar guantes; cambiar guantes entre tareas."]]},
- {id:"colddeli",en:"Cold Deli & Salads",es:"Cold Deli y ensaladas",shift:"",b:[
-  ["Case fully merchandised: aguas frescas, cut fruit, salads, meats and cheeses","Vitrina completa: aguas frescas, fruta picada, ensaladas, carnes frías y quesos","Aguas frescas are the department's leading item and should never be out of stock.","Las aguas frescas son el producto principal del departamento y no deben agotarse."],
-  ["All product dated and within shelf life","Todo el producto con fecha y dentro de su vida útil","Most items carry a 4–5 day shelf life. Pull and scan expired product as waste.","La mayoría tiene 4–5 días de vida útil. Retirar y escanear como merma lo vencido."],
-  ["Slicers cleaned and sanitized","Rebanadoras limpias y sanitizadas","At least every four hours and when changing between meats and cheeses.","Por lo menos cada cuatro horas y al cambiar entre carnes y quesos."],
-  ["Hairnets, gloves and a clean station","Red, guantes y estación limpia","Same food-handling standard as the Hot Deli.","El mismo estándar de manejo de alimentos que el Hot Deli."]]},
- {id:"meat",en:"Meat Market",es:"Carnicería",shift:"",b:[
-  ["Case full and well presented; packages sealed with no leaks","Vitrina llena y bien presentada; paquetes sellados sin fugas","Re-wrap leaking packages immediately.","Reempacar de inmediato los paquetes con fugas."],
-  ["Pack and sell-by dates accurate (5-day window)","Fechas de empaque y venta correctas (5 días)","Five days from pack date to sell-by date. Oldest product rotated forward.","Cinco días desde la fecha de empaque hasta la de venta. Rotar lo más antiguo al frente."],
-  ["Raw product separated; saws and grinders clean","Producto crudo separado; sierras y molinos limpios","Prevent cross-contamination. Clean and sanitize equipment between products.","Evitar la contaminación cruzada. Limpiar y sanitizar el equipo entre productos."]]},
- {id:"produce",en:"Produce",es:"Frutas y verduras",shift:"",b:[
-  ["Displays full and fresh; product culled","Exhibidores llenos y frescos; producto revisado","Cull displays every morning and afternoon.","Revisar y retirar producto en mal estado cada mañana y tarde."],
-  ["Prices and PLU signs accurate","Precios y letreros con PLU correctos","Accurate PLUs are required for registers and self-checkout.","Los PLU correctos son necesarios para las cajas y el autocobro."],
-  ["Backstock rotated; cooler organized","Reserva rotada; refrigerador ordenado","Oldest product goes to the floor first.","El producto más antiguo sale primero al piso."]]},
- {id:"bakery",en:"Bakery & Cakes",es:"Panadería y pasteles",shift:"",b:[
-  ["Bolillo ready before opening (half-batch rule)","Bolillo listo antes de abrir (regla de media tanda)","Begin with a half batch so bread is available at opening. No dough prepared the night before.","Iniciar con media tanda para tener pan al abrir. No preparar masa la noche anterior."],
-  ["Production adjusted based on leftover bread","Producción ajustada según el pan sobrante","Review the prior day's leftover bread and adjust batch sizes accordingly.","Revisar el pan sobrante del día anterior y ajustar el tamaño de las tandas."],
-  ["PM: trays consolidated starting at 6–7 PM through close","PM: consolidar charolas a partir de las 6–7 PM hasta el cierre","Condense trays in the evening to keep the case full while reducing end-of-day waste.","Consolidar charolas por la tarde para mantener la vitrina llena y reducir la merma al cierre."],
-  ["Bread case full and served from behind the counter","Vitrina de pan llena y servida detrás del mostrador","Tongs or gloves at all times.","Pinzas o guantes en todo momento."],
-  ["Cake case full (tres leches), dated and labeled","Vitrina de pasteles llena (tres leches), con fecha y etiqueta","Offer a written message and suggest pairing with floral.","Ofrecer mensaje escrito y sugerir combinarlo con flores."]]},
- {id:"tortilla",en:"Tortilleria",es:"Tortillería",shift:"",b:[
-  ["Fresh tortillas ready on time and in sufficient quantity","Tortillas frescas listas a tiempo y en cantidad suficiente","Plan production around morning and pre-dinner peak hours.","Planear la producción para las horas pico de la mañana y antes de la cena."],
-  ["Machine and work area clean; hairnets and gloves in use","Máquina y área limpias; red y guantes en uso","Clean the machine at the end of each production run.","Limpiar la máquina al terminar cada tanda de producción."]]},
- {id:"grocery",en:"Grocery, Dairy & Frozen",es:"Abarrotes, lácteos y congelados",shift:"",extra:"oos",b:[
-  ["Shelves full and faced","Anaqueles llenos y acomodados","Face all aisles at opening and before the evening rush.","Acomodar todos los pasillos al abrir y antes de la hora pico de la tarde."],
-  ["Essential items in stock (milk, eggs, tortillas, bread, water, ice, soda)","Productos básicos en existencia (leche, huevo, tortillas, pan, agua, hielo, refrescos)","Out-of-stocks on essentials send customers to competitors.","La falta de productos básicos envía a los clientes a la competencia."],
-  ["Expired and damaged product pulled and scanned","Producto vencido y dañado retirado y escaneado","Scan waste daily for accurate reporting.","Escanear la merma a diario para reportes precisos."],
-  ["Endcaps and ad items stocked and signed","Cabeceras y productos en oferta surtidos y con letrero","Endcaps generate the highest sales per foot in the store.","Las cabeceras generan la mayor venta por espacio en la tienda."]]},
- {id:"orders",en:"Orders: AFI & Commissary",es:"Pedidos: AFI y comisaría",shift:"",extra:"orders",b:[
-  ["AFI orders submitted on each department's scheduled order day","Pedidos de AFI enviados el día programado de cada departamento","Submit before the cutoff, based on sales history and on-hand inventory.","Enviar antes del corte, según el historial de venta y el inventario disponible."],
-  ["Commissary (EPPF) order submitted before 12 PM, one day in advance","Pedido a comisaría (EPPF) enviado antes de las 12 PM, un día antes","Communicate any shortages to the commissary the same day.","Comunicar los faltantes a la comisaría el mismo día."],
-  ["EPPF inventory counted and recorded twice weekly","Inventario de EPPF contado y registrado dos veces por semana","Count before ordering to prevent over-ordering.","Contar antes de pedir para evitar pedir de más."]]},
- {id:"people",en:"People & Service",es:"Equipo y servicio",shift:"",b:[
-  ["Full attendance; call-outs documented and covered","Asistencia completa; faltas documentadas y cubiertas","Record each call-out and who covered the shift.","Registrar cada falta y quién cubrió el turno."],
-  ["Dress code followed; no phones or earbuds on the sales floor","Código de vestimenta cumplido; sin celulares ni audífonos en el piso","Phones put away when customers are present. Earbuds are not permitted for safety reasons.","Celulares guardados cuando hay clientes. Los audífonos no se permiten por seguridad."],
-  ["Daily huddle completed (Vista Way focus)","Junta diaria realizada (enfoque Vista Way)","Five minutes: daily focus, sales goal and assignments.","Cinco minutos: enfoque del día, meta de venta y asignaciones."],
-  ["Customers acknowledged and assisted; complaints resolved and documented","Clientes reconocidos y atendidos; quejas resueltas y documentadas","Never leave a customer unacknowledged.","Nunca dejar a un cliente sin reconocer."]]},
- {id:"improve",en:"Manager Walk: Areas for Improvement",es:"Recorrido del gerente: áreas de mejora",shift:"",b:[
-  ["Full store walk completed to identify improvements in customer service, cleanliness and merchandising","Recorrido completo de la tienda para identificar mejoras en servicio al cliente, limpieza y exhibición","Walk the store from the customer's perspective. Use ⚠ to record each opportunity and the action taken.","Recorrer la tienda desde la perspectiva del cliente. Usar ⚠ para registrar cada oportunidad y la acción tomada."],
-  ["Weekly deep-cleaning schedule set for each department on slow days","Calendario semanal de limpieza profunda por departamento en días de menor venta","Assign each department a deep-cleaning day and confirm it was completed.","Asignar a cada departamento un día de limpieza profunda y confirmar que se realizó."]]},
- {id:"close",en:"Closing",es:"Cierre",shift:"pm",b:[
-  ["Waste scanned in every department","Merma escaneada en todos los departamentos","Every department, every night.","Todos los departamentos, todas las noches."],
-  ["Hot food properly cooled or discarded","Comida caliente enfriada correctamente o desechada","Cool from 135°F to 70°F within 2 hours and to 41°F within 4 additional hours; otherwise discard.","Enfriar de 135°F a 70°F en 2 horas y a 41°F en 4 horas más; de lo contrario, desechar."],
-  ["Slicers, 3-compartment sink and prep tables cleaned and sanitized","Rebanadoras, tarja de 3 compartimientos y mesas limpias y sanitizadas","Wash, rinse, sanitize and air dry.","Lavar, enjuagar, sanitizar y secar al aire."],
-  ["Trash removed; dumpster area clean","Basura retirada; área del contenedor limpia","A clean dumpster area prevents pest activity.","Un área de contenedor limpia previene plagas."],
-  ["Registers closed out; safe and deposit prepared","Cajas cerradas; caja fuerte y depósito preparados","Follow the cash office closing procedure.","Seguir el procedimiento de cierre de oficina."],
-  ["Doors locked, alarm set, lights off","Puertas cerradas, alarma activada, luces apagadas","Two employees exit the building together.","Dos empleados salen juntos del edificio."]]}
+ {id:"open",en:"Before Opening",es:"Antes de abrir",shift:"am",time:["Before opening","Antes de abrir"],b:[
+  ["Closing shift notes reviewed", "Notas del turno de cierre revisadas", "The PM manager's notes appear at the top of the AM walk.", "Las notas del gerente PM aparecen arriba en el recorrido AM."],
+  ["Store opened on time with all departments ready for business", "La tienda abrió a tiempo con todos los departamentos listos para la venta", "Complete a full store walk 30 minutes before opening. Cases stocked, registers operational and lighting on at opening time.", "Realizar un recorrido completo 30 minutos antes de abrir. Vitrinas surtidas, cajas en operación y luces encendidas a la hora de apertura."],
+  ["Store condition checked: trash, floors and office", "Condición de la tienda: basura, pisos y oficina", "Trash emptied, floors clean, office organized.", "Basura vacía, pisos limpios, oficina ordenada."],
+  ["Restrooms clean and fully stocked", "Baños limpios y completamente surtidos", "Verify soap, paper towels and tissue at opening, mid-day and closing.", "Verificar jabón, toallas y papel al abrir, a mediodía y al cerrar."],
+  ["Sales floor clear of freight, pallets and spills", "Piso de venta libre de mercancía, tarimas y derrames", "All freight worked or removed before opening. Spills addressed immediately to prevent slip-and-fall incidents.", "Toda la mercancía trabajada o retirada antes de abrir. Los derrames se atienden de inmediato para prevenir caídas."]]},
+ {id:"outside",en:"Outside & Entrances",es:"Exterior y entradas",shift:"am",time:["Before opening","Antes de abrir"],b:[
+  ["Parking lot clean", "Estacionamiento limpio", "No trash or debris; carts collected.", "Sin basura; carritos recogidos."],
+  ["Entrances clean and welcoming, fans on", "Entradas limpias y acogedoras, ventiladores encendidos", "The entrance sets the customer's first impression.", "La entrada es la primera impresión del cliente."],
+  ["Shopping carts clean and available", "Carritos limpios y disponibles", "Wipe handles and remove trash from carts.", "Limpiar manijas y retirar basura de los carritos."],
+  ["Receiving area cleaned", "Área de recepción limpia", "Clear, swept and free of pests.", "Despejada, barrida y libre de plagas."]]},
+ {id:"equip",en:"Equipment & Storage",es:"Equipo y almacenamiento",shift:"am",time:["Before opening","Antes de abrir"],b:[
+  ["All coolers, freezers and hot cases walked and operating properly", "Recorrido de refrigeradores, congeladores y vitrinas calientes; todo funcionando", "If any unit is not holding temperature, move product and report it to Paola or Joe immediately.", "Si algún equipo no mantiene temperatura, mover el producto y reportarlo de inmediato a Paola o Joe."],
+  ["Thawed product tagged with an expiration date based on thaw date", "Producto descongelado etiquetado con fecha de vencimiento según su descongelación", "Read the case instructions. If none are listed, use 7–10 days from thaw or consult a manager. Thaw under refrigeration only.", "Leer las instrucciones de la caja. Si no indica, usar 7–10 días desde la descongelación o consultar a un gerente. Descongelar solo en refrigeración."],
+  ["Back room and walk-ins organized, product off the floor", "Bodega y cuartos fríos ordenados, producto fuera del piso", "Store product six inches off the floor, with raw meat on the lowest shelf.", "Almacenar a seis pulgadas del piso, con la carne cruda en la repisa más baja."],
+  ["FIFO rotation followed throughout the store", "Rotación PEPS en toda la tienda", "First in, first out on every shelf, case and cooler.", "Primero en entrar, primero en salir en anaqueles, vitrinas y refrigeradores."]]},
+ {id:"bakery",en:"Bakery & Cakes",es:"Panadería y pasteles",shift:"",time:["6:30–8:30 AM","6:30–8:30 AM"],b:[
+  ["All-department 5-minute huddle: hygiene, uniform, staffing", "Junta de 5 minutos con todo el departamento: higiene, uniforme y personal", "Every employee in the department, at the start of the shift.", "Todos los empleados del departamento, al inicio del turno."],
+  ["Supervisor 15-minute huddle", "Junta de 15 minutos con el supervisor", "Review yesterday's results, today's production plan, priorities and staffing.", "Revisar los resultados de ayer, el plan de producción, prioridades y personal del día."],
+  ["Order Day: inventory counted, rotated and organized (FIFO)", "Día de pedido: inventario contado, rotado y ordenado (PEPS)", "Count before ordering. Product rotated and storage organized.", "Contar antes de pedir. Producto rotado y almacén ordenado.", "order"],
+  ["Order Day: EPPF and Affiliated orders placed correctly and on time", "Día de pedido: pedidos a EPPF y Affiliated enviados correctamente y a tiempo", "Submit before the cutoff, based on sales history and on-hand inventory.", "Enviar antes del corte, según la venta y el inventario disponible.", "order"],
+  ["Production plan reviewed (which products and how much)", "Plan de producción revisado (qué productos y cuánto)", "Follow the department production guide; adjust for the day of the week.", "Seguir la guía de producción; ajustar según el día de la semana."],
+  ["Bolillo ready before opening (half-batch rule)", "Bolillo listo antes de abrir (regla de media tanda)", "Begin with a half batch so bread is available at opening. No dough prepared the night before.", "Iniciar con media tanda para tener pan al abrir. No preparar masa la noche anterior."],
+  ["Production adjusted based on leftover bread", "Producción ajustada según el pan sobrante", "Review the prior day's leftover bread and adjust batch sizes.", "Revisar el pan sobrante del día anterior y ajustar las tandas."],
+  ["Expired product removed and waste scanned", "Producto vencido retirado y merma escaneada", "Scan waste daily for accurate reporting.", "Escanear la merma a diario para reportes precisos."],
+  ["Closing shift cleaning met standards", "La limpieza del turno de cierre cumplió el estándar", "If not, note what was missed and who closed.", "Si no, anotar qué faltó y quién cerró."],
+  ["Display case clean and stocked to the required set by opening", "Vitrina limpia y surtida según el set requerido al abrir", "Bread served from behind the counter with tongs or gloves.", "Pan servido detrás del mostrador con pinzas o guantes."],
+  ["Commissary frozen products meet quality (empanadas, muffins, etc.)", "Producto congelado de comisaría con buena calidad (empanadas, muffins, etc.)", "Report quality issues to the commissary the same day.", "Reportar problemas de calidad a la comisaría el mismo día."],
+  ["Sell-by dates correct on commissary products and in the case", "Fechas de venta correctas en producto de comisaría y en la vitrina", "Loaves, muffin tops, cookies and similar items.", "Panes, muffin tops, galletas y similares."],
+  ["Day-old bread updated", "Pan del día anterior actualizado", "Move day-old product to its designated spot and price.", "Pasar el pan del día anterior a su lugar y precio designado."],
+  ["Cake case full (tres leches), dated and labeled", "Vitrina de pasteles llena (tres leches), con fecha y etiqueta", "Offer a written message and suggest pairing with floral.", "Ofrecer mensaje escrito y sugerir combinarlo con flores."],
+  ["PM: trays consolidated starting at 6–7 PM through close", "PM: consolidar charolas a partir de las 6–7 PM hasta el cierre", "Condense trays in the evening to keep the case full while reducing end-of-day waste.", "Consolidar charolas por la tarde para mantener la vitrina llena y reducir la merma al cierre."]]},
+ {id:"hotdeli",en:"Hot Deli",es:"Hot Deli",shift:"",time:["6:30–8:30 AM","6:30–8:30 AM"],b:[
+  ["All-department 5-minute huddle: hygiene, uniform, staffing", "Junta de 5 minutos con todo el departamento: higiene, uniforme y personal", "Every employee in the department, at the start of the shift.", "Todos los empleados del departamento, al inicio del turno."],
+  ["Supervisor 15-minute huddle", "Junta de 15 minutos con el supervisor", "Review yesterday's results, today's production plan, priorities and staffing.", "Revisar los resultados de ayer, el plan de producción, prioridades y personal del día."],
+  ["Order Day: inventory counted, rotated and organized (FIFO)", "Día de pedido: inventario contado, rotado y ordenado (PEPS)", "Count before ordering. Product rotated and storage organized.", "Contar antes de pedir. Producto rotado y almacén ordenado.", "order"],
+  ["Order Day: EPPF and Affiliated orders placed correctly and on time", "Día de pedido: pedidos a EPPF y Affiliated enviados correctamente y a tiempo", "Submit before the cutoff, based on sales history and on-hand inventory.", "Enviar antes del corte, según la venta y el inventario disponible.", "order"],
+  ["Production plan reviewed; monitored to prevent over-production", "Plan de producción revisado; supervisado para evitar sobreproducción", "Produce to the daily sets. Excess production becomes waste.", "Producir según los sets diarios. Lo que se produce de más se convierte en merma."],
+  ["Hot case full and on time for the AM and PM shifts", "Vitrina caliente llena y a tiempo para el turno AM y PM", "Top sellers (brisket, chile con queso) set first.", "Los productos de mayor venta (brisket, chile con queso) primero."],
+  ["Heat & serve items held no more than 4 hours in the warmer", "Productos de calentar y servir no más de 4 horas en el calentador", "Rotate and replace before four hours.", "Rotar y reemplazar antes de cuatro horas."],
+  ["Leftovers from the prior day accounted for; expired product removed and scanned", "Sobrantes del día anterior registrados; producto vencido retirado y escaneado", "Note leftovers in the issue box when they are high.", "Anotar los sobrantes cuando sean altos."],
+  ["Closing shift cleaning met standards", "La limpieza del turno de cierre cumplió el estándar", "If not, note what was missed and who closed.", "Si no, anotar qué faltó y quién cerró."],
+  ["Food properly covered in coolers", "Comida bien tapada en los refrigeradores", "Covered, labeled and dated.", "Tapada, etiquetada y con fecha."],
+  ["Commissary products meet quality", "Producto de comisaría con buena calidad", "Report quality issues to the commissary the same day.", "Reportar problemas de calidad a la comisaría el mismo día."],
+  ["Burrito station clean and ready for opening", "Estación de burritos limpia y lista para abrir", "Stocked, clean and set before doors open.", "Surtida, limpia y lista antes de abrir."],
+  ["All product dated and labeled", "Todo el producto con fecha y etiqueta", "Preparation date on every pan and container, following the shelf-life chart.", "Fecha de preparación en cada charola y recipiente, según la tabla de vida útil."],
+  ["Hairnets, gloves, clean uniforms and a clean station", "Red, guantes, uniforme y estación limpios", "Wash hands before putting on gloves; change gloves between tasks.", "Lavar manos antes de usar guantes; cambiar guantes entre tareas."]]},
+ {id:"colddeli",en:"Cold Deli & Salads",es:"Cold Deli y ensaladas",shift:"",time:["6:30–8:30 AM","6:30–8:30 AM"],b:[
+  ["Order Day: inventory counted, rotated and organized (FIFO)", "Día de pedido: inventario contado, rotado y ordenado (PEPS)", "Count before ordering. Product rotated and storage organized.", "Contar antes de pedir. Producto rotado y almacén ordenado.", "order"],
+  ["Order Day: EPPF and Affiliated orders placed correctly and on time", "Día de pedido: pedidos a EPPF y Affiliated enviados correctamente y a tiempo", "Submit before the cutoff, based on sales history and on-hand inventory.", "Enviar antes del corte, según la venta y el inventario disponible.", "order"],
+  ["Case fully merchandised: aguas frescas, cut fruit, salads, meats and cheeses", "Vitrina completa: aguas frescas, fruta picada, ensaladas, carnes frías y quesos", "Aguas frescas are the department's leading item and should never be out of stock.", "Las aguas frescas son el producto principal y no deben agotarse."],
+  ["All product dated and within shelf life", "Todo el producto con fecha y dentro de su vida útil", "Most items carry a 4–5 day shelf life. Pull and scan expired product as waste.", "La mayoría tiene 4–5 días de vida útil. Retirar y escanear como merma lo vencido."],
+  ["Food properly covered in coolers", "Comida bien tapada en los refrigeradores", "Covered, labeled and dated.", "Tapada, etiquetada y con fecha."],
+  ["Slicers cleaned and sanitized", "Rebanadoras limpias y sanitizadas", "At least every four hours and when changing between meats and cheeses.", "Por lo menos cada cuatro horas y al cambiar entre carnes y quesos."],
+  ["Hairnets, gloves and a clean station", "Red, guantes y estación limpia", "Same food-handling standard as the Hot Deli.", "El mismo estándar que el Hot Deli."]]},
+ {id:"front",en:"Front End",es:"Frente y cajas",shift:"",time:["Opening & throughout","Apertura y todo el día"],b:[
+  ["Registers ready; prior-day deposit completed and secured", "Cajas listas; depósito del día anterior completo y resguardado", "Follow the cash office procedure for drawers and deposits.", "Seguir el procedimiento de oficina para cajas y depósitos."],
+  ["Register coverage matches customer traffic; lines moving quickly", "Cobertura de cajas según el tráfico; filas avanzando rápido", "Open an additional register when more than three customers are waiting.", "Abrir otra caja cuando haya más de tres clientes esperando."],
+  ["Self-checkout operational, stocked and attended", "Autocobro en operación, surtido y con encargado", "Receipt paper and bags stocked. The attendant greets customers and reminds them of accepted payments (card, EBT, WIC).", "Papel y bolsas surtidos. El encargado saluda y recuerda las formas de pago (tarjeta, EBT, WIC)."],
+  ["Cashiers greet and thank every customer", "Los cajeros saludan y agradecen a cada cliente", "Follow V.I.S.T.A.: acknowledge, invite, serve with care, thank, and invite them back.", "Seguir V.I.S.T.A.: reconocer, invitar, servir con cuidado, agradecer e invitar a regresar."]]},
+ {id:"recv",en:"Receiving & Vendors",es:"Recepción y proveedores",shift:"",time:["As deliveries arrive","Al llegar las entregas"],extra:"vendors",b:[
+  ["All deliveries counted against the invoice before signing", "Todas las entregas contadas contra la factura antes de firmar", "Never sign for product that has not been counted and verified.", "Nunca firmar por producto que no haya sido contado y verificado."],
+  ["Product condition, dates and temperatures verified at delivery", "Condición, fechas y temperatura verificadas al recibir", "Refuse damaged or short-dated product. Refrigerated and frozen product must arrive cold and solid.", "Rechazar producto dañado o con fecha corta. Lo refrigerado y congelado debe llegar frío y sólido."],
+  ["Shortages, damages and credits documented on the invoice", "Faltantes, daños y créditos documentados en la factura", "Note discrepancies on the invoice, obtain the driver's initials and report them the same day.", "Anotar diferencias en la factura, obtener iniciales del chofer y reportarlas el mismo día."],
+  ["Refrigerated and frozen product put away first", "Producto refrigerado y congelado se guarda primero", "Maintain the cold chain: stored within 15–20 minutes of delivery.", "Mantener la cadena de frío: guardar en 15–20 minutos."],
+  ["Vendors supervised; DSD vendors rotate and pull expired product", "Proveedores supervisados; los de ruta rotan y retiran producto vencido", "Vendors are not left unattended in the back room.", "Ningún proveedor sin supervisión en la bodega."]]},
+ {id:"produce",en:"Produce",es:"Frutas y verduras",shift:"",time:["8:30–11:00 AM","8:30–11:00 AM"],b:[
+  ["Supervisor 20-minute huddle", "Junta de 20 minutos con el supervisor", "Review yesterday's results, today's production plan, priorities and staffing.", "Revisar los resultados de ayer, el plan de producción, prioridades y personal del día."],
+  ["Order Day: correct order sheet used", "Día de pedido: hoja de pedido correcta", "Confirm the current order sheet for the department.", "Confirmar la hoja de pedido vigente del departamento.", "order"],
+  ["Order Day: inventory checked for organization, waste, excess product and quality", "Día de pedido: inventario revisado por orden, merma, exceso y calidad", "Address excess before ordering more.", "Atender el exceso antes de pedir más.", "order"],
+  ["Delivery Day: shortages confirmed and product quality checked", "Día de entrega: faltantes confirmados y calidad del producto revisada", "Report shortages and quality issues the same day.", "Reportar faltantes y problemas de calidad el mismo día.", "delivery"],
+  ["Delivery Day: product stocked with proper rotation (FIFO)", "Día de entrega: producto surtido con rotación correcta (PEPS)", "New product behind older product.", "Lo nuevo detrás de lo más antiguo.", "delivery"],
+  ["Carts, floors and displays clean", "Carritos, pisos y exhibidores limpios", "Clean as you go throughout the morning.", "Limpiar durante toda la mañana."],
+  ["Product rotated, culled and meeting quality standards", "Producto rotado, revisado y con buena calidad", "Cull displays every morning and afternoon.", "Revisar y retirar producto en mal estado cada mañana y tarde."],
+  ["Avocado, banana, jalapeño and tomato all filled", "Aguacate, plátano, jalapeño y tomate surtidos", "These items should never be out.", "Estos productos nunca deben faltar."],
+  ["Prices and PLU signs accurate", "Precios y letreros con PLU correctos", "Accurate PLUs are required for registers and self-checkout.", "Los PLU correctos son necesarios para cajas y autocobro."],
+  ["Warehouse area clean, organized and clear of personal items", "Bodega limpia, ordenada y sin objetos personales", "Oldest product goes to the floor first.", "El producto más antiguo sale primero."],
+  ["Tuesday: price changes updated", "Martes: cambios de precio actualizados", "Confirm new prices and signs are in place.", "Confirmar que los nuevos precios y letreros estén puestos.", "tue"]]},
+ {id:"meat",en:"Meat Market",es:"Carnicería",shift:"",time:["8:30–11:00 AM","8:30–11:00 AM"],b:[
+  ["All-department 5-minute huddle: hygiene, uniform, staffing", "Junta de 5 minutos con todo el departamento: higiene, uniforme y personal", "Every employee in the department, at the start of the shift.", "Todos los empleados del departamento, al inicio del turno."],
+  ["Supervisor 20-minute huddle", "Junta de 20 minutos con el supervisor", "Review yesterday's results, today's production plan, priorities and staffing.", "Revisar los resultados de ayer, el plan de producción, prioridades y personal del día."],
+  ["Order Day: correct order sheet used", "Día de pedido: hoja de pedido correcta", "Confirm the current order sheet for the department.", "Confirmar la hoja de pedido vigente del departamento.", "order"],
+  ["Order Day: inventory checked for organization, waste, excess product and quality", "Día de pedido: inventario revisado por orden, merma, exceso y calidad", "Address excess before ordering more.", "Atender el exceso antes de pedir más.", "order"],
+  ["Delivery Day: shortages confirmed and product quality checked", "Día de entrega: faltantes confirmados y calidad del producto revisada", "Report shortages and quality issues the same day.", "Reportar faltantes y problemas de calidad el mismo día.", "delivery"],
+  ["Delivery Day: product stocked with proper rotation (FIFO)", "Día de entrega: producto surtido con rotación correcta (PEPS)", "New product behind older product.", "Lo nuevo detrás de lo más antiguo.", "delivery"],
+  ["Production plan reviewed (which products and how much)", "Plan de producción revisado (qué productos y cuánto)", "Follow the department production guide; adjust for the day of the week.", "Seguir la guía de producción; ajustar según el día de la semana."],
+  ["Expired product removed and waste scanned", "Producto vencido retirado y merma escaneada", "Scan waste daily for accurate reporting.", "Escanear la merma a diario para reportes precisos."],
+  ["Closing shift cleaning met standards", "La limpieza del turno de cierre cumplió el estándar", "If not, note what was missed and who closed.", "Si no, anotar qué faltó y quién cerró."],
+  ["Trimmings without excessive waste", "Recortes sin merma excesiva", "Review trim on high-volume cuts.", "Revisar el recorte en los cortes de mayor venta."],
+  ["Meat cases stocked, clean and presentable; packages sealed", "Vitrinas surtidas, limpias y presentables; paquetes sellados", "Re-wrap leaking packages immediately.", "Reempacar de inmediato los paquetes con fugas."],
+  ["Ground beef, caldillo, loin tip and muenster cheese filled", "Carne molida, caldillo, loin tip y queso muenster surtidos", "These items should never be out.", "Estos productos nunca deben faltar."],
+  ["Pack and sell-by dates accurate (5-day window)", "Fechas de empaque y venta correctas (5 días)", "Five days from pack date to sell-by date. Oldest product rotated forward.", "Cinco días desde el empaque hasta la venta. Rotar lo más antiguo al frente."],
+  ["Proper cleaning supplies in use to prevent cross-contamination", "Productos de limpieza correctos para evitar contaminación cruzada", "Clean and sanitize saws, grinders and boards between products.", "Limpiar y sanitizar sierras, molinos y tablas entre productos."],
+  ["Pricing counter and open case accurate", "Precios del mostrador y vitrina abierta correctos", "Every item priced and signed.", "Cada producto con precio y letrero."]]},
+ {id:"tortilla",en:"Tortilleria",es:"Tortillería",shift:"",time:["Morning","Mañana"],b:[
+  ["Fresh tortillas ready on time and in sufficient quantity", "Tortillas frescas listas a tiempo y en cantidad suficiente", "Plan production around morning and pre-dinner peak hours.", "Planear la producción para las horas pico de la mañana y antes de la cena."],
+  ["Machine and work area clean; hairnets and gloves in use", "Máquina y área limpias; red y guantes en uso", "Clean the machine at the end of each production run.", "Limpiar la máquina al terminar cada tanda."]]},
+ {id:"grocery",en:"Grocery, Dairy & Frozen",es:"Abarrotes, lácteos y congelados",shift:"",time:["Throughout the day","Todo el día"],extra:"oos",b:[
+  ["Shelves full and faced", "Anaqueles llenos y acomodados", "Face all aisles at opening and before the evening rush.", "Acomodar todos los pasillos al abrir y antes de la hora pico."],
+  ["Essential items in stock (milk, eggs, tortillas, bread, water, ice, soda)", "Productos básicos en existencia (leche, huevo, tortillas, pan, agua, hielo, refrescos)", "Out-of-stocks on essentials send customers to competitors.", "La falta de básicos envía a los clientes a la competencia."],
+  ["Expired and damaged product pulled and scanned", "Producto vencido y dañado retirado y escaneado", "Scan waste daily for accurate reporting.", "Escanear la merma a diario."],
+  ["Endcaps and ad items stocked", "Cabeceras y productos en oferta surtidos", "Endcaps generate the highest sales per foot in the store.", "Las cabeceras generan la mayor venta por espacio."]]},
+ {id:"pricing",en:"Pricing",es:"Precios",shift:"",time:["11:30 AM–1:00 PM","11:30 AM–1:00 PM"],b:[
+  ["Pending pricing batches checked and applied", "Lotes de precios pendientes revisados y aplicados", "Review pending batches in the pricing system.", "Revisar los lotes pendientes en el sistema de precios."],
+  ["Weekly ad items ringing correctly", "Productos de la oferta semanal cobrando correctamente", "Scan a sample of ad items at a register.", "Escanear una muestra de productos en oferta en una caja."],
+  ["Beer and wine pricing accurate", "Precios de cerveza y vino correctos", "Shelf tags match the register.", "Las etiquetas coinciden con la caja."],
+  ["Endcap and large display pricing accurate and signed", "Precios de cabeceras y exhibidores grandes correctos y con letrero", "Every display has a visible price.", "Cada exhibidor con precio visible."]]},
+ {id:"orders",en:"Orders: AFI & Commissary",es:"Pedidos: AFI y comisaría",shift:"",time:["By the cutoff","Antes del corte"],extra:"orders",b:[
+  ["Commissary (EPPF) order submitted before 12 PM, one day in advance", "Pedido a comisaría (EPPF) enviado antes de las 12 PM, un día antes", "Communicate any shortages to the commissary the same day.", "Comunicar los faltantes a la comisaría el mismo día."],
+  ["EPPF inventory counted and recorded twice weekly", "Inventario de EPPF contado y registrado dos veces por semana", "Count before ordering to prevent over-ordering.", "Contar antes de pedir para evitar pedir de más."]]},
+ {id:"people",en:"People & Customer Service",es:"Equipo y servicio al cliente",shift:"",time:["11:30 AM–1:00 PM","11:30 AM–1:00 PM"],b:[
+  ["Full attendance; call-outs documented and covered", "Asistencia completa; faltas documentadas y cubiertas", "Record each call-out and who covered the shift.", "Registrar cada falta y quién cubrió."],
+  ["Employees visible, assisting, greeting and thanking customers", "Empleados visibles, ayudando, saludando y agradeciendo a los clientes", "Never leave a customer unacknowledged.", "Nunca dejar a un cliente sin reconocer."],
+  ["Departments clean and organized", "Departamentos limpios y ordenados", "Walk every department as a customer would.", "Recorrer cada departamento como un cliente."],
+  ["Uniforms, gloves and hairnets in all departments; no phones or earbuds on the floor", "Uniforme, guantes y red en todos los departamentos; sin celulares ni audífonos", "Phones put away when customers are present. Earbuds are not permitted for safety reasons.", "Celulares guardados con clientes presentes. Audífonos no permitidos por seguridad."],
+  ["Complaints resolved and documented", "Quejas resueltas y documentadas", "Note the complaint and the action taken.", "Anotar la queja y la acción tomada."]]},
+ {id:"improve",en:"Manager Walk: Areas for Improvement",es:"Recorrido del gerente: áreas de mejora",shift:"",time:["Every shift","Cada turno"],b:[
+  ["Full store walk completed to identify improvements in customer service, cleanliness and merchandising", "Recorrido completo para identificar mejoras en servicio al cliente, limpieza y exhibición", "Walk the store from the customer's perspective. Use ⚠ to record each opportunity and the action taken.", "Recorrer la tienda desde la perspectiva del cliente. Usar ⚠ para registrar cada oportunidad y la acción tomada."],
+  ["Weekly deep-cleaning schedule set for each department on slow days", "Calendario semanal de limpieza profunda por departamento en días de menor venta", "Assign each department a deep-cleaning day and confirm it was completed.", "Asignar a cada departamento un día de limpieza profunda y confirmar que se realizó."]]},
+ {id:"close",en:"Closing",es:"Cierre",shift:"pm",time:["Close","Cierre"],b:[
+  ["Waste scanned in every department", "Merma escaneada en todos los departamentos", "Every department, every night.", "Todos los departamentos, todas las noches."],
+  ["Hot food properly cooled or discarded", "Comida caliente enfriada correctamente o desechada", "Cool from 135°F to 70°F within 2 hours and to 41°F within 4 additional hours; otherwise discard.", "Enfriar de 135°F a 70°F en 2 horas y a 41°F en 4 horas más; si no, desechar."],
+  ["Slicers, 3-compartment sink and prep tables cleaned and sanitized", "Rebanadoras, tarja de 3 compartimientos y mesas limpias y sanitizadas", "Wash, rinse, sanitize and air dry.", "Lavar, enjuagar, sanitizar y secar al aire."],
+  ["Trash removed; dumpster area clean", "Basura retirada; área del contenedor limpia", "A clean dumpster area prevents pest activity.", "Un área limpia previene plagas."],
+  ["Registers closed out; safe and deposit prepared", "Cajas cerradas; caja fuerte y depósito preparados", "Follow the cash office closing procedure.", "Seguir el procedimiento de cierre de oficina."],
+  ["Doors locked, alarm set, lights off", "Puertas cerradas, alarma activada, luces apagadas", "Two employees exit the building together.", "Dos empleados salen juntos del edificio."]]},
 ];
 const DEPTS=[["hotdeli","Hot Deli","Hot Deli"],["colddeli","Cold Deli","Cold Deli"],["meat","Meat Market","Carnicería"],["produce","Produce","Frutas y verduras"],["bakery","Bakery & Cakes","Panadería y pasteles"],["tortilleria","Tortilleria","Tortillería"],["grocery","Grocery / Dairy / Frozen","Abarrotes / lácteos / congelados"],["eppf","Commissary (EPPF)","Comisaría (EPPF)"]];
 const TEMPS_OFF=[["dairy","Dairy cooler","Lácteos","cold"],["meatc","Meat case","Vitrina de carne","cold"],["deli","Cold Deli case","Vitrina Cold Deli","cold"],["prod","Produce cooler","Refri. verduras","cold"],["walk","Walk-in cooler","Cuarto frío","cold"],["frz","Freezer","Congelador","frozen"],["hot","Hot case","Vitrina caliente","hot"]];
@@ -402,7 +456,7 @@ const T={
  en:{title:"Daily Walk",sub:"Vista Markets · AM & PM managers",tabForm:"Walk",tabHist:"History",store:"Store",date:"Date",am:"AM manager",pm:"PM manager",shift:"Who is walking now?",shiftHint:"Check off each task as you walk. Tap ⚠ to record an issue. Score each section once at the end.",scale:"Grading scale ▾",section:"Section",
   results:"Daily results",final:"Daily grade",finalSub:"Average of section scores",done:"tasks done",issuesOpen:"open issues",tempsOut:"temps out",flags:"Issues found",noFlags:"No issues flagged.",lowSec:"Sections scored 1–2",
   na:"N/A",photos:"Photos",addPhoto:"Add photo",uploading:"Uploading…",phOff:"Photo uploads aren't available with your access.",phWait:"Wait for photos to finish uploading.",
-  allGood:"✓ Mark remaining tasks complete",rate:"Score this section",rateHint:"1 = fix now · 3 = meets standard · 5 = excellent",rateNeed:"Score this section (it has issues)",issNote:"Describe the issue and action taken",fixed:"Fixed now",follow:"Needs follow-up",
+  dayIs:"Today is",orderDay:"Order Day",deliveryDay:"Delivery Day",tuesday:"Tuesday",dayHint:"Order Day and Delivery Day tasks only show when selected. Tuesday tasks show automatically.",summaryL:"Shift summary: how the day went, in your own words",summaryPh:"E.g. strong sales in Hot Deli, short-staffed in the afternoon, bread delivery late…",kudosL:"Recognition: who did well today?",kudosPh:"Name the employee and what they did",urgentL:"Anything urgent reported to the office",allGood:"✓ Mark remaining tasks complete",rate:"Score this section",rateHint:"1 = fix now · 3 = meets standard · 5 = excellent",rateNeed:"Score this section (it has issues)",issNote:"Describe the issue and action taken",fixed:"Fixed now",follow:"Needs follow-up",
   temps:"Temperature readings (°F)",tGoal:{cold:"41°F or below",frozen:"0°F or below",hot:"135°F or above"},
   vendors:"Vendor log",vTime:"Time",vOk:"All good",vIss:"Problem",vNote:"Note: shorts, damage, credit",noV:"No vendors logged yet.",
   orders:"Today's orders",sent:"Sent",late:"Pending",notday:"Not today",oos:"Out of stock today",oosPh:"E.g. bolillo at 5pm, whole milk gallon, avocados…",
@@ -416,7 +470,7 @@ const T={
  es:{title:"Recorrido Diario",sub:"Vista Markets · Gerentes AM y PM",tabForm:"Recorrido",tabHist:"Historial",store:"Tienda",date:"Fecha",am:"Gerente AM",pm:"Gerente PM",shift:"¿Quién está haciendo el recorrido?",shiftHint:"Marca cada tarea durante el recorrido. Toca ⚠ para registrar un problema. Califica cada sección una vez al final.",scale:"Escala de evaluación ▾",section:"Sección",
   results:"Resultados del día",final:"Calificación del día",finalSub:"Promedio de las secciones",done:"tareas hechas",issuesOpen:"pendientes",tempsOut:"temps fuera",flags:"Problemas encontrados",noFlags:"Ningún problema marcado.",lowSec:"Secciones con 1–2",
   na:"N/A",photos:"Fotos",addPhoto:"Agregar foto",uploading:"Subiendo…",phOff:"No tienes acceso para subir fotos.",phWait:"Espera a que terminen de subir las fotos.",
-  allGood:"✓ Marcar el resto como completo",rate:"Califica esta sección",rateHint:"1 = corregir ya · 3 = cumple · 5 = excelente",rateNeed:"Califica esta sección (tiene problemas)",issNote:"Describe el problema y la acción tomada",fixed:"Corregido",follow:"Requiere seguimiento",
+  dayIs:"Hoy es",orderDay:"Día de pedido",deliveryDay:"Día de entrega",tuesday:"Martes",dayHint:"Las tareas de Día de pedido y Día de entrega solo aparecen si se seleccionan. Las del martes aparecen solas.",summaryL:"Resumen del turno: cómo estuvo el día, en tus palabras",summaryPh:"Ej. buena venta en Hot Deli, faltó personal en la tarde, el pan llegó tarde…",kudosL:"Reconocimiento: ¿quién hizo un buen trabajo hoy?",kudosPh:"Nombre del empleado y qué hizo",urgentL:"Todo lo urgente se reportó a la oficina",allGood:"✓ Marcar el resto como completo",rate:"Califica esta sección",rateHint:"1 = corregir ya · 3 = cumple · 5 = excelente",rateNeed:"Califica esta sección (tiene problemas)",issNote:"Describe el problema y la acción tomada",fixed:"Corregido",follow:"Requiere seguimiento",
   temps:"Lecturas de temperatura (°F)",tGoal:{cold:"41°F o menos",frozen:"0°F o menos",hot:"135°F o más"},
   vendors:"Registro de proveedores",vTime:"Hora",vOk:"Todo bien",vIss:"Problema",vNote:"Nota: faltantes, daños, crédito",noV:"Aún no hay proveedores registrados.",
   orders:"Pedidos de hoy",sent:"Enviado",late:"Pendiente",notday:"No toca",oos:"Agotados hoy",oosPh:"Ej. bolillo a las 5pm, leche entera galón, aguacate…",
@@ -440,8 +494,9 @@ const DEF_CFG={needs:false,vendors:true,orders:true,oos:true,notes:true,off:{},t
 let CFG=JSON.parse(JSON.stringify(DEF_CFG));
 try{const c=JSON.parse(localStorage.getItem("dw-cfg")||"null"); if(c) CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),c);}catch(e){}
 const FEAT={vendors:"vendors",orders:"orders",oos:"oos"};
+let DAYF={order:false,delivery:false,tue:false};
 function derive(){ return BASE.filter(s=>!CFG.off[s.id]).map(s=>{
-  const items=s.b.map((b,i)=>({k:`${s.id}.${i}`,b})).concat((CFG.custom[s.id]||[]).map(c=>({k:c.k,b:[c.en,c.es,c.sen||"",c.ses||""]})));
+  const items=s.b.map((b,i)=>({k:`${s.id}.${i}`,b})).filter(x=>!x.b[4]||DAYF[x.b[4]]).concat((CFG.custom[s.id]||[]).map(c=>({k:c.k,b:[c.en,c.es,c.sen||"",c.ses||""]})));
   const b=items.filter(x=>!CFG.taskOff[x.k]).map(x=>{const e=CFG.edits[x.k]; const v=e?[e.en||x.b[0],e.es||x.b[1],e.sen??x.b[2],e.ses??x.b[3]]:x.b.slice(0,4); v[4]=x.k; return v;});
   return Object.assign({},s,{b,extra:s.extra&&CFG[FEAT[s.extra]]===false?undefined:s.extra}); }).filter(s=>s.b.length||s.extra); }
 let SECTIONS=derive();
@@ -452,7 +507,7 @@ let lang="en", shift="am";
 try{const l=localStorage.getItem("dw-lang2"); if(l==="en"||l==="es") lang=l; const s=localStorage.getItem("dw-shift"); if(s==="am"||s==="pm") shift=s;}catch(e){}
 let curStore="Central", curDate=today();
 try{const s=localStorage.getItem("dw-store"); if(STORES.includes(s)) curStore=s;}catch(e){}
-const blank=()=>({store:curStore,date:curDate,amMgr:"",pmMgr:"",checks:{},by:{},fix:{},notes:{},rate:{},rateBy:{},photos:{},temps:{am:{},pm:{}},orders:{},vendors:[],needs:[],oos:"",handoff:"",pmnotes:"",submittedAt:null,_t:null});
+const blank=()=>({store:curStore,date:curDate,amMgr:"",pmMgr:"",checks:{},by:{},fix:{},notes:{},rate:{},rateBy:{},photos:{},temps:{am:{},pm:{}},orders:{},vendors:[],needs:[],oos:"",handoff:"",pmnotes:"",summary:"",kudos:"",urgentReported:false,dayType:{order:false,delivery:false},submittedAt:null,_t:null});
 const key=()=>`dw3:${curStore}:${curDate}`, docId=()=>`${curStore}_${curDate}`;
 function load(){ try{const d=JSON.parse(localStorage.getItem(key())||"null"); if(d) return Object.assign(blank(),d);}catch(e){} return blank(); }
 let S=load(), prevNotes="", openStd={};
@@ -492,10 +547,11 @@ function sectionInner(si){ const s=SECTIONS[si], t=T[lang]; const r=S.rate[s.id]
    +`<div class="rate ${hasIss&&r==null?"need-rate":""}"><span class="label">${hasIss?t.rateNeed:t.rate}${r!=null&&S.rateBy[s.id]?` <span class="q-by">${S.rateBy[s.id].toUpperCase()}</span>`:""}</span><p class="hint">${t.rateHint}</p>
      <div class="grades" role="group">${[1,2,3,4,5].map(v=>`<button class="gbtn" data-rate="${s.id}" data-v="${v}" aria-pressed="${r===v}" title="${t.grade[v]}">${v}</button>`).join("")}<button class="gbtn na" data-rate="${s.id}" data-v="na" aria-pressed="${r==="na"}">${t.na}</button></div></div>`
    +`<div class="photos"><span class="label">${t.photos}</span><div class="ph-row" id="phr-${si}"></div><input type="file" id="pf-${si}" accept="image/*" multiple hidden><div class="ph-msg" id="phm-${si}"></div></div>`; }
-function buildForm(){ const t=T[lang];
+function syncDay(){ const dt=S.dayType||{}; DAYF.order=!!dt.order; DAYF.delivery=!!dt.delivery; DAYF.tue=new Date(curDate+"T12:00:00").getDay()===2; applyCfg(); }
+function buildForm(){ syncDay(); const t=T[lang]; renderDay();
   $("sections").innerHTML=SECTIONS.map((s,si)=>`<section class="card sec" id="sec-${si}">
     <div class="sec-head" data-sec="${si}" role="button" tabindex="0" aria-expanded="true">
-      <h2><small>${t.section} ${si+1}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
+      <h2><small>${t.section} ${si+1}${s.time?` · ${esc(L(s.time))}`:""}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
       <div class="sec-meta"><b id="sa-${si}">–</b><span id="sc-${si}">0/${s.b.length}</span></div></div>
     <div class="qs" id="qs-${si}">${sectionInner(si)}</div></section>`).join("");
   $("scale-list").innerHTML=SCALE.map((s,i)=>`<div class="scale-row"><span class="chip" style="background:var(--g${i+1})">${i+1}</span><span><b>${esc(s[lang][0])}</b> — ${esc(s[lang][1])}</span></div>`).join("");
@@ -524,11 +580,18 @@ function renderNeeds(){ const t=T[lang]; $("needs-card").hidden=!CFG.needs; if(!
 function renderNotes(){ const t=T[lang]; $("notes-card").hidden=!CFG.notes; if(!CFG.notes) return;
   $("notes-card").innerHTML=`<div class="sec-head" style="cursor:default"><h2>${t.notes}</h2></div>
    <label class="label" for="f-handoff" style="margin-top:12px">${t.handoff}</label><textarea id="f-handoff" rows="3" placeholder="${esc(t.handoffPh)}">${esc(S.handoff)}</textarea>
-   <label class="label" for="f-pmnotes" style="margin-top:12px">${t.pmnotes}</label><textarea id="f-pmnotes" rows="3" placeholder="${esc(t.pmnotesPh)}">${esc(S.pmnotes)}</textarea>`; }
+   <label class="label" for="f-pmnotes" style="margin-top:12px">${t.pmnotes}</label><textarea id="f-pmnotes" rows="3" placeholder="${esc(t.pmnotesPh)}">${esc(S.pmnotes)}</textarea>
+   <label class="label" for="f-summary" style="margin-top:12px">${t.summaryL}</label><textarea id="f-summary" rows="3" placeholder="${esc(t.summaryPh)}">${esc(S.summary||"")}</textarea>
+   <label class="label" for="f-kudos" style="margin-top:12px">${t.kudosL}</label><input type="text" id="f-kudos" placeholder="${esc(t.kudosPh)}" value="${esc(S.kudos||"")}">
+   <label class="check" style="margin-top:12px"><input type="checkbox" id="f-urgent" ${S.urgentReported?"checked":""}> ${t.urgentL}</label>`; }
 function renderHandoff(){ const t=T[lang]; let h="";
   if(shift==="pm"&&S.handoff) h+=`<div class="handoff"><b>☀ ${t.fromAM}${S.amMgr?` · ${esc(S.amMgr)}`:""}</b><p>${esc(S.handoff)}</p></div>`;
   if(shift==="am"&&prevNotes) h+=`<div class="handoff"><b>☾ ${t.fromPM}</b><p>${esc(prevNotes)}</p></div>`;
   $("handoff-top").innerHTML=h; }
+function renderDay(){ const t=T[lang]; $("l-day").textContent=t.dayIs; $("dt-order").textContent=t.orderDay; $("dt-delivery").textContent=t.deliveryDay; $("dt-tue").textContent=t.tuesday;
+  $("dt-order").setAttribute("aria-pressed",DAYF.order); $("dt-delivery").setAttribute("aria-pressed",DAYF.delivery); $("dt-tue").hidden=!DAYF.tue; $("l-day-hint").textContent=t.dayHint; }
+function toggleDay(k){ S.dayType=Object.assign({order:false,delivery:false},S.dayType||{}); S.dayType[k]=!S.dayType[k]; save(); buildForm(); }
+document.addEventListener("click",e=>{ if(e.target.id==="dt-order") toggleDay("order"); else if(e.target.id==="dt-delivery") toggleDay("delivery"); });
 function applyText(){ const t=T[lang]; document.documentElement.lang=lang;
   $("t-title").textContent=t.title; $("t-sub").textContent=t.sub; $("tab-form").textContent=t.tabForm; $("tab-hist").textContent=t.tabHist;
   $("l-store").textContent=t.store; $("l-date").textContent=t.date; $("l-am").textContent=t.am; $("l-pm").textContent=t.pm; $("l-shift").textContent=t.shift; $("l-shift-hint").textContent=t.shiftHint;
@@ -557,6 +620,8 @@ function extrasHTML(src){ const t=T[lang]; let h=`<h3 class="r-h">${t.flags}</h3
   if(late.length) h+=`<h3 class="r-h">${t.oLate}</h3><p style="margin:6px 0 0">${late.map(esc).join(" · ")}</p>`;
   if(src.oos) h+=`<h3 class="r-h">${t.oos}</h3><p style="white-space:pre-wrap;margin:6px 0 0">${esc(src.oos)}</p>`;
   if(src.handoff||src.pmnotes) h+=`<h3 class="r-h">${t.notes}</h3>${src.handoff?`<p style="white-space:pre-wrap;margin:6px 0 0"><b>AM → PM:</b> ${esc(src.handoff)}</p>`:""}${src.pmnotes?`<p style="white-space:pre-wrap;margin:6px 0 0"><b>PM → AM:</b> ${esc(src.pmnotes)}</p>`:""}`;
+  if(src.summary||src.kudos) h+=`<h3 class="r-h">${t.summaryL.split(':')[0]}</h3>${src.summary?`<p style="white-space:pre-wrap;margin:6px 0 0">${esc(src.summary)}</p>`:""}${src.kudos?`<p style="margin:6px 0 0"><b>⭐ ${esc(src.kudos)}</b></p>`:""}`;
+  if(src.dayType&&(src.dayType.order||src.dayType.delivery)) h+=`<p class="hint" style="margin-top:10px">${[src.dayType.order?t.orderDay:"",src.dayType.delivery?t.deliveryDay:""].filter(Boolean).join(" · ")}${src.urgentReported?" · ✓ "+t.urgentL:""}</p>`;
   if(src===S&&S.submittedAt) h+=`<p class="status ok">✓ ${t.resub}</p>`;
   return h; }
 
@@ -583,12 +648,13 @@ document.addEventListener("input",e=>{ const el=e.target, id=el.id||"";
   if(el.dataset.note){ const k=el.dataset.note; if(el.value) S.notes[k]=el.value; else delete S.notes[k]; save(); clearTimeout(window._rf); window._rf=setTimeout(refresh,500); return; }
   if(el.dataset.temp){ const [sh,tid]=el.dataset.temp.split("."); if(el.value==="") delete S.temps[sh][tid]; else S.temps[sh][tid]=el.value; const x=TEMPS.find(q=>q[0]===tid); const st=tState(x[3],el.value); el.className=st?"t-"+st:""; save(); clearTimeout(window._rf); window._rf=setTimeout(refresh,400); return; }
   if(id==="f-am"){S.amMgr=el.value;save();} else if(id==="f-pm"){S.pmMgr=el.value;save();}
-  else if(id==="f-oos"){S.oos=el.value;save();} else if(id==="f-handoff"){S.handoff=el.value;save();} else if(id==="f-pmnotes"){S.pmnotes=el.value;save();}
+  else if(id==="f-oos"){S.oos=el.value;save();} else if(id==="f-handoff"){S.handoff=el.value;save();} else if(id==="f-pmnotes"){S.pmnotes=el.value;save();} else if(id==="f-summary"){S.summary=el.value;save();} else if(id==="f-kudos"){S.kudos=el.value;save();}
   else return; clearTimeout(window._rf); window._rf=setTimeout(refresh,500);
 });
 document.addEventListener("change",e=>{ const el=e.target;
   if(el.id==="f-store"||el.id==="f-date"){ try{localStorage.setItem(key(),JSON.stringify(S))}catch(x){} syncDraft(); curStore=$("f-store").value; curDate=$("f-date").value||today(); try{localStorage.setItem("dw-store",curStore)}catch(x){} S=load(); fillDay(); buildForm(); loadRemote(); loadPrev(); return; }
   if(el.id==="h-store"){ hStore=el.value; renderHist(); return; }
+  if(el.id==="f-urgent"){ S.urgentReported=el.checked; save(); return; }
   if(el.id&&el.id.startsWith("pf-")&&el.files.length){ addPhotos(+el.id.slice(3),[...el.files]); el.value=""; }
 });
 function setShift(s){ shift=s; try{localStorage.setItem("dw-shift",s)}catch(e){} applyText(); renderHandoff(); }
@@ -610,7 +676,7 @@ function summaryText(src){ const t=T[lang], r=compute(src);
   if(fl.length) s+=`\n${t.flags}:\n${fl.join("\n")}\n`;
   if(src.needs?.length) s+=`\n${t.needs}:\n${src.needs.map(n=>`  ${n.urg?"["+t.urgent+"] ":""}${n.desc}`).join("\n")}\n`;
   const vi=(src.vendors||[]).filter(v=>!v.ok); if(vi.length) s+=`\n${t.vIssues}:\n${vi.map(v=>`  ${v.name} ${v.time||""} — ${v.note||""}`).join("\n")}\n`;
-  if(src.oos) s+=`\n${t.oos}: ${src.oos}\n`; if(src.handoff) s+=`\nAM → PM: ${src.handoff}\n`; if(src.pmnotes) s+=`PM → AM: ${src.pmnotes}\n`;
+  if(src.oos) s+=`\n${t.oos}: ${src.oos}\n`; if(src.handoff) s+=`\nAM → PM: ${src.handoff}\n`; if(src.pmnotes) s+=`PM → AM: ${src.pmnotes}\n`; if(src.summary) s+=`\n${t.summaryL.split(':')[0]}: ${src.summary}\n`; if(src.kudos) s+=`⭐ ${src.kudos}\n`;
   return s; }
 async function copyText(txt,stEl){ try{ await navigator.clipboard.writeText(txt); (stEl||$("status")).textContent=T[lang].copied; }catch(e){ (stEl||$("status")).textContent=T[lang].copyErr; } }
 $("b-copy").onclick=()=>copyText(summaryText(S));
