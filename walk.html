@@ -551,7 +551,7 @@ function syncDay(){ const dt=S.dayType||{}; DAYF.order=!!dt.order; DAYF.delivery
 function buildForm(){ syncDay(); const t=T[lang]; renderDay();
   $("sections").innerHTML=SECTIONS.map((s,si)=>`<section class="card sec" id="sec-${si}">
     <div class="sec-head" data-sec="${si}" role="button" tabindex="0" aria-expanded="true">
-      <h2><small>${t.section} ${si+1}${s.time?` · ${esc(L(s.time))}`:""}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
+      <h2><small>${t.section} ${si+1}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
       <div class="sec-meta"><b id="sa-${si}">–</b><span id="sc-${si}">0/${s.b.length}</span></div></div>
     <div class="qs" id="qs-${si}">${sectionInner(si)}</div></section>`).join("");
   $("scale-list").innerHTML=SCALE.map((s,i)=>`<div class="scale-row"><span class="chip" style="background:var(--g${i+1})">${i+1}</span><span><b>${esc(s[lang][0])}</b> — ${esc(s[lang][1])}</span></div>`).join("");
