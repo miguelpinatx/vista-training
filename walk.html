@@ -559,9 +559,12 @@ function sectionInner(si){ const s=SECTIONS[si], t=T[lang]; const r=S.rate[s.id]
    +`<div class="photos"><span class="label">${t.photos}</span><div class="ph-row" id="phr-${si}"></div><input type="file" id="pf-${si}" accept="image/*" multiple hidden><div class="ph-msg" id="phm-${si}"></div></div>`; }
 function syncDay(){ const dt=S.dayType||{}; DAYF.order=!!dt.order; DAYF.delivery=!!dt.delivery; DAYF.tue=new Date(curDate+"T12:00:00").getDay()===2; applyCfg(); }
 function activeBulletins(){ const td=today(); return (CFG.bulletins||[]).filter(b=>(!b.until||b.until>=td)&&(!b.stores||!b.stores.length||b.stores.includes(curStore))); }
+function attHTML(files,admin,bi){ if(!files||!files.length) return ""; return `<div class="ph-row" style="margin-top:8px">${files.map((f,j)=>f.type==="application/pdf"
+   ?`<span style="display:inline-flex;gap:4px;align-items:center"><a class="btn small" href="#" data-phref="${esc(f.path)}" target="_blank" rel="noopener">📄 ${esc(f.name||"PDF")}</a>${admin?`<button class="btn small danger" data-brm="${bi}|${j}" aria-label="remove">×</button>`:""}</span>`
+   :`<div class="ph"><a href="#" data-phref="${esc(f.path)}" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-ph="${esc(f.path)}" alt=""></a>${admin?`<button class="x" data-brm="${bi}|${j}" aria-label="remove">×</button>`:""}</div>`).join("")}</div>`; }
 function renderBulletin(){ const el=$("bulletin"); if(!el) return; const list=activeBulletins(); if(!list.length){ el.innerHTML=""; return; }
   const urgent=list.filter(b=>b.urgent), info=list.filter(b=>!b.urgent);
-  const item=b=>{ const ti=(lang==="es"&&b.tes)||b.ten||b.tes||"", tx=(lang==="es"&&b.xes)||b.xen||b.xes||""; return `<div class="bul-item">${ti?`<b>${esc(ti)}</b>`:""}${tx?`<p>${esc(tx)}</p>`:""}<small>${b.stores&&b.stores.length?esc(b.stores.join(", "))+" · ":""}${esc(b.posted||"")}${b.until?` · ${lang==="es"?"hasta":"until"} ${esc(b.until)}`:""}</small></div>`; };
+  const item=b=>{ const ti=(lang==="es"&&b.tes)||b.ten||b.tes||"", tx=(lang==="es"&&b.xes)||b.xen||b.xes||""; return `<div class="bul-item">${ti?`<b>${esc(ti)}</b>`:""}${tx?`<p>${esc(tx)}</p>`:""}${attHTML(b.files,false)}<small>${b.stores&&b.stores.length?esc(b.stores.join(", "))+" · ":""}${esc(b.posted||"")}${b.until?` · ${lang==="es"?"hasta":"until"} ${esc(b.until)}`:""}</small></div>`; };
   const box=(arr,u)=>arr.length?`<section class="bul ${u?"urgent":""}"><div class="bul-h">${u?"⚠ "+(lang==="es"?"Urgente":"Urgent"):"📌 "+(lang==="es"?"Avisos":"Bulletin")}</div>${arr.map(item).join("")}</section>`:"";
   el.innerHTML=box(urgent,true)+box(info,false); }
 function buildForm(){ syncDay(); const t=T[lang]; renderDay(); renderBulletin();
@@ -742,11 +745,11 @@ function showDetail(id){ const a=walks.find(x=>x.id===id); if(!a){ openId=null; 
 /* ================= ADMIN ================= */
 let adminDirty=false, aOpen={}, aEdit=null, DRAFT=null;
 const AT={
- es:{bul:"Tablero de avisos",storesL:"Publicar en",allStores:"Todas las tiendas",bulSub:"Los avisos aparecen arriba del recorrido para todas las tiendas. Escríbelo en inglés, español o ambos.",addBul:"+ Nuevo aviso",noBul:"Sin avisos publicados.",bTitle:"Título",bMsg:"Mensaje",urgent:"Urgente",until:"Mostrar hasta",untitled:"Aviso sin título",title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
+ es:{bul:"Tablero de avisos",files:"Fotos y PDF",addFile:"+ Foto o PDF",uploading:"Subiendo",upErr:"No se pudo subir: ",storesL:"Publicar en",allStores:"Todas las tiendas",bulSub:"Los avisos aparecen arriba del recorrido para todas las tiendas. Escríbelo en inglés, español o ambos.",addBul:"+ Nuevo aviso",noBul:"Sin avisos publicados.",bTitle:"Título",bMsg:"Mensaje",urgent:"Urgente",until:"Mostrar hasta",untitled:"Aviso sin título",title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
   f:{needs:["Necesidades de la tienda","Mantenimiento, refrigeración, limpieza, equipo, personal"],vendors:["Registro de proveedores","Dentro de Recepción"],orders:["Estado de pedidos por departamento","Dentro de Pedidos"],oos:["Agotados hoy","Dentro de Abarrotes"],notes:["Notas del turno","AM → PM y PM → AM"]},
   tasks:"tareas",edit:"Editar",done:"Listo",add:"+ Agregar tarea",custom:"Personalizada",en:"Tarea (inglés)",es:"Tarea (español)",sen:"Estándar ⓘ (inglés)",ses:"Estándar ⓘ (español)",del:"Eliminar",reset:"Restaurar texto original",
   unsaved:"Cambios sin guardar",save:"Guardar",discard:"Descartar",saved:"Guardado. Ya aplica en todas las tiendas.",err:"No se pudo guardar: ",noAccess:"Solo el dueño o editores pueden cambiar la configuración.",resetAll:"Restaurar todo a la versión original",resetQ:"¿Restaurar todas las secciones, tareas y funciones a la versión original?",yes:"Restaurar",no:"Cancelar"},
- en:{bul:"Bulletin board",storesL:"Post to",allStores:"All stores",bulSub:"Posts show at the top of the walk for every store. Write in English, Spanish or both.",addBul:"+ New post",noBul:"No posts yet.",bTitle:"Title",bMsg:"Message",urgent:"Urgent",until:"Show until",untitled:"Untitled post",title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
+ en:{bul:"Bulletin board",files:"Photos & PDFs",addFile:"+ Photo or PDF",uploading:"Uploading",upErr:"Upload failed: ",storesL:"Post to",allStores:"All stores",bulSub:"Posts show at the top of the walk for every store. Write in English, Spanish or both.",addBul:"+ New post",noBul:"No posts yet.",bTitle:"Title",bMsg:"Message",urgent:"Urgent",until:"Show until",untitled:"Untitled post",title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
   f:{needs:["Store needs","Maintenance, refrigeration, supplies, equipment, staffing"],vendors:["Vendor log","Inside Receiving"],orders:["Order status by department","Inside Orders"],oos:["Out of stock today","Inside Grocery"],notes:["Shift notes","AM → PM and PM → AM"]},
   tasks:"tasks",edit:"Edit",done:"Done",add:"+ Add task",custom:"Custom",en:"Task (English)",es:"Task (Spanish)",sen:"Standard ⓘ (English)",ses:"Standard ⓘ (Spanish)",del:"Delete",reset:"Restore original text",
   unsaved:"Unsaved changes",save:"Save",discard:"Discard",saved:"Saved. Now live for every store.",err:"Couldn't save: ",noAccess:"Only the owner or editors can change settings.",resetAll:"Restore everything to the original",resetQ:"Restore all sections, tasks and features to the original?",yes:"Restore",no:"Cancel"}};
@@ -767,6 +770,8 @@ function renderAdmin(){ const a=AT[lang], v=$("view-admin"); if(!isEditor){ v.in
       <label class="label">${a.bMsg} (ES)</label><textarea rows="3" data-bi="${i}" data-bf="xes">${esc(b.xes||"")}</textarea>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><label class="check"><input type="checkbox" data-bi="${i}" data-bf="urgent" ${b.urgent?"checked":""}> ${a.urgent}</label>
       <label class="check">${a.until} <input type="date" data-bi="${i}" data-bf="until" value="${esc(b.until||"")}" style="width:auto"></label></div>
+      <label class="label" style="margin-top:6px">${a.files}</label>${attHTML(b.files,true,i)}
+      <div class="actions" style="margin-top:6px"><button class="btn small" data-batt="${i}">${a.addFile}</button><input type="file" id="bf-${i}" accept="image/*,application/pdf" multiple hidden></div><p class="hint" id="bfm-${i}" style="margin:2px 0 0"></p>
       <label class="label" style="margin-top:6px">${a.storesL}</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" data-bst="${i}|*" aria-pressed="${!b.stores||!b.stores.length}">${a.allStores}</button>${STORES.map(st=>`<button class="btn small" data-bst="${i}|${esc(st)}" aria-pressed="${!!(b.stores&&b.stores.includes(st))}">${esc(st)}</button>`).join("")}</div>
      </div></div>`).join(""):`<p class="empty">${a.noBul}</p>`}
@@ -799,6 +804,8 @@ document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; 
   const ad=e.target.closest("[data-adel]"); if(ad){ startDraft(); const k=ad.dataset.adel, id=k.split(".")[0]; DRAFT.custom[id]=(DRAFT.custom[id]||[]).filter(c=>c.k!==k); delete DRAFT.taskOff[k]; aEdit=null; markDirty(); return; }
   const ar=e.target.closest("[data-areset]"); if(ar){ startDraft(); delete DRAFT.edits[ar.dataset.areset]; markDirty(); return; }
   if(e.target.id==="b-add"){ startDraft(); (DRAFT.bulletins=DRAFT.bulletins||[]).unshift({ten:"",xen:"",tes:"",xes:"",urgent:false,until:"",stores:[],posted:today()}); markDirty(); return; }
+  const ba=e.target.closest("[data-batt]"); if(ba){ $("bf-"+ba.dataset.batt).click(); return; }
+  const br=e.target.closest("[data-brm]"); if(br){ e.preventDefault(); startDraft(); const [i,j]=br.dataset.brm.split("|"); const b=DRAFT.bulletins[+i]; const f=b&&b.files&&b.files.splice(+j,1)[0]; if(f) sb.storage.from(BUCKET).remove([f.path]).catch(()=>{}); markDirty(); return; }
   const bs=e.target.closest("[data-bst]"); if(bs){ startDraft(); const [i,st]=bs.dataset.bst.split("|"); const b=DRAFT.bulletins[+i]; if(!b) return;
     if(st==="*") b.stores=[]; else { const set=new Set(b.stores||[]); set.has(st)?set.delete(st):set.add(st); b.stores=[...set]; }
     markDirty(); return; }
@@ -812,7 +819,14 @@ document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; 
 });
 function bulField(el){ if(!el.dataset||el.dataset.bi==null) return false; startDraft(); const b=DRAFT.bulletins[+el.dataset.bi]; if(!b) return true; b[el.dataset.bf]=el.type==="checkbox"?el.checked:el.value; b.posted=today();
   if(!adminDirty){ adminDirty=true; const bar=document.createElement("div"); const a=AT[lang]; bar.className="savebar"; bar.innerHTML=`<b>${a.unsaved}</b><span style="display:flex;gap:8px"><button class="btn small" id="a-discard">${a.discard}</button><button class="btn small primary" id="a-save">${a.save}</button></span>`; $("view-admin").insertBefore(bar,$("a-status")); } return true; }
-document.addEventListener("change",e=>{ if(!$("view-admin").hidden) bulField(e.target); });
+document.addEventListener("change",async e=>{ if($("view-admin").hidden) return; const el=e.target;
+  if(el.id&&el.id.startsWith("bf-")&&el.files.length){ const i=+el.id.slice(3), msg=$("bfm-"+i), a=AT[lang]; startDraft(); const files=[...el.files]; el.value="";
+    for(const f of files){ msg.textContent=a.uploading+" "+f.name; try{ const isPdf=f.type==="application/pdf"; const blob=isPdf?f:await shrink(f); const safe=(f.name||"file").replace(/[^\w.\-]+/g,"_").slice(-60);
+        const p=`bulletin/${Date.now().toString(36)}-${safe}${isPdf||/\.(jpe?g)$/i.test(safe)?"":".jpg"}`; const {error}=await sb.storage.from(BUCKET).upload(p,blob,{contentType:isPdf?"application/pdf":(blob.type||"image/jpeg")}); if(error) throw error;
+        const b=DRAFT.bulletins[i]; (b.files=b.files||[]).push({path:p,name:f.name,type:isPdf?"application/pdf":"image"}); }
+      catch(err){ msg.textContent=a.upErr+((err&&err.message)||"error"); return; } }
+    markDirty(); return; }
+  bulField(el); });
 document.addEventListener("input",e=>{ const el=e.target; if(!$("view-admin").hidden&&bulField(el)) return; if(!el.dataset||!el.dataset.ak) return; startDraft(); const k=el.dataset.ak, fld=el.dataset.af; const id=k.split(".")[0];
   const cu=(DRAFT.custom[id]||[]).find(c=>c.k===k);
   if(cu){ cu[fld]=el.value; } else { const e2=DRAFT.edits[k]=DRAFT.edits[k]||{}; e2[fld]=el.value; }
