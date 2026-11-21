@@ -558,10 +558,10 @@ function sectionInner(si){ const s=SECTIONS[si], t=T[lang]; const r=S.rate[s.id]
      <div class="grades" role="group">${[1,2,3,4,5].map(v=>`<button class="gbtn" data-rate="${s.id}" data-v="${v}" aria-pressed="${r===v}" title="${t.grade[v]}">${v}</button>`).join("")}<button class="gbtn na" data-rate="${s.id}" data-v="na" aria-pressed="${r==="na"}">${t.na}</button></div></div>`
    +`<div class="photos"><span class="label">${t.photos}</span><div class="ph-row" id="phr-${si}"></div><input type="file" id="pf-${si}" accept="image/*" multiple hidden><div class="ph-msg" id="phm-${si}"></div></div>`; }
 function syncDay(){ const dt=S.dayType||{}; DAYF.order=!!dt.order; DAYF.delivery=!!dt.delivery; DAYF.tue=new Date(curDate+"T12:00:00").getDay()===2; applyCfg(); }
-function activeBulletins(){ const td=today(); return (CFG.bulletins||[]).filter(b=>!b.until||b.until>=td); }
+function activeBulletins(){ const td=today(); return (CFG.bulletins||[]).filter(b=>(!b.until||b.until>=td)&&(!b.stores||!b.stores.length||b.stores.includes(curStore))); }
 function renderBulletin(){ const el=$("bulletin"); if(!el) return; const list=activeBulletins(); if(!list.length){ el.innerHTML=""; return; }
   const urgent=list.filter(b=>b.urgent), info=list.filter(b=>!b.urgent);
-  const item=b=>{ const ti=(lang==="es"&&b.tes)||b.ten||b.tes||"", tx=(lang==="es"&&b.xes)||b.xen||b.xes||""; return `<div class="bul-item">${ti?`<b>${esc(ti)}</b>`:""}${tx?`<p>${esc(tx)}</p>`:""}<small>${esc(b.posted||"")}${b.until?` · ${lang==="es"?"hasta":"until"} ${esc(b.until)}`:""}</small></div>`; };
+  const item=b=>{ const ti=(lang==="es"&&b.tes)||b.ten||b.tes||"", tx=(lang==="es"&&b.xes)||b.xen||b.xes||""; return `<div class="bul-item">${ti?`<b>${esc(ti)}</b>`:""}${tx?`<p>${esc(tx)}</p>`:""}<small>${b.stores&&b.stores.length?esc(b.stores.join(", "))+" · ":""}${esc(b.posted||"")}${b.until?` · ${lang==="es"?"hasta":"until"} ${esc(b.until)}`:""}</small></div>`; };
   const box=(arr,u)=>arr.length?`<section class="bul ${u?"urgent":""}"><div class="bul-h">${u?"⚠ "+(lang==="es"?"Urgente":"Urgent"):"📌 "+(lang==="es"?"Avisos":"Bulletin")}</div>${arr.map(item).join("")}</section>`:"";
   el.innerHTML=box(urgent,true)+box(info,false); }
 function buildForm(){ syncDay(); const t=T[lang]; renderDay(); renderBulletin();
@@ -742,11 +742,11 @@ function showDetail(id){ const a=walks.find(x=>x.id===id); if(!a){ openId=null; 
 /* ================= ADMIN ================= */
 let adminDirty=false, aOpen={}, aEdit=null, DRAFT=null;
 const AT={
- es:{bul:"Tablero de avisos",bulSub:"Los avisos aparecen arriba del recorrido para todas las tiendas. Escríbelo en inglés, español o ambos.",addBul:"+ Nuevo aviso",noBul:"Sin avisos publicados.",bTitle:"Título",bMsg:"Mensaje",urgent:"Urgente",until:"Mostrar hasta",untitled:"Aviso sin título",title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
+ es:{bul:"Tablero de avisos",storesL:"Publicar en",allStores:"Todas las tiendas",bulSub:"Los avisos aparecen arriba del recorrido para todas las tiendas. Escríbelo en inglés, español o ambos.",addBul:"+ Nuevo aviso",noBul:"Sin avisos publicados.",bTitle:"Título",bMsg:"Mensaje",urgent:"Urgente",until:"Mostrar hasta",untitled:"Aviso sin título",title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
   f:{needs:["Necesidades de la tienda","Mantenimiento, refrigeración, limpieza, equipo, personal"],vendors:["Registro de proveedores","Dentro de Recepción"],orders:["Estado de pedidos por departamento","Dentro de Pedidos"],oos:["Agotados hoy","Dentro de Abarrotes"],notes:["Notas del turno","AM → PM y PM → AM"]},
   tasks:"tareas",edit:"Editar",done:"Listo",add:"+ Agregar tarea",custom:"Personalizada",en:"Tarea (inglés)",es:"Tarea (español)",sen:"Estándar ⓘ (inglés)",ses:"Estándar ⓘ (español)",del:"Eliminar",reset:"Restaurar texto original",
   unsaved:"Cambios sin guardar",save:"Guardar",discard:"Descartar",saved:"Guardado. Ya aplica en todas las tiendas.",err:"No se pudo guardar: ",noAccess:"Solo el dueño o editores pueden cambiar la configuración.",resetAll:"Restaurar todo a la versión original",resetQ:"¿Restaurar todas las secciones, tareas y funciones a la versión original?",yes:"Restaurar",no:"Cancelar"},
- en:{bul:"Bulletin board",bulSub:"Posts show at the top of the walk for every store. Write in English, Spanish or both.",addBul:"+ New post",noBul:"No posts yet.",bTitle:"Title",bMsg:"Message",urgent:"Urgent",until:"Show until",untitled:"Untitled post",title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
+ en:{bul:"Bulletin board",storesL:"Post to",allStores:"All stores",bulSub:"Posts show at the top of the walk for every store. Write in English, Spanish or both.",addBul:"+ New post",noBul:"No posts yet.",bTitle:"Title",bMsg:"Message",urgent:"Urgent",until:"Show until",untitled:"Untitled post",title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
   f:{needs:["Store needs","Maintenance, refrigeration, supplies, equipment, staffing"],vendors:["Vendor log","Inside Receiving"],orders:["Order status by department","Inside Orders"],oos:["Out of stock today","Inside Grocery"],notes:["Shift notes","AM → PM and PM → AM"]},
   tasks:"tasks",edit:"Edit",done:"Done",add:"+ Add task",custom:"Custom",en:"Task (English)",es:"Task (Spanish)",sen:"Standard ⓘ (English)",ses:"Standard ⓘ (Spanish)",del:"Delete",reset:"Restore original text",
   unsaved:"Unsaved changes",save:"Save",discard:"Discard",saved:"Saved. Now live for every store.",err:"Couldn't save: ",noAccess:"Only the owner or editors can change settings.",resetAll:"Restore everything to the original",resetQ:"Restore all sections, tasks and features to the original?",yes:"Restore",no:"Cancel"}};
@@ -759,7 +759,7 @@ function renderAdmin(){ const a=AT[lang], v=$("view-admin"); if(!isEditor){ v.in
   let h=`<section class="card"><h2 style="font-size:24px">${a.title}</h2><p class="hint" style="margin-top:4px">${a.sub}</p></section>
    <section class="card"><span class="label">${a.bul}</span><p class="hint" style="margin:0 0 6px">${a.bulSub}</p>
    ${BL.length?BL.map((b,i)=>`<div class="asec" style="padding:10px 12px">
-     <div style="display:flex;gap:8px;align-items:center"><span style="flex:1;font-weight:700">${b.urgent?`<span class="tag" style="background:var(--g1)">${a.urgent}</span>`:""}${esc(b.ten||b.tes||a.untitled)}</span><button class="btn small danger" data-bdel="${i}">${a.del}</button></div>
+     <div style="display:flex;gap:8px;align-items:center"><span style="flex:1;font-weight:700">${b.urgent?`<span class="tag" style="background:var(--g1)">${a.urgent}</span>`:""}${esc(b.ten||b.tes||a.untitled)} <span class="q-by">${b.stores&&b.stores.length?esc(b.stores.join(", ")):a.allStores}</span></span><button class="btn small danger" data-bdel="${i}">${a.del}</button></div>
      <div class="aedit" style="padding:8px 0 0;border:0;background:none">
       <label class="label">${a.bTitle} (EN)</label><input type="text" data-bi="${i}" data-bf="ten" value="${esc(b.ten||"")}">
       <label class="label">${a.bMsg} (EN)</label><textarea rows="3" data-bi="${i}" data-bf="xen">${esc(b.xen||"")}</textarea>
@@ -767,6 +767,8 @@ function renderAdmin(){ const a=AT[lang], v=$("view-admin"); if(!isEditor){ v.in
       <label class="label">${a.bMsg} (ES)</label><textarea rows="3" data-bi="${i}" data-bf="xes">${esc(b.xes||"")}</textarea>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><label class="check"><input type="checkbox" data-bi="${i}" data-bf="urgent" ${b.urgent?"checked":""}> ${a.urgent}</label>
       <label class="check">${a.until} <input type="date" data-bi="${i}" data-bf="until" value="${esc(b.until||"")}" style="width:auto"></label></div>
+      <label class="label" style="margin-top:6px">${a.storesL}</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" data-bst="${i}|*" aria-pressed="${!b.stores||!b.stores.length}">${a.allStores}</button>${STORES.map(st=>`<button class="btn small" data-bst="${i}|${esc(st)}" aria-pressed="${!!(b.stores&&b.stores.includes(st))}">${esc(st)}</button>`).join("")}</div>
      </div></div>`).join(""):`<p class="empty">${a.noBul}</p>`}
    <div class="actions"><button class="btn small primary" id="b-add">${a.addBul}</button></div></section>
    <section class="card"><span class="label">${a.feat}</span>${["needs","vendors","orders","oos","notes"].map(f=>`<div class="arow"><div><b>${a.f[f][0]}</b><span>${a.f[f][1]}</span></div>${sw(C[f]!==false&&(f!=="needs"||C.needs),`data-feat="${f}"`)}</div>`).join("")}</section>
@@ -796,7 +798,10 @@ document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; 
   const aa=e.target.closest("[data-aadd]"); if(aa){ startDraft(); const id=aa.dataset.aadd; const k=`${id}.c${Date.now().toString(36)}`; (DRAFT.custom[id]=DRAFT.custom[id]||[]).push({k,en:"New task",es:"Nueva tarea",sen:"",ses:""}); aEdit=k; markDirty(); return; }
   const ad=e.target.closest("[data-adel]"); if(ad){ startDraft(); const k=ad.dataset.adel, id=k.split(".")[0]; DRAFT.custom[id]=(DRAFT.custom[id]||[]).filter(c=>c.k!==k); delete DRAFT.taskOff[k]; aEdit=null; markDirty(); return; }
   const ar=e.target.closest("[data-areset]"); if(ar){ startDraft(); delete DRAFT.edits[ar.dataset.areset]; markDirty(); return; }
-  if(e.target.id==="b-add"){ startDraft(); (DRAFT.bulletins=DRAFT.bulletins||[]).unshift({ten:"",xen:"",tes:"",xes:"",urgent:false,until:"",posted:today()}); markDirty(); return; }
+  if(e.target.id==="b-add"){ startDraft(); (DRAFT.bulletins=DRAFT.bulletins||[]).unshift({ten:"",xen:"",tes:"",xes:"",urgent:false,until:"",stores:[],posted:today()}); markDirty(); return; }
+  const bs=e.target.closest("[data-bst]"); if(bs){ startDraft(); const [i,st]=bs.dataset.bst.split("|"); const b=DRAFT.bulletins[+i]; if(!b) return;
+    if(st==="*") b.stores=[]; else { const set=new Set(b.stores||[]); set.has(st)?set.delete(st):set.add(st); b.stores=[...set]; }
+    markDirty(); return; }
   const bd=e.target.closest("[data-bdel]"); if(bd){ startDraft(); DRAFT.bulletins.splice(+bd.dataset.bdel,1); markDirty(); return; }
   if(e.target.id==="a-resetall"){ $("a-rc").hidden=false; return; } if(e.target.id==="a-rc-no"){ $("a-rc").hidden=true; return; }
   if(e.target.id==="a-rc-yes"){ DRAFT=JSON.parse(JSON.stringify(DEF_CFG)); aEdit=null; markDirty(); return; }
