@@ -233,6 +233,15 @@ details.scale summary::-webkit-details-marker{display:none}
 .savebar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:14px;background:var(--fg);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .savebar .btn{border-color:transparent}
 .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.bul{border-radius:12px;padding:12px 14px;margin-top:14px;background:#eaf3fb;border:1px solid #b9d7ef}
+.bul.urgent{background:#fdecea;border-color:#f1b9b2}
+.bul-h{display:flex;align-items:center;gap:8px;font:700 13px var(--body);letter-spacing:.06em;text-transform:uppercase;color:#1d5c8f}
+.bul.urgent .bul-h{color:var(--g1)}
+.bul-item{padding:8px 0;border-top:1px solid rgba(0,0,0,.08)}
+.bul-item:first-of-type{border-top:0}
+.bul-item b{font:700 17px var(--display);display:block}
+.bul-item p{margin:3px 0 0;white-space:pre-wrap;font-size:14.5px}
+.bul-item small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 </style>
 </head>
 <body>
@@ -263,6 +272,7 @@ details.scale summary::-webkit-details-marker{display:none}
   </header>
 
   <main id="view-form">
+    <div id="bulletin"></div>
     <section class="card">
       <div class="grid2">
         <div><label class="label" for="f-store" id="l-store">Tienda</label><select id="f-store"></select></div>
@@ -490,7 +500,7 @@ const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4)
 const gColor=v=>v==null||isNaN(v)?"var(--na)":`var(--g${Math.min(5,Math.max(1,Math.round(v)))})`;
 const fmt=v=>v==null||isNaN(v)?"–":v.toFixed(2);
 /* ---------- settings (admin) ---------- */
-const DEF_CFG={needs:false,vendors:true,orders:true,oos:true,notes:true,off:{},taskOff:{},edits:{},custom:{}};
+const DEF_CFG={bulletins:[],needs:false,vendors:true,orders:true,oos:true,notes:true,off:{},taskOff:{},edits:{},custom:{}};
 let CFG=JSON.parse(JSON.stringify(DEF_CFG));
 try{const c=JSON.parse(localStorage.getItem("dw-cfg")||"null"); if(c) CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),c);}catch(e){}
 const FEAT={vendors:"vendors",orders:"orders",oos:"oos"};
@@ -548,7 +558,13 @@ function sectionInner(si){ const s=SECTIONS[si], t=T[lang]; const r=S.rate[s.id]
      <div class="grades" role="group">${[1,2,3,4,5].map(v=>`<button class="gbtn" data-rate="${s.id}" data-v="${v}" aria-pressed="${r===v}" title="${t.grade[v]}">${v}</button>`).join("")}<button class="gbtn na" data-rate="${s.id}" data-v="na" aria-pressed="${r==="na"}">${t.na}</button></div></div>`
    +`<div class="photos"><span class="label">${t.photos}</span><div class="ph-row" id="phr-${si}"></div><input type="file" id="pf-${si}" accept="image/*" multiple hidden><div class="ph-msg" id="phm-${si}"></div></div>`; }
 function syncDay(){ const dt=S.dayType||{}; DAYF.order=!!dt.order; DAYF.delivery=!!dt.delivery; DAYF.tue=new Date(curDate+"T12:00:00").getDay()===2; applyCfg(); }
-function buildForm(){ syncDay(); const t=T[lang]; renderDay();
+function activeBulletins(){ const td=today(); return (CFG.bulletins||[]).filter(b=>!b.until||b.until>=td); }
+function renderBulletin(){ const el=$("bulletin"); if(!el) return; const list=activeBulletins(); if(!list.length){ el.innerHTML=""; return; }
+  const urgent=list.filter(b=>b.urgent), info=list.filter(b=>!b.urgent);
+  const item=b=>{ const ti=(lang==="es"&&b.tes)||b.ten||b.tes||"", tx=(lang==="es"&&b.xes)||b.xen||b.xes||""; return `<div class="bul-item">${ti?`<b>${esc(ti)}</b>`:""}${tx?`<p>${esc(tx)}</p>`:""}<small>${esc(b.posted||"")}${b.until?` · ${lang==="es"?"hasta":"until"} ${esc(b.until)}`:""}</small></div>`; };
+  const box=(arr,u)=>arr.length?`<section class="bul ${u?"urgent":""}"><div class="bul-h">${u?"⚠ "+(lang==="es"?"Urgente":"Urgent"):"📌 "+(lang==="es"?"Avisos":"Bulletin")}</div>${arr.map(item).join("")}</section>`:"";
+  el.innerHTML=box(urgent,true)+box(info,false); }
+function buildForm(){ syncDay(); const t=T[lang]; renderDay(); renderBulletin();
   $("sections").innerHTML=SECTIONS.map((s,si)=>`<section class="card sec" id="sec-${si}">
     <div class="sec-head" data-sec="${si}" role="button" tabindex="0" aria-expanded="true">
       <h2><small>${t.section} ${si+1}${s.shift?`<span class="when">${s.shift.toUpperCase()}</span>`:""}</small>${esc(s[lang])}</h2>
@@ -726,11 +742,11 @@ function showDetail(id){ const a=walks.find(x=>x.id===id); if(!a){ openId=null; 
 /* ================= ADMIN ================= */
 let adminDirty=false, aOpen={}, aEdit=null, DRAFT=null;
 const AT={
- es:{title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
+ es:{bul:"Tablero de avisos",bulSub:"Los avisos aparecen arriba del recorrido para todas las tiendas. Escríbelo en inglés, español o ambos.",addBul:"+ Nuevo aviso",noBul:"Sin avisos publicados.",bTitle:"Título",bMsg:"Mensaje",urgent:"Urgente",until:"Mostrar hasta",untitled:"Aviso sin título",title:"Administración",sub:"Activa o desactiva funciones y secciones, y edita las tareas. Los cambios aplican a todas las tiendas al guardar.",feat:"Funciones",sections:"Secciones y tareas",
   f:{needs:["Necesidades de la tienda","Mantenimiento, refrigeración, limpieza, equipo, personal"],vendors:["Registro de proveedores","Dentro de Recepción"],orders:["Estado de pedidos por departamento","Dentro de Pedidos"],oos:["Agotados hoy","Dentro de Abarrotes"],notes:["Notas del turno","AM → PM y PM → AM"]},
   tasks:"tareas",edit:"Editar",done:"Listo",add:"+ Agregar tarea",custom:"Personalizada",en:"Tarea (inglés)",es:"Tarea (español)",sen:"Estándar ⓘ (inglés)",ses:"Estándar ⓘ (español)",del:"Eliminar",reset:"Restaurar texto original",
   unsaved:"Cambios sin guardar",save:"Guardar",discard:"Descartar",saved:"Guardado. Ya aplica en todas las tiendas.",err:"No se pudo guardar: ",noAccess:"Solo el dueño o editores pueden cambiar la configuración.",resetAll:"Restaurar todo a la versión original",resetQ:"¿Restaurar todas las secciones, tareas y funciones a la versión original?",yes:"Restaurar",no:"Cancelar"},
- en:{title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
+ en:{bul:"Bulletin board",bulSub:"Posts show at the top of the walk for every store. Write in English, Spanish or both.",addBul:"+ New post",noBul:"No posts yet.",bTitle:"Title",bMsg:"Message",urgent:"Urgent",until:"Show until",untitled:"Untitled post",title:"Admin",sub:"Turn features and sections on or off and edit tasks. Changes apply to every store once saved.",feat:"Features",sections:"Sections and tasks",
   f:{needs:["Store needs","Maintenance, refrigeration, supplies, equipment, staffing"],vendors:["Vendor log","Inside Receiving"],orders:["Order status by department","Inside Orders"],oos:["Out of stock today","Inside Grocery"],notes:["Shift notes","AM → PM and PM → AM"]},
   tasks:"tasks",edit:"Edit",done:"Done",add:"+ Add task",custom:"Custom",en:"Task (English)",es:"Task (Spanish)",sen:"Standard ⓘ (English)",ses:"Standard ⓘ (Spanish)",del:"Delete",reset:"Restore original text",
   unsaved:"Unsaved changes",save:"Save",discard:"Discard",saved:"Saved. Now live for every store.",err:"Couldn't save: ",noAccess:"Only the owner or editors can change settings.",resetAll:"Restore everything to the original",resetQ:"Restore all sections, tasks and features to the original?",yes:"Restore",no:"Cancel"}};
@@ -739,7 +755,20 @@ function markDirty(){ adminDirty=true; renderAdmin(); }
 function renderAdmin(){ const a=AT[lang], v=$("view-admin"); if(!isEditor){ v.innerHTML=`<section class="card"><p class="empty">${a.noAccess}</p></section>`; return; }
   startDraft(); const C=DRAFT;
   const sw=(on,attr)=>`<button class="sw" role="switch" aria-checked="${!!on}" ${attr}></button>`;
+  const BL=C.bulletins||(C.bulletins=[]);
   let h=`<section class="card"><h2 style="font-size:24px">${a.title}</h2><p class="hint" style="margin-top:4px">${a.sub}</p></section>
+   <section class="card"><span class="label">${a.bul}</span><p class="hint" style="margin:0 0 6px">${a.bulSub}</p>
+   ${BL.length?BL.map((b,i)=>`<div class="asec" style="padding:10px 12px">
+     <div style="display:flex;gap:8px;align-items:center"><span style="flex:1;font-weight:700">${b.urgent?`<span class="tag" style="background:var(--g1)">${a.urgent}</span>`:""}${esc(b.ten||b.tes||a.untitled)}</span><button class="btn small danger" data-bdel="${i}">${a.del}</button></div>
+     <div class="aedit" style="padding:8px 0 0;border:0;background:none">
+      <label class="label">${a.bTitle} (EN)</label><input type="text" data-bi="${i}" data-bf="ten" value="${esc(b.ten||"")}">
+      <label class="label">${a.bMsg} (EN)</label><textarea rows="3" data-bi="${i}" data-bf="xen">${esc(b.xen||"")}</textarea>
+      <label class="label">${a.bTitle} (ES)</label><input type="text" data-bi="${i}" data-bf="tes" value="${esc(b.tes||"")}">
+      <label class="label">${a.bMsg} (ES)</label><textarea rows="3" data-bi="${i}" data-bf="xes">${esc(b.xes||"")}</textarea>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><label class="check"><input type="checkbox" data-bi="${i}" data-bf="urgent" ${b.urgent?"checked":""}> ${a.urgent}</label>
+      <label class="check">${a.until} <input type="date" data-bi="${i}" data-bf="until" value="${esc(b.until||"")}" style="width:auto"></label></div>
+     </div></div>`).join(""):`<p class="empty">${a.noBul}</p>`}
+   <div class="actions"><button class="btn small primary" id="b-add">${a.addBul}</button></div></section>
    <section class="card"><span class="label">${a.feat}</span>${["needs","vendors","orders","oos","notes"].map(f=>`<div class="arow"><div><b>${a.f[f][0]}</b><span>${a.f[f][1]}</span></div>${sw(C[f]!==false&&(f!=="needs"||C.needs),`data-feat="${f}"`)}</div>`).join("")}</section>
    <section class="card"><span class="label">${a.sections}</span>`;
   BASE.forEach(s=>{ const on=!C.off[s.id]; const items=s.b.map((b,i)=>({k:`${s.id}.${i}`,b,custom:false})).concat((C.custom[s.id]||[]).map(c=>({k:c.k,b:[c.en,c.es,c.sen||"",c.ses||""],custom:true})));
@@ -767,6 +796,8 @@ document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; 
   const aa=e.target.closest("[data-aadd]"); if(aa){ startDraft(); const id=aa.dataset.aadd; const k=`${id}.c${Date.now().toString(36)}`; (DRAFT.custom[id]=DRAFT.custom[id]||[]).push({k,en:"New task",es:"Nueva tarea",sen:"",ses:""}); aEdit=k; markDirty(); return; }
   const ad=e.target.closest("[data-adel]"); if(ad){ startDraft(); const k=ad.dataset.adel, id=k.split(".")[0]; DRAFT.custom[id]=(DRAFT.custom[id]||[]).filter(c=>c.k!==k); delete DRAFT.taskOff[k]; aEdit=null; markDirty(); return; }
   const ar=e.target.closest("[data-areset]"); if(ar){ startDraft(); delete DRAFT.edits[ar.dataset.areset]; markDirty(); return; }
+  if(e.target.id==="b-add"){ startDraft(); (DRAFT.bulletins=DRAFT.bulletins||[]).unshift({ten:"",xen:"",tes:"",xes:"",urgent:false,until:"",posted:today()}); markDirty(); return; }
+  const bd=e.target.closest("[data-bdel]"); if(bd){ startDraft(); DRAFT.bulletins.splice(+bd.dataset.bdel,1); markDirty(); return; }
   if(e.target.id==="a-resetall"){ $("a-rc").hidden=false; return; } if(e.target.id==="a-rc-no"){ $("a-rc").hidden=true; return; }
   if(e.target.id==="a-rc-yes"){ DRAFT=JSON.parse(JSON.stringify(DEF_CFG)); aEdit=null; markDirty(); return; }
   if(e.target.id==="a-discard"){ DRAFT=null; adminDirty=false; aEdit=null; renderAdmin(); return; }
@@ -774,7 +805,10 @@ document.addEventListener("click",async e=>{ if($("view-admin").hidden) return; 
     try{ await db.doc("settings/main").set(Object.assign({},DRAFT,{updatedAt:new Date().toISOString()})); CFG=Object.assign(JSON.parse(JSON.stringify(DEF_CFG)),DRAFT); applyCfg(); DRAFT=null; adminDirty=false; buildForm(); renderAdmin(); $("a-status").className="status ok"; $("a-status").textContent=a.saved; }
     catch(err){ st.className="status err"; st.textContent=a.err+((err&&err.message)||"error"); } }
 });
-document.addEventListener("input",e=>{ const el=e.target; if(!el.dataset||!el.dataset.ak) return; startDraft(); const k=el.dataset.ak, fld=el.dataset.af; const id=k.split(".")[0];
+function bulField(el){ if(!el.dataset||el.dataset.bi==null) return false; startDraft(); const b=DRAFT.bulletins[+el.dataset.bi]; if(!b) return true; b[el.dataset.bf]=el.type==="checkbox"?el.checked:el.value; b.posted=today();
+  if(!adminDirty){ adminDirty=true; const bar=document.createElement("div"); const a=AT[lang]; bar.className="savebar"; bar.innerHTML=`<b>${a.unsaved}</b><span style="display:flex;gap:8px"><button class="btn small" id="a-discard">${a.discard}</button><button class="btn small primary" id="a-save">${a.save}</button></span>`; $("view-admin").insertBefore(bar,$("a-status")); } return true; }
+document.addEventListener("change",e=>{ if(!$("view-admin").hidden) bulField(e.target); });
+document.addEventListener("input",e=>{ const el=e.target; if(!$("view-admin").hidden&&bulField(el)) return; if(!el.dataset||!el.dataset.ak) return; startDraft(); const k=el.dataset.ak, fld=el.dataset.af; const id=k.split(".")[0];
   const cu=(DRAFT.custom[id]||[]).find(c=>c.k===k);
   if(cu){ cu[fld]=el.value; } else { const e2=DRAFT.edits[k]=DRAFT.edits[k]||{}; e2[fld]=el.value; }
   if(!adminDirty){ adminDirty=true; const sb=document.querySelector(".savebar"); if(!sb) { const ai=document.activeElement, pos=ai&&ai.selectionStart; renderAdmin(); const n=document.querySelector(`[data-ak="${CSS.escape(k)}"][data-af="${fld}"]`); if(n){ n.focus(); try{n.setSelectionRange(pos,pos)}catch(x){} } } }
